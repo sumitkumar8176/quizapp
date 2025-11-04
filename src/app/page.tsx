@@ -38,33 +38,30 @@ export default function Home() {
   const [isLoadingFromUrl, setIsLoadingFromUrl] = useState(true);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const hash = window.location.hash.substring(1);
-      if (hash.startsWith('quiz=')) {
-        const quizData = hash.substring(5);
-        if (quizData) {
-          try {
-            const decompressed = decompressFromEncodedURIComponent(quizData);
-            if (decompressed) {
-              const parsedQuiz: Quiz = JSON.parse(decompressed);
-              setQuiz(parsedQuiz);
-              setUserAnswers(new Array(parsedQuiz.length).fill(""));
-              const newUrl = `${window.location.origin}${window.location.pathname}#quiz=${quizData}`;
-              setShareableUrl(newUrl);
-              setGameState("playing");
-            }
-          } catch (error) {
-            console.error("Failed to parse quiz data from URL hash", error);
-            toast({
-              variant: "destructive",
-              title: "Error",
-              description: "Could not load the shared quiz. It might be invalid.",
-            });
-            window.location.hash = '';
+    // This effect runs only once on initial component mount.
+    // It's responsible for checking if the URL has quiz data.
+    const hash = window.location.hash.substring(1);
+    if (hash.startsWith('quiz=')) {
+      const quizData = hash.substring(5);
+      if (quizData) {
+        try {
+          const decompressed = decompressFromEncodedURIComponent(quizData);
+          if (decompressed) {
+            const parsedQuiz: Quiz = JSON.parse(decompressed);
+            setQuiz(parsedQuiz);
+            setUserAnswers(new Array(parsedQuiz.length).fill(""));
+            setShareableUrl(`${window.location.origin}${window.location.pathname}#${hash}`);
+            setGameState("playing");
           }
+        } catch (error) {
+          console.error("Failed to parse quiz data from URL hash", error);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not load the shared quiz. It might be invalid.",
+          });
+          window.location.hash = ''; // Clear invalid hash
         }
-      } else {
-         setShareableUrl(`${window.location.origin}${window.location.pathname}`);
       }
     }
     setIsLoadingFromUrl(false);
@@ -99,8 +96,11 @@ export default function Home() {
       const newQuiz = result.data;
       const compressedQuiz = compressToEncodedURIComponent(JSON.stringify(newQuiz));
       
-      const newUrl = `${window.location.origin}${window.location.pathname}#quiz=${compressedQuiz}`;
-      window.history.pushState({ path: newUrl }, '', newUrl);
+      const newHash = `quiz=${compressedQuiz}`;
+      const newUrl = `${window.location.origin}${window.location.pathname}#${newHash}`;
+      
+      // Update the URL without reloading the page
+      window.history.pushState(null, '', `#${newHash}`);
 
       setQuiz(newQuiz);
       setUserAnswers(new Array(newQuiz.length).fill(""));
@@ -127,9 +127,10 @@ export default function Home() {
     setQuiz(null);
     setUserAnswers([]);
     setScore(0);
+    // Clear the hash from the URL
     const newUrl = `${window.location.origin}${window.location.pathname}`;
-    window.history.pushState({path: newUrl}, '', newUrl);
-    setShareableUrl(newUrl);
+    window.history.pushState(null, '', newUrl);
+    setShareableUrl("");
   };
 
   const renderGameState = () => {
@@ -176,7 +177,7 @@ export default function Home() {
             </p>
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" size="icon" disabled={!quiz}>
+                <Button variant="outline" size="icon" disabled={!quiz || gameState === 'idle'}>
                   <Share2 className="h-4 w-4" />
                 </Button>
               </DialogTrigger>
