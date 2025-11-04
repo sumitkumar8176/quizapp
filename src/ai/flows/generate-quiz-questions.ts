@@ -21,6 +21,8 @@ const GenerateQuizQuestionsOutputSchema = z.array(
     question: z.string().describe('The quiz question.'),
     options: z.array(z.string()).describe('The possible answers to the question.'),
     correctAnswer: z.string().describe('The correct answer to the question.'),
+    explanation: z.string().describe('A detailed explanation of why the correct answer is right.'),
+    videoSearchQuery: z.string().describe('A concise search query to find a relevant YouTube video for this question. This will be used to embed a video.'),
   })
 ).describe('An array of quiz questions with options and correct answers.');
 export type GenerateQuizQuestionsOutput = z.infer<typeof GenerateQuizQuestionsOutputSchema>;
@@ -33,16 +35,16 @@ const prompt = ai.definePrompt({
   name: 'generateQuizQuestionsPrompt',
   input: {schema: GenerateQuizQuestionsInputSchema},
   output: {schema: GenerateQuizQuestionsOutputSchema},
-  prompt: `You are an expert at creating educational quizzes. Your task is to generate 50 important and relevant questions on the given topic.
+  prompt: `You are an expert at creating educational quizzes. Your task is to generate 10 important and relevant questions on the given topic.
 
 Topic: {{{topic}}}
 
-The questions should cover a wide range of concepts, including:
-- Key definitions
-- Short answer questions (rephrased as multiple choice)
-- Understanding-based questions
-
-For each question, provide 4 multiple-choice options and clearly identify the correct answer. Ensure the questions are clear, concise, and accurately test knowledge on the specified topic.`,
+For each question, provide:
+1.  A clear and concise question.
+2.  4 multiple-choice options.
+3.  The correct answer.
+4.  A detailed explanation for the correct answer to help with understanding.
+5.  A simple and effective YouTube search query (3-5 words) that would find a video explaining the concept.`,
 });
 
 const generateQuizQuestionsFlow = ai.defineFlow(
