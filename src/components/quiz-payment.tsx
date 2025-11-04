@@ -25,9 +25,9 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
   return (
     <Card className="w-full max-w-md mx-auto text-center border-0 shadow-none">
       <CardHeader>
-        <CardTitle className="text-2xl">Complete Payment to Start</CardTitle>
+        <CardTitle className="text-2xl">Pay ₹5 to Start Your Quiz</CardTitle>
         <CardDescription>
-          Scan the QR code with any UPI app or pay directly to the UPI ID.
+          Scan the QR code with any UPI app or pay directly to the UPI ID below.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
