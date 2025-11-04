@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CheckCircle2, XCircle, RotateCw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import QuizRating from "./quiz-rating";
 
 type QuizResultsProps = {
   quiz: Quiz;
@@ -16,28 +17,11 @@ type QuizResultsProps = {
 
 export default function QuizResults({ quiz, userAnswers, score, onPlayAgain }: QuizResultsProps) {
   const totalQuestions = quiz.length;
-  const scorePercentage = Math.round((score / totalQuestions) * 100);
-
-  const getScoreMessage = () => {
-    if (scorePercentage === 100) return "Perfect Score! You're a true QuizWhiz!";
-    if (scorePercentage >= 80) return "Excellent work! You really know your stuff.";
-    if (scorePercentage >= 50) return "Good job! A little more study and you'll be an expert.";
-    return "Keep trying! Every quiz is a learning opportunity.";
-  };
 
   return (
     <div className="space-y-8">
-      <Card className="text-center border-primary/20 bg-primary/5">
-        <CardHeader>
-          <CardTitle className="text-2xl">Quiz Complete!</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-lg text-muted-foreground">Your Score</p>
-          <div className="text-6xl font-bold text-primary">{score} / {totalQuestions}</div>
-          <p className="text-xl font-semibold text-accent">{scorePercentage}%</p>
-          <p className="text-muted-foreground">{getScoreMessage()}</p>
-        </CardContent>
-      </Card>
+      
+      <QuizRating />
 
       <div className="space-y-4">
         <h3 className="text-xl font-semibold">Review Your Answers</h3>
@@ -51,7 +35,7 @@ export default function QuizResults({ quiz, userAnswers, score, onPlayAgain }: Q
                 <AccordionTrigger className="text-left hover:no-underline">
                   <div className="flex items-center gap-3 flex-1">
                     {isCorrect ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : <XCircle className="h-5 w-5 text-destructive" />}
-                    <span className="flex-1">Question {index + 1}</span>
+                    <span className="flex-1">Question {index + 1}: Scored {isCorrect ? 1 : 0}/{1}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="space-y-4 pt-2">
