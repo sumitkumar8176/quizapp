@@ -6,9 +6,11 @@ import { Loader2, Camera, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card } from "./ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "./ui/label";
 
 type QuizCameraProps = {
-  onCapture: (dataUri: string) => void;
+  onCapture: (dataUri: string, language: string) => void;
   isLoading: boolean;
 };
 
@@ -17,6 +19,7 @@ export default function QuizCamera({ onCapture, isLoading }: QuizCameraProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [language, setLanguage] = useState("english");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -79,7 +82,7 @@ export default function QuizCamera({ onCapture, isLoading }: QuizCameraProps) {
 
   const handleGenerateQuiz = () => {
     if (capturedImage) {
-      onCapture(capturedImage);
+      onCapture(capturedImage, language);
     }
   };
 
@@ -116,6 +119,19 @@ export default function QuizCamera({ onCapture, isLoading }: QuizCameraProps) {
       </Card>
 
       <canvas ref={canvasRef} className="hidden" />
+
+      <div className="space-y-2">
+        <Label htmlFor="language-camera">Quiz Language</Label>
+        <Select value={language} onValueChange={setLanguage} disabled={isLoading}>
+          <SelectTrigger id="language-camera">
+            <SelectValue placeholder="Select language" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="english">English</SelectItem>
+            <SelectItem value="hindi">Hindi</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {capturedImage ? (
         <div className="grid grid-cols-2 gap-4">

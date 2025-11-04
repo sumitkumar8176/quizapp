@@ -1,19 +1,22 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FileUp, ImageUp, Loader2, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import QuizCamera from "./quiz-camera";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 type QuizUploaderProps = {
-  onUpload: (dataUri: string) => void;
+  onUpload: (dataUri: string, language: string) => void;
   isLoading: boolean;
 };
 
 export default function QuizUploader({ onUpload, isLoading }: QuizUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [language, setLanguage] = useState("english");
   const { toast } = useToast();
 
   const handleButtonClick = () => {
@@ -28,7 +31,7 @@ export default function QuizUploader({ onUpload, isLoading }: QuizUploaderProps)
     reader.onload = (e) => {
       const dataUri = e.target?.result as string;
       if (dataUri) {
-        onUpload(dataUri);
+        onUpload(dataUri, language);
       } else {
         toast({
           variant: "destructive",
@@ -92,6 +95,19 @@ export default function QuizUploader({ onUpload, isLoading }: QuizUploaderProps)
                   Photos or screenshots. Our AI will read the text and generate a quiz.
                 </p>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="language-upload">Quiz Language</Label>
+              <Select value={language} onValueChange={setLanguage} disabled={isLoading}>
+                <SelectTrigger id="language-upload">
+                  <SelectValue placeholder="Select language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="english">English</SelectItem>
+                  <SelectItem value="hindi">Hindi</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

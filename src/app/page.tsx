@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import QuizPayment from "@/components/quiz-payment";
 
 type GameState = "idle" | "loading" | "payment" | "playing" | "finished";
-type QuizFormValues = { topic: string; numberOfQuestions: number };
+type QuizFormValues = { topic: string; numberOfQuestions: number; language: string; };
 
 export default function Home() {
   const [gameState, setGameState] = useState<GameState>("idle");
@@ -31,6 +31,7 @@ export default function Home() {
     const formData = new FormData();
     formData.append("topic", values.topic);
     formData.append("numberOfQuestions", values.numberOfQuestions.toString());
+    formData.append("language", values.language);
 
     const result = await createQuiz(formData);
 
@@ -49,7 +50,7 @@ export default function Home() {
     }
   };
 
-  const handleUploadQuiz = async (dataUri: string) => {
+  const handleUploadQuiz = async (dataUri: string, language: string) => {
     setGameState("loading");
 
     const formData = new FormData();
@@ -57,6 +58,7 @@ export default function Home() {
     // For now, we'll hardcode the number of questions for uploads.
     // This could be a user input field in QuizUploader in the future.
     formData.append("numberOfQuestions", "10");
+    formData.append("language", language);
 
     const result = await createQuizFromContent(formData);
 
