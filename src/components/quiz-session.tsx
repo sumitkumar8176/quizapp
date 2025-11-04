@@ -144,10 +144,10 @@ export default function QuizSession({ quiz, onFinish, timerDuration }: QuizSessi
         </motion.div>
       </AnimatePresence>
 
-      <div className="flex justify-between items-center pt-4">
+      <div className="flex flex-wrap justify-between items-center pt-4 gap-4">
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="outline" size="lg">
+            <Button variant="outline" size="sm" className="md:size-lg">
               <PartyPopper className="mr-2 h-5 w-5" />
               Submit Quiz
             </Button>
