@@ -22,6 +22,8 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
   const [isVerifying, setIsVerifying] = useState(false);
   const [freeTrialsUsed, setFreeTrialsUsed] = useState(0);
   const [isTrialDisabled, setIsTrialDisabled] = useState(false);
+  const onPaymentSuccessRef = useRef(onPaymentSuccess);
+  onPaymentSuccessRef.current = onPaymentSuccess;
 
   useEffect(() => {
     QRCode.toDataURL(UPI_URL, { width: 256, margin: 2 })
@@ -36,20 +38,21 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
     setFreeTrialsUsed(trials);
     if (trials >= FREE_TRIAL_LIMIT) {
       setIsTrialDisabled(true);
+      
+      // Start automatic verification if it's not a free trial
+      setIsVerifying(true);
+      const timer = setTimeout(() => {
+        setIsVerifying(false);
+        setPaymentConfirmed(true);
+        setTimeout(() => {
+          onPaymentSuccessRef.current();
+        }, 1500); // Wait for confirmation animation
+      }, 5000); // 5-second delay to simulate verification
+
+      return () => clearTimeout(timer);
     }
   }, []);
 
-  const handleConfirmation = () => {
-    setIsVerifying(true);
-    // Simulate payment verification
-    setTimeout(() => {
-      setIsVerifying(false);
-      setPaymentConfirmed(true);
-      setTimeout(() => {
-        onPaymentSuccess();
-      }, 1500); // Wait for animation
-    }, 3000); // 3-second delay to simulate verification
-  };
 
   const handleFreeTrial = () => {
     const newTrialCount = freeTrialsUsed + 1;
@@ -66,12 +69,65 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
 
   const trialsLeft = FREE_TRIAL_LIMIT - freeTrialsUsed;
 
+  const renderPaymentState = () => {
+    if (!isTrialDisabled) {
+      return (
+        <div className="space-y-4">
+           <div className="flex justify-center items-center bg-white rounded-lg border p-2 w-64 h-64 mx-auto">
+            {qrCodeDataUrl ? (
+              <img src={qrCodeDataUrl} alt="UPI QR Code" className="w-full h-full" />
+            ) : (
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            )}
+          </div>
+           <div className="space-y-1">
+            <p className="font-semibold text-sm text-muted-foreground">Pay to UPI ID:</p>
+            <p className="font-mono text-lg tracking-wider bg-muted p-2 rounded-md">{UPI_ID}</p>
+          </div>
+          <Button onClick={handleFreeTrial} size="lg" className="w-full" variant="outline" disabled={isTrialDisabled || isVerifying}>
+             Use a free trial
+          </Button>
+           {isTrialDisabled ? (
+            <p className="text-xs text-destructive">You have used all your free trials.</p>
+          ) : (
+            <p className="text-xs text-muted-foreground">{trialsLeft} free trial{trialsLeft !== 1 ? 's' : ''} left.</p>
+          )}
+        </div>
+      );
+    }
+
+    return (
+       <div className="space-y-4">
+        <div className="flex justify-center items-center bg-white rounded-lg border p-2 w-64 h-64 mx-auto">
+          {qrCodeDataUrl ? (
+            <img src={qrCodeDataUrl} alt="UPI QR Code" className="w-full h-full" />
+          ) : (
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          )}
+        </div>
+        <div className="space-y-1">
+          <p className="font-semibold text-sm text-muted-foreground">Pay to UPI ID:</p>
+          <p className="font-mono text-lg tracking-wider bg-muted p-2 rounded-md">{UPI_ID}</p>
+        </div>
+         <div className="flex items-center justify-center pt-4">
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            <p>Verifying payment, please wait...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <Card className="w-full max-w-md mx-auto text-center border-0 shadow-none">
       <CardHeader>
-        <CardTitle className="text-2xl">Pay ₹{PAYMENT_AMOUNT} to Start Your Quiz</CardTitle>
+        <CardTitle className="text-2xl">
+          {isTrialDisabled ? `Pay ₹${PAYMENT_AMOUNT} to Start Your Quiz` : "Unlock Your Quiz"}
+        </CardTitle>
         <CardDescription>
-          Scan the QR code with any UPI app or pay directly to the UPI ID below.
+         {isTrialDisabled 
+            ? "Scan the QR code with any UPI app or pay directly to the UPI ID below."
+            : `You have ${trialsLeft} free trial${trialsLeft !== 1 ? 's' : ''} remaining.`
+          }
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -85,40 +141,7 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
               transition={{ duration: 0.3 }}
               className="space-y-4"
             >
-              <div className="flex justify-center items-center bg-white rounded-lg border p-2 w-64 h-64 mx-auto">
-                {qrCodeDataUrl ? (
-                  <img src={qrCodeDataUrl} alt="UPI QR Code" className="w-full h-full" />
-                ) : (
-                  <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                )}
-              </div>
-              <div className="space-y-1">
-                <p className="font-semibold text-sm text-muted-foreground">Pay to UPI ID:</p>
-                <p className="font-mono text-lg tracking-wider bg-muted p-2 rounded-md">{UPI_ID}</p>
-              </div>
-
-              <p className="text-xs text-muted-foreground">
-                After completing the payment, click the button below to start your quiz.
-              </p>
-
-              <div className="space-y-2">
-                <Button onClick={handleConfirmation} size="lg" className="w-full" disabled={isVerifying}>
-                  {isVerifying ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Verifying Payment...
-                    </>
-                  ) : "I Have Paid"}
-                </Button>
-                <Button onClick={handleFreeTrial} size="lg" className="w-full" variant="outline" disabled={isTrialDisabled || isVerifying}>
-                   Use a free trial
-                </Button>
-                 {isTrialDisabled ? (
-                  <p className="text-xs text-destructive">You have used all your free trials.</p>
-                ) : (
-                  <p className="text-xs text-muted-foreground">{trialsLeft} free trial{trialsLeft !== 1 ? 's' : ''} left.</p>
-                )}
-              </div>
+             {renderPaymentState()}
             </motion.div>
           ) : (
             <motion.div
