@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -20,12 +20,26 @@ const ratings = [
 export default function QuizRating() {
   const [selectedRating, setSelectedRating] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [totalRatings, setTotalRatings] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (isSubmitted) {
+      // Simulate fetching a total number of ratings
+      setTotalRatings(Math.floor(Math.random() * (1500 - 300 + 1)) + 300);
+    }
+  }, [isSubmitted]);
+
 
   const handleSubmit = () => {
     if (selectedRating) {
       setIsSubmitted(true);
     }
   };
+
+  const getRatingEmoji = (value: string | null) => {
+    if (!value) return '';
+    return ratings.find(r => r.value === value)?.emoji || '';
+  }
 
   return (
     <Card className="text-center">
@@ -82,9 +96,23 @@ export default function QuizRating() {
               className="space-y-3 py-8"
             >
               <div className="text-5xl">💖</div>
-              <h2 className="text-2xl font-bold">Thank You!</h2>
-              <p className="text-muted-foreground max-w-sm mx-auto">
-                Thank you for being part of our growing quiz community! Your feedback has been submitted.
+              <h2 className="text-2xl font-bold">Thank You for Your Feedback!</h2>
+              <div className="flex items-center justify-center gap-2">
+                <p className="text-muted-foreground">You rated this quiz:</p>
+                <div className="flex items-center gap-1 rounded-full bg-accent/20 px-3 py-1 text-accent-foreground">
+                   <span className="text-xl">{getRatingEmoji(selectedRating)}</span>
+                   <span className="font-semibold">{selectedRating}/5</span>
+                </div>
+              </div>
+
+              {totalRatings !== null && (
+                 <p className="text-sm text-muted-foreground pt-4">
+                    Join <span className="font-semibold text-foreground">{totalRatings}</span> other users who have rated this quiz!
+                </p>
+              )}
+
+              <p className="text-muted-foreground max-w-sm mx-auto pt-2">
+                Thank you for being part of our growing quiz community!
               </p>
             </motion.div>
           )}
