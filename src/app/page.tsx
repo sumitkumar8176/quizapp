@@ -109,15 +109,10 @@ export default function Home() {
       setGameState("idle");
     } else if (result.data) {
       const newQuiz = result.data;
-      setQuiz(newQuiz);
-      setUserAnswers(new Array(newQuiz.length).fill(""));
-      
       const compressedQuiz = compressToEncodedURIComponent(JSON.stringify(newQuiz));
-      const newUrl = `${window.location.origin}${window.location.pathname}#quiz=${compressedQuiz}`;
       window.location.hash = `quiz=${compressedQuiz}`;
-      setShareableUrl(newUrl);
-
-      setGameState("playing");
+      // Force a reload to ensure the new state is loaded from the hash
+      window.location.reload();
     }
   };
 
