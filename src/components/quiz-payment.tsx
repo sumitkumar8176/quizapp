@@ -37,6 +37,13 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
     }, 1500); // Wait for animation
   };
 
+  const handleFreeTrial = () => {
+    setPaymentConfirmed(true);
+    setTimeout(() => {
+      onPaymentSuccess();
+    }, 1500); // Wait for animation
+  };
+
   return (
     <Card className="w-full max-w-md mx-auto text-center border-0 shadow-none">
       <CardHeader>
@@ -72,9 +79,14 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
                 After completing the payment, click the button below to start your quiz.
               </p>
 
-              <Button onClick={handleConfirmation} size="lg" className="w-full">
-                I Have Paid
-              </Button>
+              <div className="space-y-2">
+                <Button onClick={handleConfirmation} size="lg" className="w-full">
+                  I Have Paid
+                </Button>
+                <Button onClick={handleFreeTrial} size="lg" className="w-full" variant="outline">
+                   Use as a free trial
+                </Button>
+              </div>
             </motion.div>
           ) : (
             <motion.div
@@ -85,7 +97,7 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
               className="flex flex-col items-center justify-center space-y-4 py-12"
             >
               <CheckCircle className="h-16 w-16 text-green-500" />
-              <h3 className="text-2xl font-bold">Payment Confirmed!</h3>
+              <h3 className="text-2xl font-bold">Confirmed!</h3>
               <p className="text-muted-foreground">Your quiz is starting now...</p>
             </motion.div>
           )}
