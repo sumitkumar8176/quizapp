@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { Quiz } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, ArrowRight, PartyPopper } from "lucide-react";
+import { ArrowLeft, ArrowRight, PartyPopper, Timer } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -25,11 +25,39 @@ import {
 type QuizSessionProps = {
   quiz: Quiz;
   onFinish: (answers: string[]) => void;
+  timerDuration: number | null; // in minutes
 };
 
-export default function QuizSession({ quiz, onFinish }: QuizSessionProps) {
+export default function QuizSession({ quiz, onFinish, timerDuration }: QuizSessionProps) {
   const [userAnswers, setUserAnswers] = useState<string[]>(new Array(quiz.length).fill(""));
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [timeLeft, setTimeLeft] = useState<number | null>(timerDuration ? timerDuration * 60 : null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const onFinishRef = useRef(onFinish);
+  onFinishRef.current = onFinish;
+
+  const userAnswersRef = useRef(userAnswers);
+  userAnswersRef.current = userAnswers;
+
+  useEffect(() => {
+    if (timeLeft === 0) {
+      onFinishRef.current(userAnswersRef.current);
+    }
+
+    if (timeLeft !== null && timeLeft > 0) {
+      timerRef.current = setInterval(() => {
+        setTimeLeft(prevTime => (prevTime !== null ? prevTime - 1 : null));
+      }, 1000);
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [timeLeft]);
+
 
   const handleAnswerChange = (answer: string) => {
     const newAnswers = [...userAnswers];
@@ -50,7 +78,17 @@ export default function QuizSession({ quiz, onFinish }: QuizSessionProps) {
   };
 
   const handleSubmit = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
     onFinish(userAnswers);
+  };
+
+  const formatTime = (seconds: number | null) => {
+    if (seconds === null) return "No timer";
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   const currentQuestion = quiz[currentQuestionIndex];
@@ -59,9 +97,17 @@ export default function QuizSession({ quiz, onFinish }: QuizSessionProps) {
 
   return (
     <div className="space-y-6">
-       <div className="space-y-2">
-        <p className="text-sm text-muted-foreground">Question {currentQuestionIndex + 1} of {quiz.length}</p>
-        <Progress value={((currentQuestionIndex + 1) / quiz.length) * 100} />
+       <div className="flex justify-between items-center">
+         <div className="space-y-2 w-full">
+          <p className="text-sm text-muted-foreground">Question {currentQuestionIndex + 1} of {quiz.length}</p>
+          <Progress value={((currentQuestionIndex + 1) / quiz.length) * 100} />
+        </div>
+        {timerDuration !== null && (
+          <div className="flex items-center gap-2 ml-4 p-2 rounded-md bg-muted text-muted-foreground font-mono text-lg">
+            <Timer className="h-5 w-5" />
+            <span>{formatTime(timeLeft)}</span>
+          </div>
+        )}
       </div>
 
       <AnimatePresence mode="wait">

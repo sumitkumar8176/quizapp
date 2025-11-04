@@ -16,13 +16,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import QuizPayment from "@/components/quiz-payment";
 
 type GameState = "idle" | "loading" | "payment" | "playing" | "finished";
-type QuizFormValues = { topic: string; numberOfQuestions: number; language: string; };
+type QuizFormValues = { topic: string; numberOfQuestions: number; language: string; timerDuration: number | null; };
 
 export default function Home() {
   const [gameState, setGameState] = useState<GameState>("idle");
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
   const [score, setScore] = useState(0);
+  const [timerDuration, setTimerDuration] = useState<number | null>(null);
   const { toast } = useToast();
 
   const handleStartQuiz = async (values: QuizFormValues) => {
@@ -46,6 +47,7 @@ export default function Home() {
       const newQuiz = result.data;
       setQuiz(newQuiz);
       setUserAnswers(new Array(newQuiz.length).fill(""));
+      setTimerDuration(values.timerDuration);
       setGameState("payment");
     }
   };
@@ -73,6 +75,7 @@ export default function Home() {
       const newQuiz = result.data;
       setQuiz(newQuiz);
       setUserAnswers(new Array(newQuiz.length).fill(""));
+      setTimerDuration(null); // No timer for uploaded quizzes for now
       setGameState("payment");
     }
   };
@@ -99,6 +102,7 @@ export default function Home() {
     setQuiz(null);
     setUserAnswers([]);
     setScore(0);
+    setTimerDuration(null);
   };
   
   const renderIdleState = () => (
@@ -126,7 +130,7 @@ export default function Home() {
         return <QuizPayment onPaymentSuccess={handlePaymentSuccess} />;
       case "playing":
         return quiz ? (
-          <QuizSession quiz={quiz} onFinish={handleFinishQuiz} />
+          <QuizSession quiz={quiz} onFinish={handleFinishQuiz} timerDuration={timerDuration} />
         ) : renderIdleState();
       case "finished":
         return quiz ? (
