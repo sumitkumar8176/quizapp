@@ -10,10 +10,11 @@ import { Lightbulb, Loader2 } from "lucide-react";
 
 const formSchema = z.object({
   topic: z.string().min(2, { message: "Topic must be at least 2 characters." }).max(50),
+  numberOfQuestions: z.coerce.number().min(1, { message: "You must request at least 1 question." }).max(50, { message: "You can request a maximum of 50 questions." }),
 });
 
 type QuizFormProps = {
-  onSubmit: (values: { topic: string }) => void;
+  onSubmit: (values: z.infer<typeof formSchema>) => void;
   isLoading: boolean;
 };
 
@@ -22,6 +23,7 @@ export default function QuizForm({ onSubmit, isLoading }: QuizFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       topic: "",
+      numberOfQuestions: 10,
     },
   });
 
@@ -36,6 +38,19 @@ export default function QuizForm({ onSubmit, isLoading }: QuizFormProps) {
               <FormLabel className="text-lg">What do you want a quiz on?</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., The Roman Empire, Quantum Physics, Taylor Swift" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="numberOfQuestions"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-lg">Enter the number of questions you want in your quiz:</FormLabel>
+              <FormControl>
+                <Input type="number" placeholder="e.g., 10" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

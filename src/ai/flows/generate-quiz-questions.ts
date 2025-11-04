@@ -12,7 +12,8 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateQuizQuestionsInputSchema = z.object({
-  topic: z.string().describe('The topic for which to generate quiz questions.')
+  topic: z.string().describe('The topic for which to generate quiz questions.'),
+  numberOfQuestions: z.number().describe('The number of questions to generate.'),
 });
 export type GenerateQuizQuestionsInput = z.infer<typeof GenerateQuizQuestionsInputSchema>;
 
@@ -34,7 +35,7 @@ const prompt = ai.definePrompt({
   name: 'generateQuizQuestionsPrompt',
   input: {schema: GenerateQuizQuestionsInputSchema},
   output: {schema: GenerateQuizQuestionsOutputSchema},
-  prompt: `You are an expert at creating educational quizzes. Your task is to generate 10 important and relevant questions on the given topic.
+  prompt: `You are an expert at creating educational quizzes. Your task is to generate {{{numberOfQuestions}}} important and relevant questions on the given topic.
 
 Topic: {{{topic}}}
 

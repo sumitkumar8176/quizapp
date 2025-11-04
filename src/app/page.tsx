@@ -13,23 +13,23 @@ import { AnimatePresence, motion } from "framer-motion";
 import Loading from "@/app/loading";
 
 type GameState = "idle" | "loading" | "playing" | "finished";
+type QuizFormValues = { topic: string; numberOfQuestions: number };
 
 export default function Home() {
   const [gameState, setGameState] = useState<GameState>("idle");
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
   const [score, setScore] = useState(0);
-  const [topic, setTopic] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleStartQuiz = async (values: { topic: string }) => {
+  const handleStartQuiz = async (values: QuizFormValues) => {
     setIsLoading(true);
     setGameState("loading");
-    setTopic(values.topic);
 
     const formData = new FormData();
     formData.append("topic", values.topic);
+    formData.append("numberOfQuestions", values.numberOfQuestions.toString());
 
     const result = await createQuiz(formData);
 
@@ -66,7 +66,6 @@ export default function Home() {
     setQuiz(null);
     setUserAnswers([]);
     setScore(0);
-    setTopic("");
   };
 
   const renderGameState = () => {
