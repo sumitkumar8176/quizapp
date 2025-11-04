@@ -31,7 +31,7 @@ const prompt = ai.definePrompt({
   name: 'generateQuizQuestionsPrompt',
   input: {schema: GenerateQuizQuestionsInputSchema},
   output: {schema: GenerateQuizQuestionsOutputSchema},
-  prompt: `Generate 50 quiz questions about {{{$input}}}. For each question, provide 4 multiple-choice options and identify the correct answer.`,
+  prompt: `Generate 10 quiz questions about {{{$input}}}. For each question, provide 4 multiple-choice options and identify the correct answer.`,
 });
 
 const generateQuizQuestionsFlow = ai.defineFlow(
