@@ -7,7 +7,7 @@ import { z } from "zod";
 
 const QuizTopicSchema = z.object({
   topic: z.string().min(2, { message: "Topic must be at least 2 characters long." }).max(50, { message: "Topic must be at most 50 characters long." }),
-  numberOfQuestions: z.coerce.number().min(1, { message: "You must request at least 1 question." }).max(50, { message: "You can request a maximum of 50 questions." }),
+  numberOfQuestions: z.coerce.number().min(1, { message: "You must request at least 1 question." }),
   language: z.string(),
 });
 
@@ -45,7 +45,7 @@ export async function createQuiz(formData: FormData) {
 
 const QuizContentSchema = z.object({
   contentDataUri: z.string().min(1, { message: "File content is missing." }),
-  numberOfQuestions: z.coerce.number().min(1, { message: "You must request at least 1 question." }).max(50, { message: "You can request a maximum of 50 questions." }),
+  numberOfQuestions: z.coerce.number().min(1, { message: "You must request at least 1 question." }),
   language: z.string(),
 });
 
@@ -85,7 +85,7 @@ const QuizPyqSchema = z.object({
   exam: z.string().min(1, { message: "Please select an exam." }),
   subject: z.string().min(1, { message: "Please select a subject." }),
   topic: z.string().min(2, { message: "Topic must be at least 2 characters." }).max(50),
-  numberOfQuestions: z.coerce.number().min(1, { message: "You must request at least 1 question." }).max(50, { message: "You can request a maximum of 50 questions." }),
+  numberOfQuestions: z.coerce.number().min(1, { message: "You must request at least 1 question." }),
   language: z.string(),
 });
 

@@ -11,7 +11,7 @@ import { Lightbulb, Loader2 } from "lucide-react";
 
 const formSchema = z.object({
   topic: z.string().min(2, { message: "Topic must be at least 2 characters." }).max(50),
-  numberOfQuestions: z.coerce.number().min(1, { message: "You must request at least 1 question." }).max(50, { message: "You can request a maximum of 50 questions." }),
+  numberOfQuestions: z.coerce.number().min(1, { message: "You must request at least 1 question." }),
   language: z.string(),
   timerDuration: z.coerce.number().min(0, { message: "Timer must be a positive number." }).max(120, { message: "Timer cannot exceed 120 minutes." }).nullable(),
 });

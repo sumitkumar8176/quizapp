@@ -134,7 +134,6 @@ export default function QuizUploader({ onUpload, isLoading }: QuizUploaderProps)
                   value={numberOfQuestions}
                   onChange={(e) => setNumberOfQuestions(Number(e.target.value))}
                   min="1"
-                  max="50"
                   disabled={isLoading}
                   placeholder="e.g., 10"
                 />
