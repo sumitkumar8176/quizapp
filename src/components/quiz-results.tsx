@@ -45,7 +45,6 @@ export default function QuizResults({ quiz, userAnswers, score, onPlayAgain }: Q
           {quiz.map((question, index) => {
             const userAnswer = userAnswers[index];
             const isCorrect = userAnswer === question.correctAnswer;
-            const videoUrl = `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(question.videoSearchQuery)}`;
 
             return (
               <AccordionItem value={`item-${index}`} key={index}>
@@ -81,19 +80,6 @@ export default function QuizResults({ quiz, userAnswers, score, onPlayAgain }: Q
                     <h4 className="font-semibold text-accent">Explanation</h4>
                     <p className="text-sm text-muted-foreground">{question.explanation}</p>
                   </div>
-                   <div className="p-4 bg-muted/50 rounded-md space-y-3">
-                     <h4 className="font-semibold text-accent">Video Explanation</h4>
-                     <div className="aspect-video">
-                       <iframe
-                        key={videoUrl}
-                        className="w-full h-full rounded-md"
-                        src={videoUrl}
-                        title={`YouTube video for: ${question.question}`}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                       ></iframe>
-                     </div>
-                   </div>
                 </AccordionContent>
               </AccordionItem>
             );

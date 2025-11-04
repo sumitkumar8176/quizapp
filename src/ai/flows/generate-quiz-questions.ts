@@ -22,7 +22,6 @@ const GenerateQuizQuestionsOutputSchema = z.array(
     options: z.array(z.string()).describe('The possible answers to the question.'),
     correctAnswer: z.string().describe('The correct answer to the question.'),
     explanation: z.string().describe('A detailed explanation of why the correct answer is right.'),
-    videoSearchQuery: z.string().describe('A concise search query to find a relevant YouTube video for this question. This will be used to embed a video.'),
   })
 ).describe('An array of quiz questions with options and correct answers.');
 export type GenerateQuizQuestionsOutput = z.infer<typeof GenerateQuizQuestionsOutputSchema>;
@@ -43,8 +42,7 @@ For each question, provide:
 1.  A clear and concise question.
 2.  4 multiple-choice options.
 3.  The correct answer.
-4.  A detailed explanation for the correct answer to help with understanding.
-5.  A simple and effective YouTube search query (3-5 words) that would find a video explaining the concept.`,
+4.  A detailed explanation for the correct answer to help with understanding.`,
 });
 
 const generateQuizQuestionsFlow = ai.defineFlow(
