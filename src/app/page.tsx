@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type { Quiz } from "@/lib/types";
 import { createQuiz } from "@/app/actions";
@@ -35,10 +35,9 @@ export default function Home() {
   const [score, setScore] = useState(0);
   const { toast } = useToast();
   const [shareableUrl, setShareableUrl] = useState("");
-  const [initialLoad, setInitialLoad] = useState(true);
+  const [isLoadingFromUrl, setIsLoadingFromUrl] = useState(true);
 
   useEffect(() => {
-    // This effect runs only once on initial mount
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.substring(1);
       if (hash.startsWith('quiz=')) {
@@ -50,11 +49,9 @@ export default function Home() {
               const parsedQuiz: Quiz = JSON.parse(decompressed);
               setQuiz(parsedQuiz);
               setUserAnswers(new Array(parsedQuiz.length).fill(""));
-              setGameState("playing");
-              // Set the shareable URL when loaded from hash
               const newUrl = `${window.location.origin}${window.location.pathname}#quiz=${quizData}`;
               setShareableUrl(newUrl);
-              return;
+              setGameState("playing");
             }
           } catch (error) {
             console.error("Failed to parse quiz data from URL hash", error);
@@ -63,16 +60,15 @@ export default function Home() {
               title: "Error",
               description: "Could not load the shared quiz. It might be invalid.",
             });
-            window.location.hash = ''; // Clear invalid hash
+            window.location.hash = '';
           }
         }
+      } else {
+         setShareableUrl(`${window.location.origin}${window.location.pathname}`);
       }
     }
-    // If no valid quiz in hash, set base URL for sharing
-    if(typeof window !== 'undefined') {
-      setShareableUrl(`${window.location.origin}${window.location.pathname}`);
-    }
-  }, [toast]); // Only depends on toast, runs once
+    setIsLoadingFromUrl(false);
+  }, [toast]);
 
 
   const handleCopyUrl = () => {
@@ -103,11 +99,11 @@ export default function Home() {
       const newQuiz = result.data;
       const compressedQuiz = compressToEncodedURIComponent(JSON.stringify(newQuiz));
       
-      // Update state and URL
+      const newUrl = `${window.location.origin}${window.location.pathname}#quiz=${compressedQuiz}`;
+      window.history.pushState({ path: newUrl }, '', newUrl);
+
       setQuiz(newQuiz);
       setUserAnswers(new Array(newQuiz.length).fill(""));
-      const newUrl = `${window.location.origin}${window.location.pathname}#quiz=${compressedQuiz}`;
-      window.history.pushState({}, '', newUrl); // Use pushState to avoid reloads
       setShareableUrl(newUrl);
       setGameState("playing");
     }
@@ -132,11 +128,15 @@ export default function Home() {
     setUserAnswers([]);
     setScore(0);
     const newUrl = `${window.location.origin}${window.location.pathname}`;
-    window.history.pushState({}, '', newUrl);
+    window.history.pushState({path: newUrl}, '', newUrl);
     setShareableUrl(newUrl);
   };
 
   const renderGameState = () => {
+    if (isLoadingFromUrl) {
+      return <Loading />;
+    }
+
     switch (gameState) {
       case "loading":
         return <Loading />;
@@ -145,7 +145,7 @@ export default function Home() {
       case "playing":
         return quiz ? (
           <QuizSession quiz={quiz} onFinish={handleFinishQuiz} />
-        ) : <Loading />; // Show loading if quiz is expected but not ready
+        ) : <QuizForm onSubmit={handleStartQuiz} isLoading={false} />;
       case "finished":
         return quiz ? (
           <QuizResults
