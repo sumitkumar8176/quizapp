@@ -13,8 +13,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import Loading from "@/app/loading";
 import QuizUploader from "@/components/quiz-uploader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import QuizPayment from "@/components/quiz-payment";
 
-type GameState = "idle" | "loading" | "playing" | "finished";
+type GameState = "idle" | "loading" | "payment" | "playing" | "finished";
 type QuizFormValues = { topic: string; numberOfQuestions: number };
 
 export default function Home() {
@@ -44,7 +45,7 @@ export default function Home() {
       const newQuiz = result.data;
       setQuiz(newQuiz);
       setUserAnswers(new Array(newQuiz.length).fill(""));
-      setGameState("playing");
+      setGameState("payment");
     }
   };
 
@@ -70,10 +71,13 @@ export default function Home() {
       const newQuiz = result.data;
       setQuiz(newQuiz);
       setUserAnswers(new Array(newQuiz.length).fill(""));
-      setGameState("playing");
+      setGameState("payment");
     }
   };
 
+  const handlePaymentSuccess = () => {
+    setGameState("playing");
+  };
 
   const handleFinishQuiz = (answers: string[]) => {
     if (!quiz) return;
@@ -116,6 +120,8 @@ export default function Home() {
         return <Loading />;
       case "idle":
         return renderIdleState();
+      case "payment":
+        return <QuizPayment onPaymentSuccess={handlePaymentSuccess} />;
       case "playing":
         return quiz ? (
           <QuizSession quiz={quiz} onFinish={handleFinishQuiz} />
