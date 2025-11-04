@@ -1,19 +1,34 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Loader2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import QRCode from 'qrcode';
 
 type QuizPaymentProps = {
   onPaymentSuccess: () => void;
 };
 
 const UPI_ID = 'sumit.gusknp2022@okhdfcbank';
+const PAYMENT_AMOUNT = '5';
+const UPI_URL = `upi://pay?pa=${UPI_ID}&pn=Sumit%20Kumar&am=${PAYMENT_AMOUNT}&cu=INR`;
 
 export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    QRCode.toDataURL(UPI_URL, { width: 256, margin: 2 })
+      .then(url => {
+        setQrCodeDataUrl(url);
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  }, []);
+
 
   const handleConfirmation = () => {
     setPaymentConfirmed(true);
@@ -25,7 +40,7 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
   return (
     <Card className="w-full max-w-md mx-auto text-center border-0 shadow-none">
       <CardHeader>
-        <CardTitle className="text-2xl">Pay ₹5 to Start Your Quiz</CardTitle>
+        <CardTitle className="text-2xl">Pay ₹{PAYMENT_AMOUNT} to Start Your Quiz</CardTitle>
         <CardDescription>
           Scan the QR code with any UPI app or pay directly to the UPI ID below.
         </CardDescription>
@@ -41,9 +56,13 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
               transition={{ duration: 0.3 }}
               className="space-y-4"
             >
-              <div className="flex justify-center">
-                  <img src="/payment-qr.png" alt="UPI QR Code" className="rounded-lg border p-2 bg-white w-64 h-64" />
-                </div>
+              <div className="flex justify-center items-center bg-white rounded-lg border p-2 w-64 h-64 mx-auto">
+                {qrCodeDataUrl ? (
+                  <img src={qrCodeDataUrl} alt="UPI QR Code" className="w-full h-full" />
+                ) : (
+                  <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                )}
+              </div>
               <div className="space-y-1">
                 <p className="font-semibold text-sm text-muted-foreground">Pay to UPI ID:</p>
                 <p className="font-mono text-lg tracking-wider bg-muted p-2 rounded-md">{UPI_ID}</p>
