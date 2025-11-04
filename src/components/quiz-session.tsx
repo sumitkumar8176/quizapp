@@ -97,7 +97,7 @@ export default function QuizSession({ quiz, onFinish }: QuizSessionProps) {
           </Button>
 
           {!isLastQuestion && (
-            <Button onClick={handleNext} disabled={!userAnswers[currentQuestionIndex]}>
+            <Button onClick={handleNext}>
               Next
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
