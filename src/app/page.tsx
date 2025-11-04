@@ -58,6 +58,9 @@ export default function Home() {
           description: "Could not load the shared quiz. It might be invalid.",
         });
       }
+    } else {
+        // Set a default shareable URL if there is no quiz
+       setShareableUrl(`${window.location.origin}${window.location.pathname}`);
     }
     setIsLoading(false);
   }, [toast]);
@@ -68,9 +71,6 @@ export default function Home() {
       const compressedQuiz = compressToEncodedURIComponent(JSON.stringify(quiz));
       const newUrl = `${window.location.origin}${window.location.pathname}?quiz=${compressedQuiz}`;
       setShareableUrl(newUrl);
-    } else {
-       // Set a default shareable URL if there is no quiz
-      setShareableUrl(`${window.location.origin}${window.location.pathname}`);
     }
   }, [quiz]);
 
@@ -83,7 +83,6 @@ export default function Home() {
   };
 
   const handleStartQuiz = async (values: QuizFormValues) => {
-    setIsLoading(true);
     setGameState("loading");
 
     const formData = new FormData();
@@ -111,7 +110,6 @@ export default function Home() {
 
       setGameState("playing");
     }
-    setIsLoading(false);
   };
 
   const handleFinishQuiz = (answers: string[]) => {
