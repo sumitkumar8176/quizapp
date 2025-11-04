@@ -11,7 +11,9 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-const GenerateQuizQuestionsInputSchema = z.string().describe('The topic for which to generate quiz questions.');
+const GenerateQuizQuestionsInputSchema = z.object({
+  topic: z.string().describe('The topic for which to generate quiz questions.')
+});
 export type GenerateQuizQuestionsInput = z.infer<typeof GenerateQuizQuestionsInputSchema>;
 
 const GenerateQuizQuestionsOutputSchema = z.array(
@@ -23,15 +25,15 @@ const GenerateQuizQuestionsOutputSchema = z.array(
 ).describe('An array of quiz questions with options and correct answers.');
 export type GenerateQuizQuestionsOutput = z.infer<typeof GenerateQuizQuestionsOutputSchema>;
 
-export async function generateQuizQuestions(topic: GenerateQuizQuestionsInput): Promise<GenerateQuizQuestionsOutput> {
-  return generateQuizQuestionsFlow(topic);
+export async function generateQuizQuestions(input: GenerateQuizQuestionsInput): Promise<GenerateQuizQuestionsOutput> {
+  return generateQuizQuestionsFlow(input);
 }
 
 const prompt = ai.definePrompt({
   name: 'generateQuizQuestionsPrompt',
   input: {schema: GenerateQuizQuestionsInputSchema},
   output: {schema: GenerateQuizQuestionsOutputSchema},
-  prompt: `Generate 10 quiz questions about {{{$input}}}. For each question, provide 4 multiple-choice options and identify the correct answer.`,
+  prompt: `Generate 10 quiz questions about {{{topic}}}. For each question, provide 4 multiple-choice options and identify the correct answer.`,
 });
 
 const generateQuizQuestionsFlow = ai.defineFlow(
@@ -40,8 +42,8 @@ const generateQuizQuestionsFlow = ai.defineFlow(
     inputSchema: GenerateQuizQuestionsInputSchema,
     outputSchema: GenerateQuizQuestionsOutputSchema,
   },
-  async topic => {
-    const {output} = await prompt(topic);
+  async input => {
+    const {output} = await prompt(input);
     return output!;
   }
 );

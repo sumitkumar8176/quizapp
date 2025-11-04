@@ -19,7 +19,7 @@ export async function createQuiz(formData: FormData) {
   }
 
   try {
-    const questions = await generateQuizQuestions(validatedFields.data.topic);
+    const questions = await generateQuizQuestions({ topic: validatedFields.data.topic });
     if (!questions || questions.length === 0) {
       return { error: "Could not generate a quiz for this topic. Please try another one." };
     }
