@@ -11,6 +11,8 @@ import { Logo } from "@/components/icons";
 import { Card, CardContent } from "@/components/ui/card";
 import { AnimatePresence, motion } from "framer-motion";
 import Loading from "@/app/loading";
+import QuizUploader from "@/components/quiz-uploader";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type GameState = "idle" | "loading" | "playing" | "finished";
 type QuizFormValues = { topic: string; numberOfQuestions: number };
@@ -65,17 +67,38 @@ export default function Home() {
     setUserAnswers([]);
     setScore(0);
   };
+  
+  const renderIdleState = () => (
+    <Tabs defaultValue="topic" className="w-full">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="topic">From Topic</TabsTrigger>
+        <TabsTrigger value="upload">From File/Image</TabsTrigger>
+      </TabsList>
+      <TabsContent value="topic" className="pt-6">
+        <QuizForm onSubmit={handleStartQuiz} isLoading={gameState === 'loading'} />
+      </TabsContent>
+      <TabsContent value="upload" className="pt-6">
+        <QuizUploader onUpload={() => {
+          // Placeholder for upload handling logic
+          toast({
+            title: "Feature in development",
+            description: "Quiz generation from uploads is coming soon!",
+          });
+        }} />
+      </TabsContent>
+    </Tabs>
+  );
 
   const renderGameState = () => {
     switch (gameState) {
       case "loading":
         return <Loading />;
       case "idle":
-        return <QuizForm onSubmit={handleStartQuiz} isLoading={gameState === 'loading'} />;
+        return renderIdleState();
       case "playing":
         return quiz ? (
           <QuizSession quiz={quiz} onFinish={handleFinishQuiz} />
-        ) : <QuizForm onSubmit={handleStartQuiz} isLoading={false} />;
+        ) : renderIdleState();
       case "finished":
         return quiz ? (
           <QuizResults
@@ -107,7 +130,7 @@ export default function Home() {
           </div>
         </header>
         <Card className="w-full shadow-lg overflow-hidden">
-          <CardContent className="p-6 md:p-8 min-h-[250px] flex items-center justify-center">
+          <CardContent className="p-6 md:p-8 min-h-[350px] flex items-center justify-center">
             <AnimatePresence mode="wait">
               <motion.div
                 key={gameState}
