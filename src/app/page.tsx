@@ -23,6 +23,7 @@ import QRCode from "react-qr-code";
 import { Share2, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from "lz-string";
 
 type GameState = "idle" | "loading" | "playing" | "finished";
 type QuizFormValues = { topic: string; numberOfQuestions: number };
@@ -32,16 +33,48 @@ export default function Home() {
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
   const [score, setScore] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const [currentUrl, setCurrentUrl] = useState("");
+  const [shareableUrl, setShareableUrl] = useState("");
 
   useEffect(() => {
-    setCurrentUrl(window.location.href);
-  }, []);
+    // Check for quiz data in URL on initial load
+    const urlParams = new URLSearchParams(window.location.search);
+    const quizData = urlParams.get('quiz');
+    if (quizData) {
+      try {
+        const decompressed = decompressFromEncodedURIComponent(quizData);
+        if (decompressed) {
+          const parsedQuiz: Quiz = JSON.parse(decompressed);
+          setQuiz(parsedQuiz);
+          setUserAnswers(new Array(parsedQuiz.length).fill(""));
+          setGameState("playing");
+        }
+      } catch (error) {
+        console.error("Failed to parse quiz data from URL", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not load the shared quiz. It might be invalid.",
+        });
+      }
+    }
+    setIsLoading(false);
+  }, [toast]);
+  
+  useEffect(() => {
+    // Generate shareable URL whenever quiz data changes
+    if (quiz) {
+      const compressedQuiz = compressToEncodedURIComponent(JSON.stringify(quiz));
+      const newUrl = `${window.location.origin}${window.location.pathname}?quiz=${compressedQuiz}`;
+      setShareableUrl(newUrl);
+    } else {
+      setShareableUrl(`${window.location.origin}${window.location.pathname}`);
+    }
+  }, [quiz]);
 
   const handleCopyUrl = () => {
-    navigator.clipboard.writeText(currentUrl);
+    navigator.clipboard.writeText(shareableUrl);
     toast({
       title: "Copied!",
       description: "The link has been copied to your clipboard.",
@@ -66,8 +99,15 @@ export default function Home() {
       });
       setGameState("idle");
     } else if (result.data) {
-      setQuiz(result.data);
-      setUserAnswers(new Array(result.data.length).fill(""));
+      const newQuiz = result.data;
+      setQuiz(newQuiz);
+      setUserAnswers(new Array(newQuiz.length).fill(""));
+      
+      const compressedQuiz = compressToEncodedURIComponent(JSON.stringify(newQuiz));
+      const newUrl = `${window.location.origin}${window.location.pathname}?quiz=${compressedQuiz}`;
+      window.history.pushState({}, '', newUrl);
+      setShareableUrl(newUrl);
+
       setGameState("playing");
     }
     setIsLoading(false);
@@ -91,12 +131,15 @@ export default function Home() {
     setQuiz(null);
     setUserAnswers([]);
     setScore(0);
+    window.history.pushState({}, '', window.location.pathname);
+    setShareableUrl(`${window.location.origin}${window.location.pathname}`);
   };
 
   const renderGameState = () => {
+    if (isLoading) return <Loading />;
     switch (gameState) {
       case "idle":
-        return <QuizForm onSubmit={handleStartQuiz} isLoading={isLoading} />;
+        return <QuizForm onSubmit={handleStartQuiz} isLoading={gameState === 'loading'} />;
       case "loading":
         return <Loading />;
       case "playing":
@@ -141,14 +184,14 @@ export default function Home() {
                 <DialogHeader>
                   <DialogTitle>Share Quiz</DialogTitle>
                   <DialogDescription>
-                    Scan the QR code or copy the link to share this quiz.
+                    Scan the QR code or copy the link to share this quiz. Just click the shared link or scan the QR code, and your quiz will open instantly in your browser or app!
                   </DialogDescription>
                 </DialogHeader>
                 <div className="flex items-center justify-center p-4 bg-white rounded-lg">
-                  {currentUrl && <QRCode value={currentUrl} size={200} />}
+                  {shareableUrl && <QRCode value={shareableUrl} size={200} />}
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Input value={currentUrl} readOnly />
+                  <Input value={shareableUrl} readOnly />
                   <Button type="submit" size="sm" onClick={handleCopyUrl}>
                     <span className="sr-only">Copy</span>
                     <Copy className="h-4 w-4" />
