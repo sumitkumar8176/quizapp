@@ -132,7 +132,13 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
         </CardTitle>
         <CardDescription>
          {isTrialDisabled 
-            ? "Scan the QR code with any UPI app or pay directly to the UPI ID below."
+            ? (
+              <div className="space-y-1">
+                <p>You can’t start the quiz until the payment is completed.</p>
+                <p>Please complete your payment to unlock and start the quiz.</p>
+                <p>Once your payment is successfully done, your quiz will automatically start.</p>
+              </div>
+            )
             : `You have ${trialsLeft} free trial${trialsLeft !== 1 ? 's' : ''} remaining.`
           }
         </CardDescription>
