@@ -69,6 +69,7 @@ export default function Home() {
       const newUrl = `${window.location.origin}${window.location.pathname}?quiz=${compressedQuiz}`;
       setShareableUrl(newUrl);
     } else {
+       // Set a default shareable URL if there is no quiz
       setShareableUrl(`${window.location.origin}${window.location.pathname}`);
     }
   }, [quiz]);
@@ -184,7 +185,7 @@ export default function Home() {
                 <DialogHeader>
                   <DialogTitle>Share Quiz</DialogTitle>
                   <DialogDescription>
-                    Scan the QR code or copy the link to share this quiz. Just click the shared link or scan the QR code, and your quiz will open instantly in your browser or app!
+                    Just click the shared link or scan the QR code, and your quiz will open instantly in your browser or app!
                   </DialogDescription>
                 </DialogHeader>
                 <div className="flex items-center justify-center p-4 bg-white rounded-lg">
