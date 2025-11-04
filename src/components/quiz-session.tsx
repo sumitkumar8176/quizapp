@@ -5,7 +5,7 @@ import type { Quiz } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, ArrowRight, PartyPopper } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
@@ -86,7 +86,8 @@ export default function QuizSession({ quiz, onFinish }: QuizSessionProps) {
       </AnimatePresence>
 
       <div className="flex justify-between items-center pt-4">
-        <Button onClick={handleSubmit} variant="outline">
+        <Button onClick={handleSubmit} variant="outline" size="lg">
+          <PartyPopper className="mr-2 h-5 w-5" />
           Submit Quiz
         </Button>
         
@@ -95,20 +96,11 @@ export default function QuizSession({ quiz, onFinish }: QuizSessionProps) {
             <ArrowLeft className="mr-2 h-5 w-5" />
             Previous
           </Button>
-
-          {!isLastQuestion && (
-            <Button onClick={handleNext}>
-              Next
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          )}
-
-          {isLastQuestion && (
-             <Button onClick={handleSubmit}>
-              Submit Quiz
-              <PartyPopper className="ml-2 h-5 w-5" />
-            </Button>
-          )}
+          
+          <Button onClick={handleNext} disabled={isLastQuestion}>
+            Next
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
         </div>
       </div>
     </div>

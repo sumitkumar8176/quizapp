@@ -33,7 +33,16 @@ const prompt = ai.definePrompt({
   name: 'generateQuizQuestionsPrompt',
   input: {schema: GenerateQuizQuestionsInputSchema},
   output: {schema: GenerateQuizQuestionsOutputSchema},
-  prompt: `Generate 10 quiz questions about {{{topic}}}. For each question, provide 4 multiple-choice options and identify the correct answer.`,
+  prompt: `You are an expert at creating educational quizzes. Your task is to generate 50 important and relevant questions on the given topic.
+
+Topic: {{{topic}}}
+
+The questions should cover a wide range of concepts, including:
+- Key definitions
+- Short answer questions (rephrased as multiple choice)
+- Understanding-based questions
+
+For each question, provide 4 multiple-choice options and clearly identify the correct answer. Ensure the questions are clear, concise, and accurately test knowledge on the specified topic.`,
 });
 
 const generateQuizQuestionsFlow = ai.defineFlow(
