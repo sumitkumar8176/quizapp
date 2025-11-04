@@ -14,6 +14,8 @@ import {z} from 'genkit';
 
 const GenerateQuizFromPyqInputSchema = z.object({
   exam: z.string().describe('The Indian competitive exam for which to generate PYQ-based quiz questions.'),
+  subject: z.string().describe('The subject within the exam.'),
+  topic: z.string().describe('The specific topic within the subject.'),
   numberOfQuestions: z.number().describe('The number of questions to generate.'),
   language: z.string().describe('The language for the quiz (e.g., "English", "Hindi").'),
 });
@@ -29,12 +31,14 @@ const prompt = ai.definePrompt({
   name: 'generateQuizFromPyqPrompt',
   input: {schema: GenerateQuizFromPyqInputSchema},
   output: {schema: QuizSchema},
-  prompt: `You are an expert at creating educational quizzes based on Previous Year Questions (PYQs) for major Indian competitive exams. Your task is to generate {{{numberOfQuestions}}} important and relevant questions in {{{language}}} based on the patterns and topics from past papers for the specified exam.
+  prompt: `You are an expert at creating educational quizzes based on Previous Year Questions (PYQs) for major Indian competitive exams. Your task is to generate {{{numberOfQuestions}}} important and relevant questions in {{{language}}} based on the patterns and topics from past papers for the specified exam, subject, and topic.
 
 Exam: {{{exam}}}
+Subject: {{{subject}}}
+Topic: {{{topic}}}
 
 For each question, provide:
-1.  A clear and concise question, in {{{language}}}, that reflects the style and difficulty of the exam.
+1.  A clear and concise question, in {{{language}}}, that reflects the style and difficulty of the exam for the given subject and topic.
 2.  4 multiple-choice options, in {{{language}}}.
 3.  The correct answer, in {{{language}}}.
 4.  A detailed explanation for the correct answer to help with understanding, in {{{language}}}.

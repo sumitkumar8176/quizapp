@@ -1,6 +1,7 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -11,26 +12,34 @@ import { BookCopy, Loader2 } from "lucide-react";
 
 const formSchema = z.object({
   exam: z.string().min(1, { message: "Please select an exam." }),
+  subject: z.string().min(1, { message: "Please select a subject." }),
+  topic: z.string().min(2, { message: "Topic must be at least 2 characters." }).max(50),
   numberOfQuestions: z.coerce.number().min(1, { message: "You must request at least 1 question." }).max(50, { message: "You can request a maximum of 50 questions." }),
   language: z.string(),
   timerDuration: z.coerce.number().min(0, { message: "Timer must be a positive number." }).max(120, { message: "Timer cannot exceed 120 minutes." }).nullable(),
 });
 
-const indianExams = [
-  "UPSC Civil Services",
-  "SSC CGL",
-  "IBPS PO",
-  "SBI PO",
-  "RRB NTPC",
-  "NEET",
-  "JEE Main",
-  "JEE Advanced",
-  "CAT",
-  "GATE",
-  "CLAT",
-  "NDA",
-  "CDS",
-];
+type ExamData = {
+  [key: string]: string[];
+};
+
+const examSubjects: ExamData = {
+  "UPSC Civil Services": ["History", "Geography", "Polity & Governance", "Economy", "Environment & Ecology", "Science & Technology", "Current Affairs"],
+  "SSC CGL": ["Quantitative Aptitude", "General Intelligence & Reasoning", "English Language", "General Awareness"],
+  "IBPS PO": ["Reasoning Ability", "Quantitative Aptitude", "English Language", "General Awareness", "Computer Aptitude"],
+  "SBI PO": ["Reasoning Ability", "Quantitative Aptitude", "English Language", "General/Economy/Banking Awareness", "Computer Aptitude"],
+  "RRB NTPC": ["Mathematics", "General Intelligence and Reasoning", "General Awareness"],
+  "NEET": ["Physics", "Chemistry", "Biology"],
+  "JEE Main": ["Physics", "Chemistry", "Mathematics"],
+  "JEE Advanced": ["Physics", "Chemistry", "Mathematics"],
+  "CAT": ["Verbal Ability & Reading Comprehension", "Data Interpretation & Logical Reasoning", "Quantitative Ability"],
+  "GATE": ["Aerospace Engineering", "Chemical Engineering", "Civil Engineering", "Computer Science & Information Technology", "Electrical Engineering", "Electronics & Communication Engineering", "Mechanical Engineering"],
+  "CLAT": ["English Language", "Current Affairs, including General Knowledge", "Legal Reasoning", "Logical Reasoning", "Quantitative Techniques"],
+  "NDA": ["Mathematics", "General Ability Test"],
+  "CDS": ["English", "General Knowledge", "Elementary Mathematics"],
+};
+
+const indianExams = Object.keys(examSubjects);
 
 type QuizPyqFormProps = {
   onSubmit: (values: z.infer<typeof formSchema>) => void;
@@ -42,22 +51,33 @@ export default function QuizPyqForm({ onSubmit, isLoading }: QuizPyqFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       exam: "",
+      subject: "",
+      topic: "",
       numberOfQuestions: 10,
       language: "english",
       timerDuration: null,
     },
   });
 
+  const selectedExam = useWatch({
+    control: form.control,
+    name: 'exam',
+  });
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="exam"
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-lg">Select an Exam</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={(value) => {
+                field.onChange(value);
+                form.resetField('subject');
+                form.resetField('topic');
+              }} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select an exam for PYQs" />
@@ -73,6 +93,49 @@ export default function QuizPyqForm({ onSubmit, isLoading }: QuizPyqFormProps) {
             </FormItem>
           )}
         />
+        
+        {selectedExam && (
+          <FormField
+            control={form.control}
+            name="subject"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-lg">Select a Subject</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a subject" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {examSubjects[selectedExam]?.map(subject => (
+                      <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+        
+        {selectedExam && (
+           <FormField
+            control={form.control}
+            name="topic"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-lg">Enter a Topic</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., Modern History, Algebra, Thermodynamics" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}

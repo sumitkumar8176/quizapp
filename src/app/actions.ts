@@ -83,6 +83,8 @@ export async function createQuizFromContent(formData: FormData) {
 
 const QuizPyqSchema = z.object({
   exam: z.string().min(1, { message: "Please select an exam." }),
+  subject: z.string().min(1, { message: "Please select a subject." }),
+  topic: z.string().min(2, { message: "Topic must be at least 2 characters." }).max(50),
   numberOfQuestions: z.coerce.number().min(1, { message: "You must request at least 1 question." }).max(50, { message: "You can request a maximum of 50 questions." }),
   language: z.string(),
 });
@@ -90,6 +92,8 @@ const QuizPyqSchema = z.object({
 export async function createQuizFromPyq(formData: FormData) {
   const validatedFields = QuizPyqSchema.safeParse({
     exam: formData.get("exam"),
+    subject: formData.get("subject"),
+    topic: formData.get("topic"),
     numberOfQuestions: formData.get("numberOfQuestions"),
     language: formData.get("language"),
   });
@@ -97,20 +101,24 @@ export async function createQuizFromPyq(formData: FormData) {
   if (!validatedFields.success) {
     const errorMessages = validatedFields.error.flatten();
     const examError = errorMessages.fieldErrors.exam?.join(", ");
+    const subjectError = errorMessages.fieldErrors.subject?.join(", ");
+    const topicError = errorMessages.fieldErrors.topic?.join(", ");
     const questionsError = errorMessages.fieldErrors.numberOfQuestions?.join(", ");
     return {
-      error: examError || questionsError || "Invalid input.",
+      error: examError || subjectError || topicError || questionsError || "Invalid input.",
     };
   }
 
   try {
     const questions = await generateQuizFromPyq({
       exam: validatedFields.data.exam,
+      subject: validatedFields.data.subject,
+      topic: validatedFields.data.topic,
       numberOfQuestions: validatedFields.data.numberOfQuestions,
       language: validatedFields.data.language,
     });
     if (!questions || questions.length === 0) {
-      return { error: "Could not generate a quiz for this exam. Please try another one." };
+      return { error: "Could not generate a PYQ quiz for this combination. Please try another one." };
     }
     return { data: questions };
   } catch (e) {

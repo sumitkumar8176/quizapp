@@ -18,7 +18,7 @@ import QuizPyqForm from "@/components/quiz-pyq-form";
 
 type GameState = "idle" | "loading" | "payment" | "playing" | "finished";
 type QuizFormValues = { topic: string; numberOfQuestions: number; language: string; timerDuration: number | null; };
-type QuizPyqFormValues = { exam: string; numberOfQuestions: number; language: string; timerDuration: number | null; };
+type QuizPyqFormValues = { exam: string; subject: string; topic: string; numberOfQuestions: number; language: string; timerDuration: number | null; };
 
 export default function Home() {
   const [gameState, setGameState] = useState<GameState>("idle");
@@ -59,6 +59,8 @@ export default function Home() {
 
     const formData = new FormData();
     formData.append("exam", values.exam);
+    formData.append("subject", values.subject);
+    formData.append("topic", values.topic);
     formData.append("numberOfQuestions", values.numberOfQuestions.toString());
     formData.append("language", values.language);
 
