@@ -31,9 +31,9 @@ export default function Header() {
   return (
     <header className="w-full bg-card border-b">
       <div className="container mx-auto flex items-center justify-end gap-4 p-2 text-sm">
-        <p className="text-destructive">
+        <h1 className="text-destructive text-sm font-normal">
           Practice questions for all exams like here
-        </p>
+        </h1>
         <Menubar className="border-none bg-transparent shadow-none">
           <MenubarMenu>
             <MenubarTrigger className="p-0 text-muted-foreground hover:text-foreground data-[state=open]:text-foreground">
