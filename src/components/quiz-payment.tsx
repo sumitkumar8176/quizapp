@@ -14,10 +14,14 @@ type QuizPaymentProps = {
 const UPI_ID = 'sumit.gusknp2022@okhdfcbank';
 const PAYMENT_AMOUNT = '5';
 const UPI_URL = `upi://pay?pa=${UPI_ID}&pn=Sumit%20Kumar&am=${PAYMENT_AMOUNT}&cu=INR`;
+const FREE_TRIAL_LIMIT = 2;
 
 export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [freeTrialsUsed, setFreeTrialsUsed] = useState(0);
+  const [isTrialDisabled, setIsTrialDisabled] = useState(false);
 
   useEffect(() => {
     QRCode.toDataURL(UPI_URL, { width: 256, margin: 2 })
@@ -27,22 +31,40 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
       .catch(err => {
         console.error(err);
       });
+    
+    const trials = parseInt(localStorage.getItem('freeTrialsUsed') || '0', 10);
+    setFreeTrialsUsed(trials);
+    if (trials >= FREE_TRIAL_LIMIT) {
+      setIsTrialDisabled(true);
+    }
   }, []);
 
-
   const handleConfirmation = () => {
-    setPaymentConfirmed(true);
+    setIsVerifying(true);
+    // Simulate payment verification
     setTimeout(() => {
-      onPaymentSuccess();
-    }, 1500); // Wait for animation
+      setIsVerifying(false);
+      setPaymentConfirmed(true);
+      setTimeout(() => {
+        onPaymentSuccess();
+      }, 1500); // Wait for animation
+    }, 3000); // 3-second delay to simulate verification
   };
 
   const handleFreeTrial = () => {
+    const newTrialCount = freeTrialsUsed + 1;
+    localStorage.setItem('freeTrialsUsed', newTrialCount.toString());
+    setFreeTrialsUsed(newTrialCount);
+    if (newTrialCount >= FREE_TRIAL_LIMIT) {
+      setIsTrialDisabled(true);
+    }
     setPaymentConfirmed(true);
     setTimeout(() => {
       onPaymentSuccess();
     }, 1500); // Wait for animation
   };
+
+  const trialsLeft = FREE_TRIAL_LIMIT - freeTrialsUsed;
 
   return (
     <Card className="w-full max-w-md mx-auto text-center border-0 shadow-none">
@@ -80,12 +102,22 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
               </p>
 
               <div className="space-y-2">
-                <Button onClick={handleConfirmation} size="lg" className="w-full">
-                  I Have Paid
+                <Button onClick={handleConfirmation} size="lg" className="w-full" disabled={isVerifying}>
+                  {isVerifying ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Verifying Payment...
+                    </>
+                  ) : "I Have Paid"}
                 </Button>
-                <Button onClick={handleFreeTrial} size="lg" className="w-full" variant="outline">
+                <Button onClick={handleFreeTrial} size="lg" className="w-full" variant="outline" disabled={isTrialDisabled || isVerifying}>
                    Use as a free trial
                 </Button>
+                 {isTrialDisabled ? (
+                  <p className="text-xs text-destructive">You have used all your free trials.</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">{trialsLeft} free trial{trialsLeft !== 1 ? 's' : ''} left.</p>
+                )}
               </div>
             </motion.div>
           ) : (
