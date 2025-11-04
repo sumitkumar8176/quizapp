@@ -29,60 +29,58 @@ type GameState = "idle" | "loading" | "playing" | "finished";
 type QuizFormValues = { topic: string; numberOfQuestions: number };
 
 export default function Home() {
-  const [gameState, setGameState] = useState<GameState>("loading");
+  const [gameState, setGameState] = useState<GameState>("idle");
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
   const [score, setScore] = useState(0);
   const { toast } = useToast();
   const [shareableUrl, setShareableUrl] = useState("");
 
-  const handleHashChange = useCallback(() => {
-    if (typeof window === 'undefined') return;
-
-    const hash = window.location.hash.substring(1);
-    const urlParams = new URLSearchParams(hash);
-    const quizData = urlParams.get('quiz');
-
-    if (quizData) {
-      try {
-        const decompressed = decompressFromEncodedURIComponent(quizData);
-        if (decompressed) {
-          const parsedQuiz: Quiz = JSON.parse(decompressed);
-          setQuiz(parsedQuiz);
-          setUserAnswers(new Array(parsedQuiz.length).fill(""));
-          setGameState("playing");
-          const newUrl = `${window.location.origin}${window.location.pathname}#quiz=${quizData}`;
-          setShareableUrl(newUrl);
-        } else {
-          throw new Error("Decompression failed");
+  const loadQuizFromHash = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.substring(1);
+      if (hash.startsWith('quiz=')) {
+        const quizData = hash.substring(5);
+        if (quizData) {
+          try {
+            const decompressed = decompressFromEncodedURIComponent(quizData);
+            if (decompressed) {
+              const parsedQuiz: Quiz = JSON.parse(decompressed);
+              setQuiz(parsedQuiz);
+              setUserAnswers(new Array(parsedQuiz.length).fill(""));
+              setGameState("playing");
+              const newUrl = `${window.location.origin}${window.location.pathname}#quiz=${quizData}`;
+              setShareableUrl(newUrl);
+              return;
+            }
+          } catch (error) {
+            console.error("Failed to parse quiz data from URL hash", error);
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: "Could not load the shared quiz. It might be invalid.",
+            });
+            window.location.hash = ''; // Clear invalid hash
+          }
         }
-      } catch (error) {
-        console.error("Failed to parse quiz data from URL hash", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Could not load the shared quiz. It might be invalid.",
-        });
-        window.location.hash = '';
-        setGameState("idle");
       }
-    } else {
-      setGameState("idle");
-      setQuiz(null);
-      setUserAnswers([]);
-      setScore(0);
-      setShareableUrl(typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : '');
     }
+    // If no valid quiz in hash, go to idle state
+    setGameState("idle");
+    setQuiz(null);
+    setUserAnswers([]);
+    setScore(0);
+    setShareableUrl(typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : '');
   }, [toast]);
-  
-  useEffect(() => {
-    handleHashChange(); // Initial check
 
-    window.addEventListener('hashchange', handleHashChange);
+  useEffect(() => {
+    loadQuizFromHash(); // Load on initial mount
+
+    window.addEventListener('hashchange', loadQuizFromHash);
     return () => {
-      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('hashchange', loadQuizFromHash);
     };
-  }, [handleHashChange]);
+  }, [loadQuizFromHash]);
 
 
   const handleCopyUrl = () => {
@@ -112,7 +110,7 @@ export default function Home() {
     } else if (result.data) {
       const newQuiz = result.data;
       const compressedQuiz = compressToEncodedURIComponent(JSON.stringify(newQuiz));
-      // This will trigger the 'hashchange' event listener, which calls handleHashChange
+      // This will trigger the 'hashchange' event listener, which calls loadQuizFromHash
       window.location.hash = `quiz=${compressedQuiz}`;
     }
   };
@@ -131,7 +129,7 @@ export default function Home() {
   };
 
   const handlePlayAgain = () => {
-    // This will trigger the 'hashchange' event listener, which calls handleHashChange to reset state
+    // This will trigger the 'hashchange' event listener, which calls loadQuizFromHash to reset state
     window.location.hash = '';
   };
 
@@ -175,7 +173,7 @@ export default function Home() {
             </p>
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" size="icon">
+                <Button variant="outline" size="icon" disabled={!quiz}>
                   <Share2 className="h-4 w-4" />
                 </Button>
               </DialogTrigger>
