@@ -169,7 +169,7 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
       <div className="w-full max-w-2xl">
         <header className="mb-8 flex flex-col items-center text-center">
           <div className="mb-4 flex items-center gap-3">
@@ -226,6 +226,9 @@ export default function Home() {
           </CardContent>
         </Card>
       </div>
+      <footer className="absolute bottom-4 right-4 text-sm text-muted-foreground">
+        - sumit kumar
+      </footer>
     </main>
   );
 }
