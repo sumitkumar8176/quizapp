@@ -82,14 +82,12 @@ export default function Home() {
     }
   };
 
-  const handleUploadQuiz = async (dataUri: string, language: string) => {
+  const handleUploadQuiz = async (dataUri: string, language: string, numberOfQuestions: number) => {
     setGameState("loading");
 
     const formData = new FormData();
     formData.append("contentDataUri", dataUri);
-    // For now, we'll hardcode the number of questions for uploads.
-    // This could be a user input field in QuizUploader in the future.
-    formData.append("numberOfQuestions", "10");
+    formData.append("numberOfQuestions", numberOfQuestions.toString());
     formData.append("language", language);
 
     const result = await createQuizFromContent(formData);
