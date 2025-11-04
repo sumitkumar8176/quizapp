@@ -227,7 +227,7 @@ export default function Home() {
         </Card>
       </div>
       <footer className="absolute bottom-4 right-4 text-sm text-muted-foreground">
-        - sumit kumar
+        -by sumit kumar
       </footer>
     </main>
   );
