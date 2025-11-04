@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type { Quiz } from "@/lib/types";
 import { createQuiz } from "@/app/actions";
@@ -11,19 +11,6 @@ import { Logo } from "@/components/icons";
 import { Card, CardContent } from "@/components/ui/card";
 import { AnimatePresence, motion } from "framer-motion";
 import Loading from "@/app/loading";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import QRCode from "react-qr-code";
-import { Share2, Copy } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from "lz-string";
 
 type GameState = "idle" | "loading" | "playing" | "finished";
 type QuizFormValues = { topic: string; numberOfQuestions: number };
@@ -34,47 +21,6 @@ export default function Home() {
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
   const [score, setScore] = useState(0);
   const { toast } = useToast();
-  const [shareableUrl, setShareableUrl] = useState("");
-  const [isLoadingFromUrl, setIsLoadingFromUrl] = useState(true);
-
-  useEffect(() => {
-    // This effect runs only once on initial component mount.
-    // It's responsible for checking if the URL has quiz data.
-    const hash = window.location.hash.substring(1);
-    if (hash.startsWith('quiz=')) {
-      const quizData = hash.substring(5);
-      if (quizData) {
-        try {
-          const decompressed = decompressFromEncodedURIComponent(quizData);
-          if (decompressed) {
-            const parsedQuiz: Quiz = JSON.parse(decompressed);
-            setQuiz(parsedQuiz);
-            setUserAnswers(new Array(parsedQuiz.length).fill(""));
-            setShareableUrl(`${window.location.origin}${window.location.pathname}#${hash}`);
-            setGameState("playing");
-          }
-        } catch (error) {
-          console.error("Failed to parse quiz data from URL hash", error);
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Could not load the shared quiz. It might be invalid.",
-          });
-          window.location.hash = ''; // Clear invalid hash
-        }
-      }
-    }
-    setIsLoadingFromUrl(false);
-  }, [toast]);
-
-
-  const handleCopyUrl = () => {
-    navigator.clipboard.writeText(shareableUrl);
-    toast({
-      title: "Copied!",
-      description: "The link has been copied to your clipboard.",
-    });
-  };
 
   const handleStartQuiz = async (values: QuizFormValues) => {
     setGameState("loading");
@@ -94,17 +40,8 @@ export default function Home() {
       setGameState("idle");
     } else if (result.data) {
       const newQuiz = result.data;
-      const compressedQuiz = compressToEncodedURIComponent(JSON.stringify(newQuiz));
-      
-      const newHash = `quiz=${compressedQuiz}`;
-      const newUrl = `${window.location.origin}${window.location.pathname}#${newHash}`;
-      
-      // Update the URL without reloading the page
-      window.history.pushState(null, '', `#${newHash}`);
-
       setQuiz(newQuiz);
       setUserAnswers(new Array(newQuiz.length).fill(""));
-      setShareableUrl(newUrl);
       setGameState("playing");
     }
   };
@@ -127,17 +64,9 @@ export default function Home() {
     setQuiz(null);
     setUserAnswers([]);
     setScore(0);
-    // Clear the hash from the URL
-    const newUrl = `${window.location.origin}${window.location.pathname}`;
-    window.history.pushState(null, '', newUrl);
-    setShareableUrl("");
   };
 
   const renderGameState = () => {
-    if (isLoadingFromUrl) {
-      return <Loading />;
-    }
-
     switch (gameState) {
       case "loading":
         return <Loading />;
@@ -175,31 +104,6 @@ export default function Home() {
             <p className="max-w-md text-muted-foreground">
               Enter a topic and let our AI create a fun quiz for you. Test your knowledge and challenge yourself!
             </p>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="icon" disabled={!quiz || gameState === 'idle'}>
-                  <Share2 className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Share Quiz</DialogTitle>
-                  <DialogDescription>
-                    Just click the shared link or scan the QR code, and your quiz will open instantly in your browser or app!
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex items-center justify-center p-4 bg-white rounded-lg">
-                  {shareableUrl && <QRCode value={shareableUrl} size={200} />}
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Input value={shareableUrl} readOnly />
-                  <Button type="submit" size="sm" onClick={handleCopyUrl}>
-                    <span className="sr-only">Copy</span>
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
           </div>
         </header>
         <Card className="w-full shadow-lg overflow-hidden">
