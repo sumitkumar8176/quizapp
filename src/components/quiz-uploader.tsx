@@ -110,6 +110,16 @@ export default function QuizUploader({ onUpload, isLoading }: QuizUploaderProps)
                   <SelectItem value="french">French</SelectItem>
                   <SelectItem value="german">German</SelectItem>
                   <SelectItem value="chinese">Chinese</SelectItem>
+                  <SelectItem value="bengali">Bengali</SelectItem>
+                  <SelectItem value="marathi">Marathi</SelectItem>
+                  <SelectItem value="telugu">Telugu</SelectItem>
+                  <SelectItem value="tamil">Tamil</SelectItem>
+                  <SelectItem value="gujarati">Gujarati</SelectItem>
+                  <SelectItem value="urdu">Urdu</SelectItem>
+                  <SelectItem value="kannada">Kannada</SelectItem>
+                  <SelectItem value="odia">Odia</SelectItem>
+                  <SelectItem value="malayalam">Malayalam</SelectItem>
+                  <SelectItem value="punjabi">Punjabi</SelectItem>
                 </SelectContent>
               </Select>
             </div>
