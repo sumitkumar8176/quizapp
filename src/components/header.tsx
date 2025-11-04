@@ -27,7 +27,11 @@ const examSubjects = {
 
 const indianExams = Object.keys(examSubjects);
 
-export default function Header() {
+type HeaderProps = {
+  onExamSelect: (exam: string) => void;
+};
+
+export default function Header({ onExamSelect }: HeaderProps) {
   return (
     <header className="w-full bg-yellow-400 border-b">
       <div className="container mx-auto flex items-center justify-between p-2 text-sm">
@@ -44,7 +48,7 @@ export default function Header() {
             </MenubarTrigger>
             <MenubarContent align="end" className="max-h-96 overflow-y-auto">
               {indianExams.map((exam) => (
-                <MenubarItem key={exam}>{exam}</MenubarItem>
+                <MenubarItem key={exam} onSelect={() => onExamSelect(exam)}>{exam}</MenubarItem>
               ))}
             </MenubarContent>
           </MenubarMenu>

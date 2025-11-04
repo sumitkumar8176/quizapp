@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -44,13 +44,14 @@ const indianExams = Object.keys(examSubjects);
 type QuizPyqFormProps = {
   onSubmit: (values: z.infer<typeof formSchema>) => void;
   isLoading: boolean;
+  selectedExam?: string | null;
 };
 
-export default function QuizPyqForm({ onSubmit, isLoading }: QuizPyqFormProps) {
+export default function QuizPyqForm({ onSubmit, isLoading, selectedExam }: QuizPyqFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      exam: "",
+      exam: selectedExam || "",
       subject: "",
       topic: "",
       numberOfQuestions: 10,
@@ -59,10 +60,18 @@ export default function QuizPyqForm({ onSubmit, isLoading }: QuizPyqFormProps) {
     },
   });
 
-  const selectedExam = useWatch({
+  const watchedExam = useWatch({
     control: form.control,
     name: 'exam',
   });
+
+  useEffect(() => {
+    if (selectedExam) {
+      form.setValue('exam', selectedExam);
+      form.resetField('subject');
+      form.resetField('topic');
+    }
+  }, [selectedExam, form]);
 
   return (
     <Form {...form}>
@@ -77,7 +86,7 @@ export default function QuizPyqForm({ onSubmit, isLoading }: QuizPyqFormProps) {
                 field.onChange(value);
                 form.resetField('subject');
                 form.resetField('topic');
-              }} defaultValue={field.value}>
+              }} value={field.value} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select an exam for PYQs" />
@@ -94,7 +103,7 @@ export default function QuizPyqForm({ onSubmit, isLoading }: QuizPyqFormProps) {
           )}
         />
         
-        {selectedExam && (
+        {watchedExam && (
           <>
             <FormField
               control={form.control}
@@ -102,14 +111,14 @@ export default function QuizPyqForm({ onSubmit, isLoading }: QuizPyqFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-lg">Select a Subject</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a subject" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {examSubjects[selectedExam]?.map(subject => (
+                      {examSubjects[watchedExam]?.map(subject => (
                         <SelectItem key={subject} value={subject}>{subject}</SelectItem>
                       ))}
                     </SelectContent>

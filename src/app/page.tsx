@@ -27,6 +27,8 @@ export default function Home() {
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
   const [score, setScore] = useState(0);
   const [timerDuration, setTimerDuration] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState("topic");
+  const [selectedExamFromHeader, setSelectedExamFromHeader] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleStartQuiz = async (values: QuizFormValues) => {
@@ -132,10 +134,17 @@ export default function Home() {
     setUserAnswers([]);
     setScore(0);
     setTimerDuration(null);
+    setSelectedExamFromHeader(null);
+    setActiveTab("topic");
+  };
+
+  const handleExamSelectFromHeader = (exam: string) => {
+    setSelectedExamFromHeader(exam);
+    setActiveTab("pyq");
   };
   
   const renderIdleState = () => (
-    <Tabs defaultValue="topic" className="w-full">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="topic">From Topic</TabsTrigger>
         <TabsTrigger value="pyq">From PYQ</TabsTrigger>
@@ -145,7 +154,11 @@ export default function Home() {
         <QuizForm onSubmit={handleStartQuiz} isLoading={gameState === 'loading'} />
       </TabsContent>
        <TabsContent value="pyq" className="pt-6">
-        <QuizPyqForm onSubmit={handleStartPyqQuiz} isLoading={gameState === 'loading'} />
+        <QuizPyqForm 
+          onSubmit={handleStartPyqQuiz} 
+          isLoading={gameState === 'loading'}
+          selectedExam={selectedExamFromHeader}
+        />
       </TabsContent>
       <TabsContent value="upload" className="pt-6">
         <QuizUploader onUpload={handleUploadQuiz} isLoading={gameState === 'loading'} />
@@ -181,7 +194,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-background">
-      <Header />
+      <Header onExamSelect={handleExamSelectFromHeader} />
       <main className="relative flex flex-1 flex-col items-center justify-center p-4">
         <div className="w-full max-w-2xl">
           <header className="mb-8 flex flex-col items-center text-center">
