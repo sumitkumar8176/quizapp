@@ -10,6 +10,7 @@ import QuizResults from "@/components/quiz-results";
 import { Logo } from "@/components/icons";
 import { Card, CardContent } from "@/components/ui/card";
 import { AnimatePresence, motion } from "framer-motion";
+import Loading from "@/app/loading";
 
 type GameState = "idle" | "loading" | "playing" | "finished";
 
@@ -73,13 +74,7 @@ export default function Home() {
       case "idle":
         return <QuizForm onSubmit={handleStartQuiz} isLoading={isLoading} />;
       case "loading":
-        return (
-          <div className="text-center p-8">
-            <p className="text-lg animate-pulse font-medium">
-              Conjuring up a quiz about <span className="font-bold text-primary">{topic}</span>...
-            </p>
-          </div>
-        );
+        return <Loading />;
       case "playing":
         return quiz ? (
           <QuizSession quiz={quiz} onFinish={handleFinishQuiz} />
@@ -113,7 +108,7 @@ export default function Home() {
           </p>
         </header>
         <Card className="w-full shadow-lg overflow-hidden">
-          <CardContent className="p-6 md:p-8">
+          <CardContent className="p-6 md:p-8 min-h-[250px] flex items-center justify-center">
             <AnimatePresence mode="wait">
               <motion.div
                 key={gameState}
@@ -121,6 +116,7 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
+                className="w-full"
               >
                 {renderGameState()}
               </motion.div>
