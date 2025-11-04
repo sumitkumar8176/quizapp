@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowRight, PartyPopper } from "lucide-react";
+import { ArrowLeft, ArrowRight, PartyPopper } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 
@@ -28,6 +28,12 @@ export default function QuizSession({ quiz, onFinish }: QuizSessionProps) {
   const handleNext = () => {
     if (currentQuestionIndex < quiz.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
     }
   };
 
@@ -84,19 +90,26 @@ export default function QuizSession({ quiz, onFinish }: QuizSessionProps) {
           Submit Quiz
         </Button>
         
-        {!isLastQuestion && (
-          <Button onClick={handleNext} disabled={!userAnswers[currentQuestionIndex]}>
-            Next
-            <ArrowRight className="ml-2 h-5 w-5" />
+        <div className="flex items-center gap-2">
+          <Button onClick={handlePrevious} disabled={currentQuestionIndex === 0} variant="outline">
+            <ArrowLeft className="mr-2 h-5 w-5" />
+            Previous
           </Button>
-        )}
 
-        {isLastQuestion && (
-           <Button onClick={handleSubmit}>
-            Submit Quiz
-            <PartyPopper className="ml-2 h-5 w-5" />
-          </Button>
-        )}
+          {!isLastQuestion && (
+            <Button onClick={handleNext} disabled={!userAnswers[currentQuestionIndex]}>
+              Next
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          )}
+
+          {isLastQuestion && (
+             <Button onClick={handleSubmit}>
+              Submit Quiz
+              <PartyPopper className="ml-2 h-5 w-5" />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
