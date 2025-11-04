@@ -30,7 +30,7 @@ const indianExams = Object.keys(examSubjects);
 export default function Header() {
   return (
     <header className="w-full bg-card border-b">
-      <div className="container mx-auto flex items-center justify-end gap-4 p-2 text-sm">
+      <div className="container mx-auto flex items-center justify-between p-2 text-sm">
         <h1 className="text-destructive text-sm font-normal">
           Practice questions for all exams like here
         </h1>
