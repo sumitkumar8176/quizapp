@@ -37,7 +37,8 @@ export default function Home() {
   const [shareableUrl, setShareableUrl] = useState("");
   const [initialLoad, setInitialLoad] = useState(true);
 
-  const loadQuizFromHash = useCallback(() => {
+  useEffect(() => {
+    // This effect runs only once on initial mount
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.substring(1);
       if (hash.startsWith('quiz=')) {
@@ -50,6 +51,7 @@ export default function Home() {
               setQuiz(parsedQuiz);
               setUserAnswers(new Array(parsedQuiz.length).fill(""));
               setGameState("playing");
+              // Set the shareable URL when loaded from hash
               const newUrl = `${window.location.origin}${window.location.pathname}#quiz=${quizData}`;
               setShareableUrl(newUrl);
               return;
@@ -61,32 +63,16 @@ export default function Home() {
               title: "Error",
               description: "Could not load the shared quiz. It might be invalid.",
             });
-            window.location.hash = '';
+            window.location.hash = ''; // Clear invalid hash
           }
         }
       }
     }
-    // If no valid quiz in hash, go to idle state
-    setGameState("idle");
-    setQuiz(null);
-    setUserAnswers([]);
-    setScore(0);
+    // If no valid quiz in hash, set base URL for sharing
     if(typeof window !== 'undefined') {
       setShareableUrl(`${window.location.origin}${window.location.pathname}`);
     }
-  }, [toast]);
-
-  useEffect(() => {
-    if(initialLoad) {
-      loadQuizFromHash();
-      setInitialLoad(false);
-    }
-
-    window.addEventListener('hashchange', loadQuizFromHash);
-    return () => {
-      window.removeEventListener('hashchange', loadQuizFromHash);
-    };
-  }, [loadQuizFromHash, initialLoad]);
+  }, [toast]); // Only depends on toast, runs once
 
 
   const handleCopyUrl = () => {
@@ -116,8 +102,14 @@ export default function Home() {
     } else if (result.data) {
       const newQuiz = result.data;
       const compressedQuiz = compressToEncodedURIComponent(JSON.stringify(newQuiz));
-      // This will trigger the 'hashchange' event listener, which calls loadQuizFromHash
-      window.location.hash = `quiz=${compressedQuiz}`;
+      
+      // Update state and URL
+      setQuiz(newQuiz);
+      setUserAnswers(new Array(newQuiz.length).fill(""));
+      const newUrl = `${window.location.origin}${window.location.pathname}#quiz=${compressedQuiz}`;
+      window.history.pushState({}, '', newUrl); // Use pushState to avoid reloads
+      setShareableUrl(newUrl);
+      setGameState("playing");
     }
   };
 
@@ -135,8 +127,13 @@ export default function Home() {
   };
 
   const handlePlayAgain = () => {
-    // This will trigger the 'hashchange' event listener to reset state
-    window.location.hash = '';
+    setGameState("idle");
+    setQuiz(null);
+    setUserAnswers([]);
+    setScore(0);
+    const newUrl = `${window.location.origin}${window.location.pathname}`;
+    window.history.pushState({}, '', newUrl);
+    setShareableUrl(newUrl);
   };
 
   const renderGameState = () => {
