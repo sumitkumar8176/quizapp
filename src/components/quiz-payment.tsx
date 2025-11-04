@@ -12,7 +12,7 @@ type QuizPaymentProps = {
 };
 
 const UPI_ID = 'sumit.gusknp2022@okhdfcbank';
-const PAYMENT_AMOUNT = '5';
+const PAYMENT_AMOUNT = '2';
 const UPI_URL = `upi://pay?pa=${UPI_ID}&pn=Sumit%20Kumar&am=${PAYMENT_AMOUNT}&cu=INR`;
 const FREE_TRIAL_LIMIT = 2;
 
@@ -111,7 +111,7 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
                   ) : "I Have Paid"}
                 </Button>
                 <Button onClick={handleFreeTrial} size="lg" className="w-full" variant="outline" disabled={isTrialDisabled || isVerifying}>
-                   Use as a free trial
+                   Use a free trial
                 </Button>
                  {isTrialDisabled ? (
                   <p className="text-xs text-destructive">You have used all your free trials.</p>
