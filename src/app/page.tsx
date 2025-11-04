@@ -51,11 +51,9 @@ export default function Home() {
           setQuiz(parsedQuiz);
           setUserAnswers(new Array(parsedQuiz.length).fill(""));
           setGameState("playing");
-          // Generate the shareable URL based on the current location, but only with the hash.
           const newUrl = `${window.location.origin}${window.location.pathname}#quiz=${quizData}`;
           setShareableUrl(newUrl);
         } else {
-          // Handle case where decompression fails
           throw new Error("Decompression failed");
         }
       } catch (error) {
@@ -65,29 +63,21 @@ export default function Home() {
           title: "Error",
           description: "Could not load the shared quiz. It might be invalid.",
         });
-        // Reset to a clean state
         window.location.hash = '';
         setGameState("idle");
-        setQuiz(null);
-        setUserAnswers([]);
-        setScore(0);
-        setShareableUrl(`${window.location.origin}${window.location.pathname}`);
       }
     } else {
-      // No quiz data in hash, reset to idle state
       setGameState("idle");
       setQuiz(null);
       setUserAnswers([]);
       setScore(0);
-      setShareableUrl(`${window.location.origin}${window.location.pathname}`);
+      setShareableUrl(typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : '');
     }
   }, [toast]);
   
   useEffect(() => {
-    // Initial load
-    handleHashChange();
+    handleHashChange(); // Initial check
 
-    // Listen for subsequent hash changes
     window.addEventListener('hashchange', handleHashChange);
     return () => {
       window.removeEventListener('hashchange', handleHashChange);
@@ -122,8 +112,7 @@ export default function Home() {
     } else if (result.data) {
       const newQuiz = result.data;
       const compressedQuiz = compressToEncodedURIComponent(JSON.stringify(newQuiz));
-      // Setting the hash will trigger the 'hashchange' event listener,
-      // which will then call `handleHashChange` to update the state.
+      // This will trigger the 'hashchange' event listener, which calls handleHashChange
       window.location.hash = `quiz=${compressedQuiz}`;
     }
   };
@@ -142,18 +131,16 @@ export default function Home() {
   };
 
   const handlePlayAgain = () => {
-    // Setting the hash to empty will trigger the hashchange listener, resetting the app state.
+    // This will trigger the 'hashchange' event listener, which calls handleHashChange to reset state
     window.location.hash = '';
   };
 
   const renderGameState = () => {
-    if (gameState === 'loading' && !quiz) return <Loading />;
-
     switch (gameState) {
+      case "loading":
+        return <Loading />;
       case "idle":
         return <QuizForm onSubmit={handleStartQuiz} isLoading={gameState === 'loading'} />;
-      case "loading":
-         return <Loading />;
       case "playing":
         return quiz ? (
           <QuizSession quiz={quiz} onFinish={handleFinishQuiz} />
@@ -168,7 +155,7 @@ export default function Home() {
           />
         ) : null;
       default:
-        return <QuizForm onSubmit={handleStartQuiz} isLoading={false} />;
+        return null;
     }
   };
 
