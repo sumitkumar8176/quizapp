@@ -38,20 +38,19 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
     setFreeTrialsUsed(trials);
     if (trials >= FREE_TRIAL_LIMIT) {
       setIsTrialDisabled(true);
-      
-      // Start automatic verification if it's not a free trial
-      setIsVerifying(true);
-      const timer = setTimeout(() => {
-        setIsVerifying(false);
-        setPaymentConfirmed(true);
-        setTimeout(() => {
-          onPaymentSuccessRef.current();
-        }, 1500); // Wait for confirmation animation
-      }, 5000); // 5-second delay to simulate verification
-
-      return () => clearTimeout(timer);
     }
   }, []);
+
+  const handleManualVerification = () => {
+    setIsVerifying(true);
+    const timer = setTimeout(() => {
+      setIsVerifying(false);
+      setPaymentConfirmed(true);
+      setTimeout(() => {
+        onPaymentSuccessRef.current();
+      }, 1500); // Wait for confirmation animation
+    }, 5000); // 5-second delay to simulate verification
+  };
 
 
   const handleFreeTrial = () => {
@@ -96,6 +95,15 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
       );
     }
 
+    if (isVerifying) {
+        return (
+             <div className="flex flex-col items-center justify-center pt-4 space-y-4">
+                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                <p>Verifying payment, please wait...</p>
+            </div>
+        )
+    }
+
     return (
        <div className="space-y-4">
         <div className="flex justify-center items-center bg-white rounded-lg border p-2 w-64 h-64 mx-auto">
@@ -109,10 +117,9 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
           <p className="font-semibold text-sm text-muted-foreground">Pay to UPI ID:</p>
           <p className="font-mono text-lg tracking-wider bg-muted p-2 rounded-md">{UPI_ID}</p>
         </div>
-         <div className="flex items-center justify-center pt-4">
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            <p>Verifying payment, please wait...</p>
-        </div>
+        <Button onClick={handleManualVerification} size="lg" className="w-full" disabled={isVerifying}>
+            Confirm Payment
+        </Button>
       </div>
     )
   }
@@ -130,7 +137,7 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
           }
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 min-h-[300px] flex items-center justify-center">
         <AnimatePresence mode="wait">
           {!paymentConfirmed ? (
             <motion.div
@@ -139,7 +146,7 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20, scale: 0.9 }}
               transition={{ duration: 0.3 }}
-              className="space-y-4"
+              className="space-y-4 w-full"
             >
              {renderPaymentState()}
             </motion.div>
