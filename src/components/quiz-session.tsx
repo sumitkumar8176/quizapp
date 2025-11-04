@@ -55,7 +55,7 @@ export default function QuizSession({ quiz, onFinish }: QuizSessionProps) {
 
   const currentQuestion = quiz[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === quiz.length - 1;
-  const isAllAnswered = userAnswers.every(answer => answer !== "");
+  const unansweredQuestions = userAnswers.filter(answer => answer === "").length;
 
   return (
     <div className="space-y-6">
@@ -101,7 +101,7 @@ export default function QuizSession({ quiz, onFinish }: QuizSessionProps) {
       <div className="flex justify-between items-center pt-4">
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="outline" size="lg" disabled={!isAllAnswered}>
+            <Button variant="outline" size="lg">
               <PartyPopper className="mr-2 h-5 w-5" />
               Submit Quiz
             </Button>
@@ -110,7 +110,10 @@ export default function QuizSession({ quiz, onFinish }: QuizSessionProps) {
             <AlertDialogHeader>
               <AlertDialogTitle>Are you sure you want to submit?</AlertDialogTitle>
               <AlertDialogDescription>
-                You have answered all the questions. You can still go back and review your answers before finishing.
+                {unansweredQuestions > 0 
+                  ? `You have ${unansweredQuestions} unanswered question${unansweredQuestions > 1 ? 's' : ''}. You can still go back and review your answers before finishing.`
+                  : "You have answered all the questions. You can still go back and review your answers before finishing."
+                }
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
