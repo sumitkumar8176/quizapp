@@ -9,6 +9,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {Quiz, QuizSchema} from '@/lib/types';
 import {z} from 'genkit';
 
 const GenerateQuizQuestionsInputSchema = z.object({
@@ -17,15 +18,7 @@ const GenerateQuizQuestionsInputSchema = z.object({
 });
 export type GenerateQuizQuestionsInput = z.infer<typeof GenerateQuizQuestionsInputSchema>;
 
-const GenerateQuizQuestionsOutputSchema = z.array(
-  z.object({
-    question: z.string().describe('The quiz question.'),
-    options: z.array(z.string()).describe('The possible answers to the question.'),
-    correctAnswer: z.string().describe('The correct answer to the question.'),
-    explanation: z.string().describe('A detailed explanation of why the correct answer is right.'),
-  })
-).describe('An array of quiz questions with options and correct answers.');
-export type GenerateQuizQuestionsOutput = z.infer<typeof GenerateQuizQuestionsOutputSchema>;
+export type GenerateQuizQuestionsOutput = Quiz;
 
 export async function generateQuizQuestions(input: GenerateQuizQuestionsInput): Promise<GenerateQuizQuestionsOutput> {
   return generateQuizQuestionsFlow(input);
@@ -34,7 +27,7 @@ export async function generateQuizQuestions(input: GenerateQuizQuestionsInput): 
 const prompt = ai.definePrompt({
   name: 'generateQuizQuestionsPrompt',
   input: {schema: GenerateQuizQuestionsInputSchema},
-  output: {schema: GenerateQuizQuestionsOutputSchema},
+  output: {schema: QuizSchema},
   prompt: `You are an expert at creating educational quizzes. Your task is to generate {{{numberOfQuestions}}} important and relevant questions on the given topic.
 
 Topic: {{{topic}}}
@@ -50,7 +43,7 @@ const generateQuizQuestionsFlow = ai.defineFlow(
   {
     name: 'generateQuizQuestionsFlow',
     inputSchema: GenerateQuizQuestionsInputSchema,
-    outputSchema: GenerateQuizQuestionsOutputSchema,
+    outputSchema: QuizSchema,
   },
   async input => {
     const {output} = await prompt(input);

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type { Quiz } from "@/lib/types";
-import { createQuiz } from "@/app/actions";
+import { createQuiz, createQuizFromContent } from "@/app/actions";
 import QuizForm from "@/components/quiz-form";
 import QuizSession from "@/components/quiz-session";
 import QuizResults from "@/components/quiz-results";
@@ -48,6 +48,33 @@ export default function Home() {
     }
   };
 
+  const handleUploadQuiz = async (dataUri: string) => {
+    setGameState("loading");
+
+    const formData = new FormData();
+    formData.append("contentDataUri", dataUri);
+    // For now, we'll hardcode the number of questions for uploads.
+    // This could be a user input field in QuizUploader in the future.
+    formData.append("numberOfQuestions", "10");
+
+    const result = await createQuizFromContent(formData);
+
+    if (result.error) {
+      toast({
+        variant: "destructive",
+        title: "Error Generating Quiz",
+        description: result.error,
+      });
+      setGameState("idle");
+    } else if (result.data) {
+      const newQuiz = result.data;
+      setQuiz(newQuiz);
+      setUserAnswers(new Array(newQuiz.length).fill(""));
+      setGameState("playing");
+    }
+  };
+
+
   const handleFinishQuiz = (answers: string[]) => {
     if (!quiz) return;
     let correctAnswers = 0;
@@ -78,13 +105,7 @@ export default function Home() {
         <QuizForm onSubmit={handleStartQuiz} isLoading={gameState === 'loading'} />
       </TabsContent>
       <TabsContent value="upload" className="pt-6">
-        <QuizUploader onUpload={() => {
-          // Placeholder for upload handling logic
-          toast({
-            title: "Feature in development",
-            description: "Quiz generation from uploads is coming soon!",
-          });
-        }} />
+        <QuizUploader onUpload={handleUploadQuiz} isLoading={gameState === 'loading'} />
       </TabsContent>
     </Tabs>
   );
