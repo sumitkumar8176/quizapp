@@ -36,7 +36,7 @@ export default function Header() {
         </h1>
         <Menubar className="border-none bg-transparent shadow-none">
           <MenubarMenu>
-            <MenubarTrigger className="p-0 text-muted-foreground hover:text-foreground data-[state=open]:text-foreground">
+            <MenubarTrigger className="p-0 text-muted-foreground hover:text-foreground data-[state=open]:text-foreground text-black">
               <div className="flex items-center gap-1 cursor-pointer">
                 <span>All Exams</span>
                 <ChevronDown className="h-4 w-4" />
