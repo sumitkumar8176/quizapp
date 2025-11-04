@@ -7,7 +7,7 @@ import {
   MenubarItem,
   MenubarTrigger,
 } from "@/components/ui/menubar";
-import { ChevronDown } from "lucide-react";
+import { Button } from "./ui/button";
 
 const examSubjects = {
   "UPSC Civil Services": ["History", "Geography", "Polity & Governance", "Economy", "Environment & Ecology", "Science & Technology", "Current Affairs"],
@@ -27,33 +27,19 @@ const examSubjects = {
 
 const indianExams = Object.keys(examSubjects);
 
-type HeaderProps = {
+type SidebarProps = {
   onExamSelect: (exam: string) => void;
 };
 
-export default function Header({ onExamSelect }: HeaderProps) {
+export default function Sidebar({ onExamSelect }: SidebarProps) {
   return (
-    <header className="w-full bg-yellow-400 border-b">
-      <div className="container mx-auto flex items-center justify-between p-2 text-sm">
-        <h1 className="text-destructive text-sm font-normal">
-          Practice questions for all exams like here
-        </h1>
-        <Menubar className="border-none bg-transparent shadow-none">
-          <MenubarMenu>
-            <MenubarTrigger className="p-0 text-muted-foreground hover:text-foreground data-[state=open]:text-foreground text-black">
-              <div className="flex items-center gap-1 cursor-pointer">
-                <span>All Exams</span>
-                <ChevronDown className="h-4 w-4" />
-              </div>
-            </MenubarTrigger>
-            <MenubarContent align="end" className="max-h-96 overflow-y-auto">
-              {indianExams.map((exam) => (
-                <MenubarItem key={exam} onSelect={() => onExamSelect(exam)}>{exam}</MenubarItem>
-              ))}
-            </MenubarContent>
-          </MenubarMenu>
-        </Menubar>
-      </div>
-    </header>
+    <aside className="w-64 bg-card p-6 flex flex-col space-y-6 border-r">
+        <h1 className="text-xl font-bold">Practice quiz for any exams given below</h1>
+        <nav className="flex flex-col space-y-2">
+            {indianExams.map((exam) => (
+                <Button key={exam} variant="ghost" className="justify-start" onClick={() => onExamSelect(exam)}>{exam}</Button>
+            ))}
+        </nav>
+    </aside>
   );
 }

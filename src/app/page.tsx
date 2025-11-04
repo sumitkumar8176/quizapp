@@ -15,7 +15,7 @@ import QuizUploader from "@/components/quiz-uploader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import QuizPayment from "@/components/quiz-payment";
 import QuizPyqForm from "@/components/quiz-pyq-form";
-import Header from "@/components/header";
+import Sidebar from "@/components/sidebar";
 
 type GameState = "idle" | "loading" | "payment" | "playing" | "finished";
 type QuizFormValues = { topic: string; numberOfQuestions: number; language: string; timerDuration: number | null; };
@@ -28,7 +28,7 @@ export default function Home() {
   const [score, setScore] = useState(0);
   const [timerDuration, setTimerDuration] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("topic");
-  const [selectedExamFromHeader, setSelectedExamFromHeader] = useState<string | null>(null);
+  const [selectedExamFromSidebar, setSelectedExamFromSidebar] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleStartQuiz = async (values: QuizFormValues) => {
@@ -134,12 +134,12 @@ export default function Home() {
     setUserAnswers([]);
     setScore(0);
     setTimerDuration(null);
-    setSelectedExamFromHeader(null);
+    setSelectedExamFromSidebar(null);
     setActiveTab("topic");
   };
 
-  const handleExamSelectFromHeader = (exam: string) => {
-    setSelectedExamFromHeader(exam);
+  const handleExamSelectFromSidebar = (exam: string) => {
+    setSelectedExamFromSidebar(exam);
     setActiveTab("pyq");
   };
   
@@ -157,7 +157,7 @@ export default function Home() {
         <QuizPyqForm 
           onSubmit={handleStartPyqQuiz} 
           isLoading={gameState === 'loading'}
-          selectedExam={selectedExamFromHeader}
+          selectedExam={selectedExamFromSidebar}
         />
       </TabsContent>
       <TabsContent value="upload" className="pt-6">
@@ -193,8 +193,8 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen w-full bg-background">
-      <Header onExamSelect={handleExamSelectFromHeader} />
+    <div className="flex min-h-screen w-full bg-background">
+      <Sidebar onExamSelect={handleExamSelectFromSidebar} />
       <main className="relative flex flex-1 flex-col items-center justify-center p-4">
         <div className="w-full max-w-2xl">
           <header className="mb-8 flex flex-col items-center text-center">
