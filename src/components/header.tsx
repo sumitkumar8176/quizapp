@@ -30,7 +30,7 @@ const indianExams = Object.keys(examSubjects);
 export default function Header() {
   return (
     <header className="w-full bg-card border-b">
-      <div className="container mx-auto flex items-center justify-between p-2 text-sm">
+      <div className="container mx-auto flex items-center justify-start gap-4 p-2 text-sm">
         <p className="text-muted-foreground">
           Practice questions for all exams like here
         </p>
@@ -42,7 +42,7 @@ export default function Header() {
                 <ChevronDown className="h-4 w-4" />
               </div>
             </MenubarTrigger>
-            <MenubarContent align="end" className="max-h-96 overflow-y-auto">
+            <MenubarContent align="start" className="max-h-96 overflow-y-auto">
               {indianExams.map((exam) => (
                 <MenubarItem key={exam}>{exam}</MenubarItem>
               ))}
