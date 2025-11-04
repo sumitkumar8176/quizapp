@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type { Quiz } from "@/lib/types";
 import { createQuiz } from "@/app/actions";
@@ -29,15 +29,14 @@ type GameState = "idle" | "loading" | "playing" | "finished";
 type QuizFormValues = { topic: string; numberOfQuestions: number };
 
 export default function Home() {
-  const [gameState, setGameState] = useState<GameState>("idle");
+  const [gameState, setGameState] = useState<GameState>("loading");
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
   const [score, setScore] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const [shareableUrl, setShareableUrl] = useState("");
 
-  const loadQuizFromHash = () => {
+  const handleHashChange = useCallback(() => {
     if (typeof window === 'undefined') return;
 
     const hash = window.location.hash.substring(1);
@@ -52,8 +51,12 @@ export default function Home() {
           setQuiz(parsedQuiz);
           setUserAnswers(new Array(parsedQuiz.length).fill(""));
           setGameState("playing");
+          // Generate the shareable URL based on the current location, but only with the hash.
           const newUrl = `${window.location.origin}${window.location.pathname}#quiz=${quizData}`;
           setShareableUrl(newUrl);
+        } else {
+          // Handle case where decompression fails
+          throw new Error("Decompression failed");
         }
       } catch (error) {
         console.error("Failed to parse quiz data from URL hash", error);
@@ -62,26 +65,34 @@ export default function Home() {
           title: "Error",
           description: "Could not load the shared quiz. It might be invalid.",
         });
+        // Reset to a clean state
         window.location.hash = '';
+        setGameState("idle");
+        setQuiz(null);
+        setUserAnswers([]);
+        setScore(0);
+        setShareableUrl(`${window.location.origin}${window.location.pathname}`);
       }
     } else {
+      // No quiz data in hash, reset to idle state
       setGameState("idle");
       setQuiz(null);
       setUserAnswers([]);
       setScore(0);
       setShareableUrl(`${window.location.origin}${window.location.pathname}`);
     }
-    setIsLoading(false);
-  };
+  }, [toast]);
   
   useEffect(() => {
-    loadQuizFromHash();
+    // Initial load
+    handleHashChange();
 
-    window.addEventListener('hashchange', loadQuizFromHash);
+    // Listen for subsequent hash changes
+    window.addEventListener('hashchange', handleHashChange);
     return () => {
-      window.removeEventListener('hashchange', loadQuizFromHash);
+      window.removeEventListener('hashchange', handleHashChange);
     };
-  }, []);
+  }, [handleHashChange]);
 
 
   const handleCopyUrl = () => {
@@ -111,8 +122,8 @@ export default function Home() {
     } else if (result.data) {
       const newQuiz = result.data;
       const compressedQuiz = compressToEncodedURIComponent(JSON.stringify(newQuiz));
-      // This will trigger the 'hashchange' event listener, which re-runs the logic
-      // to load the quiz from the hash, ensuring a consistent state.
+      // Setting the hash will trigger the 'hashchange' event listener,
+      // which will then call `handleHashChange` to update the state.
       window.location.hash = `quiz=${compressedQuiz}`;
     }
   };
@@ -136,12 +147,13 @@ export default function Home() {
   };
 
   const renderGameState = () => {
-    if (isLoading) return <Loading />;
+    if (gameState === 'loading' && !quiz) return <Loading />;
+
     switch (gameState) {
       case "idle":
         return <QuizForm onSubmit={handleStartQuiz} isLoading={gameState === 'loading'} />;
       case "loading":
-        return <Loading />;
+         return <Loading />;
       case "playing":
         return quiz ? (
           <QuizSession quiz={quiz} onFinish={handleFinishQuiz} />
@@ -156,7 +168,7 @@ export default function Home() {
           />
         ) : null;
       default:
-        return null;
+        return <QuizForm onSubmit={handleStartQuiz} isLoading={false} />;
     }
   };
 
