@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type { Quiz } from "@/lib/types";
-import { createQuiz, createQuizFromContent } from "@/app/actions";
+import { createQuiz, createQuizFromContent, createQuizFromPyq } from "@/app/actions";
 import QuizForm from "@/components/quiz-form";
 import QuizSession from "@/components/quiz-session";
 import QuizResults from "@/components/quiz-results";
@@ -14,9 +14,11 @@ import Loading from "@/app/loading";
 import QuizUploader from "@/components/quiz-uploader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import QuizPayment from "@/components/quiz-payment";
+import QuizPyqForm from "@/components/quiz-pyq-form";
 
 type GameState = "idle" | "loading" | "payment" | "playing" | "finished";
 type QuizFormValues = { topic: string; numberOfQuestions: number; language: string; timerDuration: number | null; };
+type QuizPyqFormValues = { exam: string; numberOfQuestions: number; language: string; timerDuration: number | null; };
 
 export default function Home() {
   const [gameState, setGameState] = useState<GameState>("idle");
@@ -35,6 +37,32 @@ export default function Home() {
     formData.append("language", values.language);
 
     const result = await createQuiz(formData);
+
+    if (result.error) {
+      toast({
+        variant: "destructive",
+        title: "Error Generating Quiz",
+        description: result.error,
+      });
+      setGameState("idle");
+    } else if (result.data) {
+      const newQuiz = result.data;
+      setQuiz(newQuiz);
+      setUserAnswers(new Array(newQuiz.length).fill(""));
+      setTimerDuration(values.timerDuration);
+      setGameState("payment");
+    }
+  };
+
+  const handleStartPyqQuiz = async (values: QuizPyqFormValues) => {
+    setGameState("loading");
+
+    const formData = new FormData();
+    formData.append("exam", values.exam);
+    formData.append("numberOfQuestions", values.numberOfQuestions.toString());
+    formData.append("language", values.language);
+
+    const result = await createQuizFromPyq(formData);
 
     if (result.error) {
       toast({
@@ -107,12 +135,16 @@ export default function Home() {
   
   const renderIdleState = () => (
     <Tabs defaultValue="topic" className="w-full">
-      <TabsList className="grid w-full grid-cols-2">
+      <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="topic">From Topic</TabsTrigger>
+        <TabsTrigger value="pyq">From PYQ</TabsTrigger>
         <TabsTrigger value="upload">From File/Image</TabsTrigger>
       </TabsList>
       <TabsContent value="topic" className="pt-6">
         <QuizForm onSubmit={handleStartQuiz} isLoading={gameState === 'loading'} />
+      </TabsContent>
+       <TabsContent value="pyq" className="pt-6">
+        <QuizPyqForm onSubmit={handleStartPyqQuiz} isLoading={gameState === 'loading'} />
       </TabsContent>
       <TabsContent value="upload" className="pt-6">
         <QuizUploader onUpload={handleUploadQuiz} isLoading={gameState === 'loading'} />

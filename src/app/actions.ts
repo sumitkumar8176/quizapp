@@ -2,6 +2,7 @@
 
 import { generateQuizQuestions } from "@/ai/flows/generate-quiz-questions";
 import { generateQuizFromContent } from "@/ai/flows/generate-quiz-from-content";
+import { generateQuizFromPyq } from "@/ai/flows/generate-quiz-from-pyq";
 import { z } from "zod";
 
 const QuizTopicSchema = z.object({
@@ -72,6 +73,44 @@ export async function createQuizFromContent(formData: FormData) {
     });
     if (!questions || questions.length === 0) {
       return { error: "Could not generate a quiz from the provided content. Please try another file/image." };
+    }
+    return { data: questions };
+  } catch (e) {
+    console.error(e);
+    return { error: "An unexpected error occurred while generating the quiz. Please try again." };
+  }
+}
+
+const QuizPyqSchema = z.object({
+  exam: z.string().min(1, { message: "Please select an exam." }),
+  numberOfQuestions: z.coerce.number().min(1, { message: "You must request at least 1 question." }).max(50, { message: "You can request a maximum of 50 questions." }),
+  language: z.string(),
+});
+
+export async function createQuizFromPyq(formData: FormData) {
+  const validatedFields = QuizPyqSchema.safeParse({
+    exam: formData.get("exam"),
+    numberOfQuestions: formData.get("numberOfQuestions"),
+    language: formData.get("language"),
+  });
+
+  if (!validatedFields.success) {
+    const errorMessages = validatedFields.error.flatten();
+    const examError = errorMessages.fieldErrors.exam?.join(", ");
+    const questionsError = errorMessages.fieldErrors.numberOfQuestions?.join(", ");
+    return {
+      error: examError || questionsError || "Invalid input.",
+    };
+  }
+
+  try {
+    const questions = await generateQuizFromPyq({
+      exam: validatedFields.data.exam,
+      numberOfQuestions: validatedFields.data.numberOfQuestions,
+      language: validatedFields.data.language,
+    });
+    if (!questions || questions.length === 0) {
+      return { error: "Could not generate a quiz for this exam. Please try another one." };
     }
     return { data: questions };
   } catch (e) {
