@@ -35,6 +35,7 @@ export default function Home() {
   const [score, setScore] = useState(0);
   const { toast } = useToast();
   const [shareableUrl, setShareableUrl] = useState("");
+  const [initialLoad, setInitialLoad] = useState(true);
 
   const loadQuizFromHash = useCallback(() => {
     if (typeof window !== 'undefined') {
@@ -60,7 +61,7 @@ export default function Home() {
               title: "Error",
               description: "Could not load the shared quiz. It might be invalid.",
             });
-            window.location.hash = ''; // Clear invalid hash
+            window.location.hash = '';
           }
         }
       }
@@ -70,17 +71,22 @@ export default function Home() {
     setQuiz(null);
     setUserAnswers([]);
     setScore(0);
-    setShareableUrl(typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : '');
+    if(typeof window !== 'undefined') {
+      setShareableUrl(`${window.location.origin}${window.location.pathname}`);
+    }
   }, [toast]);
 
   useEffect(() => {
-    loadQuizFromHash(); // Load on initial mount
+    if(initialLoad) {
+      loadQuizFromHash();
+      setInitialLoad(false);
+    }
 
     window.addEventListener('hashchange', loadQuizFromHash);
     return () => {
       window.removeEventListener('hashchange', loadQuizFromHash);
     };
-  }, [loadQuizFromHash]);
+  }, [loadQuizFromHash, initialLoad]);
 
 
   const handleCopyUrl = () => {
@@ -129,7 +135,7 @@ export default function Home() {
   };
 
   const handlePlayAgain = () => {
-    // This will trigger the 'hashchange' event listener, which calls loadQuizFromHash to reset state
+    // This will trigger the 'hashchange' event listener to reset state
     window.location.hash = '';
   };
 
