@@ -13,7 +13,7 @@ import { BookCopy, Loader2 } from "lucide-react";
 const formSchema = z.object({
   exam: z.string().min(1, { message: "Please select an exam." }),
   subject: z.string().min(1, { message: "Please select a subject." }),
-  topic: z.string().min(2, { message: "Topic must be at least 2 characters." }).max(50),
+  topic: z.string().min(2, { message: "Topic must be at least 2 characters." }),
   numberOfQuestions: z.coerce.number().min(1, { message: "You must request at least 1 question." }),
   language: z.string(),
   timerDuration: z.coerce.number().min(0, { message: "Timer must be a positive number." }).max(120, { message: "Timer cannot exceed 120 minutes." }).nullable(),
@@ -95,44 +95,44 @@ export default function QuizPyqForm({ onSubmit, isLoading }: QuizPyqFormProps) {
         />
         
         {selectedExam && (
-          <FormField
-            control={form.control}
-            name="subject"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-lg">Select a Subject</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+          <>
+            <FormField
+              control={form.control}
+              name="subject"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-lg">Select a Subject</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a subject" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {examSubjects[selectedExam]?.map(subject => (
+                        <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          
+             <FormField
+              control={form.control}
+              name="topic"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-lg">Enter a Topic</FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a subject" />
-                    </SelectTrigger>
+                    <Input placeholder="e.g., Modern History, Algebra, Thermodynamics" {...field} />
                   </FormControl>
-                  <SelectContent>
-                    {examSubjects[selectedExam]?.map(subject => (
-                      <SelectItem key={subject} value={subject}>{subject}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-        
-        {selectedExam && (
-           <FormField
-            control={form.control}
-            name="topic"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-lg">Enter a Topic</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g., Modern History, Algebra, Thermodynamics" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
         )}
 
 
