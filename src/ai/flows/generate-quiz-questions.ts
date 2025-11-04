@@ -31,23 +31,7 @@ const prompt = ai.definePrompt({
   name: 'generateQuizQuestionsPrompt',
   input: {schema: GenerateQuizQuestionsInputSchema},
   output: {schema: GenerateQuizQuestionsOutputSchema},
-  prompt: `You are a quiz generator. Generate the 50 most important and relevant questions on the following topic: {{{$input}}}. The questions should cover all key concepts, definitions, short answers, and understanding-based points related to that topic. For each question, provide 4 options and a correct answer. Return a JSON array of objects, where each object has a question, options, and correctAnswer field. Make sure the correct answer is one of the options.
-
-For example:
-
-[
-  {
-    "question": "What is the capital of France?",
-    "options": ["London", "Paris", "Berlin", "Rome"],
-    "correctAnswer": "Paris"
-  },
-  {
-    "question": "What is the highest mountain in the world?",
-    "options": ["Mount Everest", "K2", "Kangchenjunga", "Lhotse"],
-    "correctAnswer": "Mount Everest"
-  }
-]
-`,
+  prompt: `Generate 50 quiz questions about {{{$input}}}. For each question, provide 4 multiple-choice options and identify the correct answer.`,
 });
 
 const generateQuizQuestionsFlow = ai.defineFlow(
