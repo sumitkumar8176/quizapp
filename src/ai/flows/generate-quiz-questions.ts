@@ -31,7 +31,7 @@ const prompt = ai.definePrompt({
   name: 'generateQuizQuestionsPrompt',
   input: {schema: GenerateQuizQuestionsInputSchema},
   output: {schema: GenerateQuizQuestionsOutputSchema},
-  prompt: `You are a quiz generator. Generate 10 quiz questions with 4 options each, and a correct answer, based on the following topic: {{{$input}}}. Return a JSON array of objects, where each object has a question, options, and correctAnswer field. Make sure the correct answer is one of the options.
+  prompt: `You are a quiz generator. Generate the 50 most important and relevant questions on the following topic: {{{$input}}}. The questions should cover all key concepts, definitions, short answers, and understanding-based points related to that topic. For each question, provide 4 options and a correct answer. Return a JSON array of objects, where each object has a question, options, and correctAnswer field. Make sure the correct answer is one of the options.
 
 For example:
 
