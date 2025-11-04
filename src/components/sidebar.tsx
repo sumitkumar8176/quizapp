@@ -1,12 +1,5 @@
 "use client";
 
-import {
-  Menubar,
-  MenubarContent,
-  MenubarMenu,
-  MenubarItem,
-  MenubarTrigger,
-} from "@/components/ui/menubar";
 import { Button } from "./ui/button";
 
 const examSubjects = {
@@ -33,11 +26,11 @@ type SidebarProps = {
 
 export default function Sidebar({ onExamSelect }: SidebarProps) {
   return (
-    <aside className="w-64 bg-card p-6 flex flex-col space-y-6 border-r">
+    <aside className="w-64 bg-destructive p-6 flex flex-col space-y-6 border-r text-destructive-foreground">
         <h1 className="text-xl font-bold">Practice quiz for any exams given below</h1>
         <nav className="flex flex-col space-y-2">
             {indianExams.map((exam) => (
-                <Button key={exam} variant="ghost" className="justify-start" onClick={() => onExamSelect(exam)}>{exam}</Button>
+                <Button key={exam} variant="ghost" className="justify-start hover:bg-destructive/90 hover:text-destructive-foreground" onClick={() => onExamSelect(exam)}>{exam}</Button>
             ))}
         </nav>
     </aside>
