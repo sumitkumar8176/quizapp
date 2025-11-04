@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import QRCode from 'qrcode';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle } from 'lucide-react';
@@ -11,23 +10,10 @@ type QuizPaymentProps = {
   onPaymentSuccess: () => void;
 };
 
-const UPI_ID = 'sumit.gusknp2022@gmail.com';
-const PAYEE_NAME = 'Sumit Kumar';
-const UPI_URL = `upi://pay?pa=${UPI_ID}&pn=${PAYEE_NAME}&cu=INR`;
+const UPI_ID = 'sumit.gusknp2022@okhdfcbank';
 
 export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
-  const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
-
-  useEffect(() => {
-    QRCode.toDataURL(UPI_URL, { width: 256, margin: 2 })
-      .then(url => {
-        setQrCodeDataUrl(url);
-      })
-      .catch(err => {
-        console.error('Failed to generate QR code', err);
-      });
-  }, []);
 
   const handleConfirmation = () => {
     setPaymentConfirmed(true);
@@ -55,15 +41,9 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
               transition={{ duration: 0.3 }}
               className="space-y-4"
             >
-              {qrCodeDataUrl ? (
-                <div className="flex justify-center">
-                  <img src={qrCodeDataUrl} alt="UPI QR Code" className="rounded-lg border p-2 bg-white" />
+              <div className="flex justify-center">
+                  <img src="/payment-qr.png" alt="UPI QR Code" className="rounded-lg border p-2 bg-white w-64 h-64" />
                 </div>
-              ) : (
-                <div className="w-64 h-64 bg-muted rounded-lg flex items-center justify-center animate-pulse">
-                  <p className="text-muted-foreground">Generating QR...</p>
-                </div>
-              )}
               <div className="space-y-1">
                 <p className="font-semibold text-sm text-muted-foreground">Pay to UPI ID:</p>
                 <p className="font-mono text-lg tracking-wider bg-muted p-2 rounded-md">{UPI_ID}</p>
