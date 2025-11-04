@@ -43,13 +43,15 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
 
   const handleManualVerification = () => {
     setIsVerifying(true);
+    // Simulate a 5-second verification delay
     const timer = setTimeout(() => {
       setIsVerifying(false);
       setPaymentConfirmed(true);
+      // Wait for confirmation animation before proceeding
       setTimeout(() => {
         onPaymentSuccessRef.current();
-      }, 1500); // Wait for confirmation animation
-    }, 5000); // 5-second delay to simulate verification
+      }, 1500);
+    }, 5000);
   };
 
 
@@ -72,25 +74,10 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
     if (!isTrialDisabled) {
       return (
         <div className="space-y-4">
-           <div className="flex justify-center items-center bg-white rounded-lg border p-2 w-64 h-64 mx-auto">
-            {qrCodeDataUrl ? (
-              <img src={qrCodeDataUrl} alt="UPI QR Code" className="w-full h-full" />
-            ) : (
-              <Loader2 className="h-12 w-12 animate-spin text-primary" />
-            )}
-          </div>
-           <div className="space-y-1">
-            <p className="font-semibold text-sm text-muted-foreground">Pay to UPI ID:</p>
-            <p className="font-mono text-lg tracking-wider bg-muted p-2 rounded-md">{UPI_ID}</p>
-          </div>
-          <Button onClick={handleFreeTrial} size="lg" className="w-full" variant="outline" disabled={isTrialDisabled || isVerifying}>
+          <Button onClick={handleFreeTrial} size="lg" className="w-full">
              Use a free trial
           </Button>
-           {isTrialDisabled ? (
-            <p className="text-xs text-destructive">You have used all your free trials.</p>
-          ) : (
-            <p className="text-xs text-muted-foreground">{trialsLeft} free trial{trialsLeft !== 1 ? 's' : ''} left.</p>
-          )}
+          <p className="text-xs text-muted-foreground">{trialsLeft} free trial{trialsLeft !== 1 ? 's' : ''} left.</p>
         </div>
       );
     }
