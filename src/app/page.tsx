@@ -37,10 +37,15 @@ export default function Home() {
   const { toast } = useToast();
   const [shareableUrl, setShareableUrl] = useState("");
 
+  const getQuizDataFromHash = () => {
+    if (typeof window === 'undefined') return null;
+    const hash = window.location.hash.substring(1);
+    const urlParams = new URLSearchParams(hash);
+    return urlParams.get('quiz');
+  };
+
   useEffect(() => {
-    // Check for quiz data in URL on initial load
-    const urlParams = new URLSearchParams(window.location.search);
-    const quizData = urlParams.get('quiz');
+    const quizData = getQuizDataFromHash();
     if (quizData) {
       try {
         const decompressed = decompressFromEncodedURIComponent(quizData);
@@ -49,9 +54,11 @@ export default function Home() {
           setQuiz(parsedQuiz);
           setUserAnswers(new Array(parsedQuiz.length).fill(""));
           setGameState("playing");
+          const newUrl = `${window.location.origin}${window.location.pathname}#quiz=${quizData}`;
+          setShareableUrl(newUrl);
         }
       } catch (error) {
-        console.error("Failed to parse quiz data from URL", error);
+        console.error("Failed to parse quiz data from URL hash", error);
         toast({
           variant: "destructive",
           title: "Error",
@@ -59,20 +66,22 @@ export default function Home() {
         });
       }
     } else {
-        // Set a default shareable URL if there is no quiz
        setShareableUrl(`${window.location.origin}${window.location.pathname}`);
     }
     setIsLoading(false);
+
+    const handleHashChange = () => {
+      window.location.reload();
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, [toast]);
   
   useEffect(() => {
-    // Generate shareable URL whenever quiz data changes
-    if (quiz) {
-      const compressedQuiz = compressToEncodedURIComponent(JSON.stringify(quiz));
-      const newUrl = `${window.location.origin}${window.location.pathname}?quiz=${compressedQuiz}`;
-      setShareableUrl(newUrl);
+    if (gameState === 'idle') {
+      setShareableUrl(`${window.location.origin}${window.location.pathname}`);
     }
-  }, [quiz]);
+  }, [gameState]);
 
   const handleCopyUrl = () => {
     navigator.clipboard.writeText(shareableUrl);
@@ -104,8 +113,8 @@ export default function Home() {
       setUserAnswers(new Array(newQuiz.length).fill(""));
       
       const compressedQuiz = compressToEncodedURIComponent(JSON.stringify(newQuiz));
-      const newUrl = `${window.location.origin}${window.location.pathname}?quiz=${compressedQuiz}`;
-      window.history.pushState({}, '', newUrl);
+      const newUrl = `${window.location.origin}${window.location.pathname}#quiz=${compressedQuiz}`;
+      window.location.hash = `quiz=${compressedQuiz}`;
       setShareableUrl(newUrl);
 
       setGameState("playing");
@@ -130,7 +139,7 @@ export default function Home() {
     setQuiz(null);
     setUserAnswers([]);
     setScore(0);
-    window.history.pushState({}, '', window.location.pathname);
+    window.location.hash = '';
     setShareableUrl(`${window.location.origin}${window.location.pathname}`);
   };
 
