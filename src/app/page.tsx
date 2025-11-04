@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type { Quiz } from "@/lib/types";
 import { createQuiz } from "@/app/actions";
@@ -11,6 +11,18 @@ import { Logo } from "@/components/icons";
 import { Card, CardContent } from "@/components/ui/card";
 import { AnimatePresence, motion } from "framer-motion";
 import Loading from "@/app/loading";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import QRCode from "react-qr-code";
+import { Share2, Copy } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type GameState = "idle" | "loading" | "playing" | "finished";
 type QuizFormValues = { topic: string; numberOfQuestions: number };
@@ -22,6 +34,19 @@ export default function Home() {
   const [score, setScore] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const [currentUrl, setCurrentUrl] = useState("");
+
+  useEffect(() => {
+    setCurrentUrl(window.location.href);
+  }, []);
+
+  const handleCopyUrl = () => {
+    navigator.clipboard.writeText(currentUrl);
+    toast({
+      title: "Copied!",
+      description: "The link has been copied to your clipboard.",
+    });
+  };
 
   const handleStartQuiz = async (values: QuizFormValues) => {
     setIsLoading(true);
@@ -102,9 +127,36 @@ export default function Home() {
               QuizWhiz
             </h1>
           </div>
-          <p className="max-w-md text-muted-foreground">
-            Enter a topic and let our AI create a fun quiz for you. Test your knowledge and challenge yourself!
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="max-w-md text-muted-foreground">
+              Enter a topic and let our AI create a fun quiz for you. Test your knowledge and challenge yourself!
+            </p>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Share2 className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Share Quiz</DialogTitle>
+                  <DialogDescription>
+                    Scan the QR code or copy the link to share this quiz.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex items-center justify-center p-4 bg-white rounded-lg">
+                  {currentUrl && <QRCode value={currentUrl} size={200} />}
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Input value={currentUrl} readOnly />
+                  <Button type="submit" size="sm" onClick={handleCopyUrl}>
+                    <span className="sr-only">Copy</span>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </header>
         <Card className="w-full shadow-lg overflow-hidden">
           <CardContent className="p-6 md:p-8 min-h-[250px] flex items-center justify-center">
