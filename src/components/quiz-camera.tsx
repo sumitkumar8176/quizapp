@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -6,12 +7,11 @@ import { Loader2, Camera, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card } from "./ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 
 type QuizCameraProps = {
-  onCapture: (dataUri: string, language: string, numberOfQuestions: number) => void;
+  onCapture: (dataUri: string, numberOfQuestions: number) => void;
   isLoading: boolean;
 };
 
@@ -20,7 +20,6 @@ export default function QuizCamera({ onCapture, isLoading }: QuizCameraProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [language, setLanguage] = useState("english");
   const [numberOfQuestions, setNumberOfQuestions] = useState(10);
   const { toast } = useToast();
 
@@ -82,9 +81,11 @@ export default function QuizCamera({ onCapture, isLoading }: QuizCameraProps) {
     setCapturedImage(null);
   };
 
+
+
   const handleGenerateQuiz = () => {
     if (capturedImage) {
-      onCapture(capturedImage, language, numberOfQuestions);
+      onCapture(capturedImage, numberOfQuestions);
     }
   };
 
@@ -122,45 +123,17 @@ export default function QuizCamera({ onCapture, isLoading }: QuizCameraProps) {
 
       <canvas ref={canvasRef} className="hidden" />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="language-camera">Quiz Language</Label>
-          <Select value={language} onValueChange={setLanguage} disabled={isLoading}>
-            <SelectTrigger id="language-camera">
-              <SelectValue placeholder="Select language" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="english">English</SelectItem>
-              <SelectItem value="hindi">Hindi</SelectItem>
-              <SelectItem value="spanish">Spanish</SelectItem>
-              <SelectItem value="french">French</SelectItem>
-              <SelectItem value="german">German</SelectItem>
-              <SelectItem value="chinese">Chinese</SelectItem>
-              <SelectItem value="bengali">Bengali</SelectItem>
-              <SelectItem value="marathi">Marathi</SelectItem>
-              <SelectItem value="telugu">Telugu</SelectItem>
-              <SelectItem value="tamil">Tamil</SelectItem>
-              <SelectItem value="gujarati">Gujarati</SelectItem>
-              <SelectItem value="urdu">Urdu</SelectItem>
-              <SelectItem value="kannada">Kannada</SelectItem>
-              <SelectItem value="odia">Odia</SelectItem>
-              <SelectItem value="malayalam">Malayalam</SelectItem>
-              <SelectItem value="punjabi">Punjabi</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="questions-camera">Number of questions</Label>
-          <Input 
-            id="questions-camera" 
-            type="number" 
-            value={numberOfQuestions}
-            onChange={(e) => setNumberOfQuestions(Number(e.target.value))}
-            min="1"
-            disabled={isLoading}
-            placeholder="e.g., 10" 
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="questions-camera">Number of questions</Label>
+        <Input 
+          id="questions-camera" 
+          type="number" 
+          value={numberOfQuestions}
+          onChange={(e) => setNumberOfQuestions(Number(e.target.value))}
+          min="1"
+          disabled={isLoading}
+          placeholder="e.g., 10" 
+        />
       </div>
 
       {capturedImage ? (

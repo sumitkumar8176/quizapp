@@ -22,8 +22,8 @@ import { cn } from "@/lib/utils";
 
 
 type GameState = "idle" | "loading" | "payment" | "playing" | "finished";
-type QuizFormValues = { topic: string; numberOfQuestions: number; language: string; timerDuration: number | null; };
-type QuizPyqFormValues = { exam: string; subject: string; topic: string; numberOfQuestions: number; language: string; timerDuration: number | null; };
+type QuizFormValues = { topic: string; numberOfQuestions: number; timerDuration: number | null; };
+type QuizPyqFormValues = { exam: string; subject: string; topic: string; numberOfQuestions: number; timerDuration: number | null; };
 
 export default function Home() {
   const [gameState, setGameState] = useState<GameState>("idle");
@@ -33,6 +33,7 @@ export default function Home() {
   const [timerDuration, setTimerDuration] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("topic");
   const [selectedExamFromSidebar, setSelectedExamFromSidebar] = useState<string | null>(null);
+  const [language, setLanguage] = useState("english");
   const { toast } = useToast();
 
   const handleStartQuiz = async (values: QuizFormValues) => {
@@ -41,7 +42,7 @@ export default function Home() {
     const formData = new FormData();
     formData.append("topic", values.topic);
     formData.append("numberOfQuestions", values.numberOfQuestions.toString());
-    formData.append("language", values.language);
+    formData.append("language", language);
 
     const result = await createQuiz(formData);
 
@@ -69,7 +70,7 @@ export default function Home() {
     formData.append("subject", values.subject);
     formData.append("topic", values.topic);
     formData.append("numberOfQuestions", values.numberOfQuestions.toString());
-    formData.append("language", values.language);
+    formData.append("language", language);
 
     const result = await createQuizFromPyq(formData);
 
@@ -89,7 +90,7 @@ export default function Home() {
     }
   };
 
-  const handleUploadQuiz = async (dataUri: string, language: string, numberOfQuestions: number) => {
+  const handleUploadQuiz = async (dataUri: string, numberOfQuestions: number) => {
     setGameState("loading");
 
     const formData = new FormData();
@@ -215,7 +216,7 @@ export default function Home() {
     <div className="flex min-h-screen w-full bg-background">
       <Sidebar onExamSelect={handleExamSelectFromSidebar} />
       <main className="relative flex flex-1 flex-col items-center">
-        <Navbar />
+        <Navbar currentLanguage={language} setLanguage={setLanguage} />
         <div className="flex flex-1 flex-col items-center justify-center p-4 w-full">
           <div className="w-full max-w-2xl">
             <header className="mb-8 flex flex-col items-center text-center">

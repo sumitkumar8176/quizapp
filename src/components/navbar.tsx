@@ -1,10 +1,18 @@
+
 "use client";
 
 import { motion } from "framer-motion";
+import { Button } from "./ui/button";
+import { cn } from "@/lib/utils";
 
-export function Navbar() {
+type NavbarProps = {
+  currentLanguage: string;
+  setLanguage: (language: string) => void;
+};
+
+export function Navbar({ currentLanguage, setLanguage }: NavbarProps) {
   return (
-    <div className="bg-yellow-400 w-full overflow-hidden">
+    <div className="bg-yellow-400 w-full overflow-hidden flex justify-between items-center pr-4">
       <motion.div
         animate={{
           x: ["-100%", "100%"],
@@ -23,6 +31,28 @@ export function Navbar() {
           🚀 Start your quiz journey now and test your knowledge!
         </h1>
       </motion.div>
+      <div className="flex gap-2">
+        <Button
+          onClick={() => setLanguage("english")}
+          size="sm"
+          className={cn(
+            "text-black bg-yellow-300 hover:bg-yellow-200",
+            currentLanguage === "english" && "bg-white hover:bg-white/90"
+          )}
+        >
+          English
+        </Button>
+        <Button
+          onClick={() => setLanguage("hindi")}
+          size="sm"
+          className={cn(
+            "text-black bg-yellow-300 hover:bg-yellow-200",
+            currentLanguage === "hindi" && "bg-white hover:bg-white/90"
+          )}
+        >
+          Hindi
+        </Button>
+      </div>
     </div>
   );
 }
