@@ -12,7 +12,7 @@ type NavbarProps = {
 
 export function Navbar({ currentLanguage, setLanguage }: NavbarProps) {
   return (
-    <div className="bg-yellow-400 w-full overflow-hidden flex justify-between items-center pr-4">
+    <div className="bg-yellow-400 w-full overflow-hidden flex justify-between items-center px-4">
       <motion.div
         animate={{
           x: ["-100%", "100%"],
@@ -25,13 +25,13 @@ export function Navbar({ currentLanguage, setLanguage }: NavbarProps) {
             ease: "linear",
           },
         }}
-        className="w-full"
+        className="flex-grow"
       >
         <h1 className="text-black text-lg font-semibold py-2 whitespace-nowrap">
           🚀 Start your quiz journey now and test your knowledge!
         </h1>
       </motion.div>
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-shrink-0">
         <Button
           onClick={() => setLanguage("english")}
           size="sm"
