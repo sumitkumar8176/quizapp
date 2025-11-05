@@ -1,6 +1,8 @@
+
 "use client";
 
 import { Button } from "./ui/button";
+import { Github, Instagram, Linkedin, Phone } from "lucide-react";
 
 const examSubjects = {
   "UPSC Civil Services": ["History", "Geography", "Polity & Governance", "Economy", "Environment & Ecology", "Science & Technology", "Current Affairs"],
@@ -26,13 +28,36 @@ type SidebarProps = {
 
 export default function Sidebar({ onExamSelect }: SidebarProps) {
   return (
-    <aside className="w-64 bg-destructive p-6 flex flex-col space-y-6 border-r text-destructive-foreground">
-        <h1 className="text-xl font-bold">Practice quiz for any exams given below</h1>
-        <nav className="flex flex-col space-y-2">
-            {indianExams.map((exam) => (
-                <Button key={exam} variant="ghost" className="justify-start hover:bg-destructive/90 hover:text-destructive-foreground" onClick={() => onExamSelect(exam)}>{exam}</Button>
-            ))}
-        </nav>
+    <aside className="w-64 bg-destructive p-6 flex flex-col justify-between border-r text-destructive-foreground">
+        <div>
+          <h1 className="text-xl font-bold">Practice quiz for any exams given below</h1>
+          <nav className="flex flex-col space-y-2 mt-6">
+              {indianExams.map((exam) => (
+                  <Button key={exam} variant="ghost" className="justify-start hover:bg-destructive/90 hover:text-destructive-foreground" onClick={() => onExamSelect(exam)}>{exam}</Button>
+              ))}
+          </nav>
+        </div>
+        <div className="mt-8">
+            <h2 className="text-lg font-semibold mb-4">Connect with me</h2>
+            <div className="space-y-3">
+                <a href="https://github.com/sumitkumar8176" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                    <Github className="h-5 w-5" />
+                    <span>GitHub</span>
+                </a>
+                <a href="http://linkedin.com/in/sumit-kumar-3737392b0" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                    <Linkedin className="h-5 w-5" />
+                    <span>LinkedIn</span>
+                </a>
+                <a href="https://www.instagram.com/fearless_fighter_0420" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                    <Instagram className="h-5 w-5" />
+                    <span>Instagram</span>
+                </a>
+                 <div className="flex items-center gap-3">
+                    <Phone className="h-5 w-5" />
+                    <span>8126718957</span>
+                </div>
+            </div>
+        </div>
     </aside>
   );
 }
