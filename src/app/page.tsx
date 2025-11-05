@@ -145,7 +145,7 @@ export default function Home() {
   
   const renderIdleState = () => (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid w-full grid-cols-3">
+      <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto sm:h-10">
         <TabsTrigger value="topic">From Topic</TabsTrigger>
         <TabsTrigger value="pyq">From PYQ</TabsTrigger>
         <TabsTrigger value="upload">From File/Image</TabsTrigger>
