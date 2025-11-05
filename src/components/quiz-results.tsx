@@ -51,16 +51,13 @@ export default function QuizResults({ quiz, userAnswers, score, onPlayAgain }: Q
     if (navigator.share) {
       try {
         await navigator.share(shareData);
-      } catch (error: any) {
-        // Handle specific errors like user cancellation silently.
-        if (error.name !== 'AbortError' && error.name !== 'NotAllowedError') {
-          // For other errors, fall back to clipboard
-          copyToClipboard(clipboardText);
-        }
+      } catch (error) {
+        // If sharing fails (e.g., user cancels), fall back to clipboard
+        await copyToClipboard(clipboardText);
       }
     } else {
       // Fallback for browsers that don't support the Web Share API
-      copyToClipboard(clipboardText);
+      await copyToClipboard(clipboardText);
     }
   };
 
