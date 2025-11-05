@@ -20,7 +20,7 @@ export function Navbar() {
         className="w-full"
       >
         <h1 className="text-black text-lg font-semibold py-2 whitespace-nowrap">
-          Knowledge your test and now journey quiz your start🚀!
+          🚀 Start your quiz journey now and test your knowledge!
         </h1>
       </motion.div>
     </div>
