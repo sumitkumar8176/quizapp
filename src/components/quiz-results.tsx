@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Quiz } from "@/lib/types";
@@ -40,10 +41,10 @@ export default function QuizResults({ quiz, userAnswers, score, onPlayAgain }: Q
     } else {
       // Fallback for browsers that don't support the Web Share API
       try {
-        await navigator.clipboard.writeText(shareText);
+        await navigator.clipboard.writeText(`${shareText} - ${window.location.href}`);
         toast({
           title: "Score Copied!",
-          description: "Your quiz score has been copied to the clipboard.",
+          description: "Your quiz score and a link have been copied to the clipboard.",
         });
       } catch (err) {
         console.error('Failed to copy score:', err);
