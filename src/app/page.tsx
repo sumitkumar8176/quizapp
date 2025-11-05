@@ -19,6 +19,7 @@ import QuizPyqForm from "@/components/quiz-pyq-form";
 import Sidebar from "@/components/sidebar";
 import { Navbar } from "@/components/navbar";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 
 type GameState = "idle" | "loading" | "payment" | "playing" | "finished";
@@ -216,8 +217,30 @@ export default function Home() {
     <div className="flex min-h-screen w-full bg-background">
       <Sidebar onExamSelect={handleExamSelectFromSidebar} />
       <main className="relative flex flex-1 flex-col items-center">
-        <Navbar currentLanguage={language} setLanguage={setLanguage} />
-        <div className="flex flex-1 flex-col items-center justify-center p-4 w-full">
+        <Navbar />
+        <div className="flex flex-1 flex-col items-center p-4 w-full">
+           <div className="w-full max-w-2xl flex justify-end mb-4 gap-2">
+            <Button
+              onClick={() => setLanguage("english")}
+              size="sm"
+              className={cn(
+                "text-black bg-yellow-300 hover:bg-yellow-200",
+                language === "english" && "bg-white hover:bg-white/90"
+              )}
+            >
+              English
+            </Button>
+            <Button
+              onClick={() => setLanguage("hindi")}
+              size="sm"
+              className={cn(
+                "text-black bg-yellow-300 hover:bg-yellow-200",
+                language === "hindi" && "bg-white hover:bg-white/90"
+              )}
+            >
+              Hindi
+            </Button>
+          </div>
           <div className="w-full max-w-2xl">
             <header className="mb-8 flex flex-col items-center text-center">
               <div className="mb-4 flex items-center gap-3">
