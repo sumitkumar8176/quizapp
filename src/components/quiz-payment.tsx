@@ -38,21 +38,25 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
     setFreeTrialsUsed(trials);
     if (trials >= FREE_TRIAL_LIMIT) {
       setIsTrialDisabled(true);
+      setIsVerifying(true); // Start "verification" immediately if trials are over
     }
   }, []);
 
-  const handleManualVerification = () => {
-    setIsVerifying(true);
-    // Simulate a 5-second verification delay
-    const timer = setTimeout(() => {
-      setIsVerifying(false);
-      setPaymentConfirmed(true);
-      // Wait for confirmation animation before proceeding
-      setTimeout(() => {
-        onPaymentSuccessRef.current();
-      }, 1500);
-    }, 5000);
-  };
+  useEffect(() => {
+    if (isVerifying) {
+      // Simulate a 5-second verification delay
+      const timer = setTimeout(() => {
+        setIsVerifying(false);
+        setPaymentConfirmed(true);
+        // Wait for confirmation animation before proceeding
+        setTimeout(() => {
+          onPaymentSuccessRef.current();
+        }, 1500);
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isVerifying]);
 
   const handleFreeTrial = () => {
     const newTrialCount = freeTrialsUsed + 1;
@@ -81,15 +85,6 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
       );
     }
 
-    if (isVerifying) {
-        return (
-             <div className="flex flex-col items-center justify-center pt-4 space-y-4">
-                <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                <p>Verifying payment, please wait...</p>
-            </div>
-        )
-    }
-
     return (
        <div className="space-y-4">
         <div className="flex justify-center items-center bg-white rounded-lg border p-2 w-64 h-64 mx-auto">
@@ -103,9 +98,10 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
           <p className="font-semibold text-sm text-muted-foreground">Pay to UPI ID:</p>
           <p className="font-mono text-lg tracking-wider bg-muted p-2 rounded-md">{UPI_ID}</p>
         </div>
-        <Button onClick={handleManualVerification} size="lg" className="w-full" disabled={isVerifying}>
-            {isVerifying ? "Verifying..." : "Confirm Payment"}
-        </Button>
+        <div className="flex flex-col items-center justify-center pt-4 space-y-4">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p>Verifying payment, please wait...</p>
+        </div>
       </div>
     )
   }
@@ -120,9 +116,9 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
          {isTrialDisabled 
             ? (
               <div className="space-y-1">
-                <p>You can’t start the quiz until the payment is completed.</p>
+                <p>🔒 You can’t start the quiz until the payment is completed.</p>
                 <p>Please complete your payment to unlock and start the quiz.</p>
-                <p>Once your payment is successfully done, your quiz will automatically start.</p>
+                <p>✅ Once your payment is successfully verified, your quiz will automatically start.</p>
               </div>
             )
             : `You have ${trialsLeft} free trial${trialsLeft !== 1 ? 's' : ''} remaining.`
