@@ -9,7 +9,6 @@ import { CheckCircle2, XCircle, RotateCw, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import QuizRating from "./quiz-rating";
 import { useToast } from "@/hooks/use-toast";
-import { Progress } from "./ui/progress";
 
 type QuizResultsProps = {
   quiz: Quiz;
@@ -27,6 +26,7 @@ export default function QuizResults({ quiz, userAnswers, score, onPlayAgain }: Q
     const shareText = `🎉 Congratulations! You scored ${score}/${totalQuestions} in QuizWhiz!
 Think you can do better? 💪
 Challenge your friends and see who’s the real quiz master!`;
+    
     const shareData = {
       title: 'My QuizWhiz Score!',
       text: shareText,
@@ -37,13 +37,13 @@ Challenge your friends and see who’s the real quiz master!`;
       try {
         await navigator.share(shareData);
       } catch (error) {
-        // This can happen if the user cancels the share. We'll just log it.
         console.error('Sharing failed:', error);
+        // This can happen if the user cancels the share dialog, so we don't show an error.
       }
     } else {
       // Fallback for browsers that don't support the Web Share API
       try {
-        await navigator.clipboard.writeText(`${shareData.text}\n\nCheck it out here: ${shareData.url}`);
+        await navigator.clipboard.writeText(`${shareData.text}\n\nTake the quiz here: ${shareData.url}`);
         toast({
           title: "Score Copied!",
           description: "Your quiz score and a link have been copied to the clipboard.",
