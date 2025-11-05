@@ -24,7 +24,9 @@ export default function QuizResults({ quiz, userAnswers, score, onPlayAgain }: Q
   const { toast } = useToast();
 
   const handleShare = async () => {
-    const shareText = `I scored ${score} out of ${totalQuestions} (${percentage}%) on this QuizWhiz quiz! Can you beat my score?`;
+    const shareText = `🎉 Congratulations! You scored ${score}/${totalQuestions} in QuizWhiz!
+Think you can do better? 💪
+Challenge your friends and see who’s the real quiz master!`;
     const shareData = {
       title: 'My QuizWhiz Score!',
       text: shareText,
@@ -41,7 +43,7 @@ export default function QuizResults({ quiz, userAnswers, score, onPlayAgain }: Q
     } else {
       // Fallback for browsers that don't support the Web Share API
       try {
-        await navigator.clipboard.writeText(`${shareText} - ${window.location.href}`);
+        await navigator.clipboard.writeText(`${shareData.text}\n\nCheck it out here: ${shareData.url}`);
         toast({
           title: "Score Copied!",
           description: "Your quiz score and a link have been copied to the clipboard.",
