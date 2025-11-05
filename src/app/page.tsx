@@ -17,6 +17,7 @@ import QuizPayment from "@/components/quiz-payment";
 import QuizPyqForm from "@/components/quiz-pyq-form";
 import Sidebar from "@/components/sidebar";
 import { Navbar } from "@/components/navbar";
+import { cn } from "@/lib/utils";
 
 
 type GameState = "idle" | "loading" | "payment" | "playing" | "finished";
@@ -147,10 +148,10 @@ export default function Home() {
   
   const renderIdleState = () => (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto sm:h-10">
-        <TabsTrigger value="topic">From Topic</TabsTrigger>
-        <TabsTrigger value="pyq">From PYQ</TabsTrigger>
-        <TabsTrigger value="upload">From File/Image</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto sm:h-12 bg-muted/50 rounded-lg p-1">
+        <TabsTrigger value="topic" className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md rounded-md py-2 text-muted-foreground">From Topic</TabsTrigger>
+        <TabsTrigger value="pyq" className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md rounded-md py-2 text-muted-foreground">From PYQ</TabsTrigger>
+        <TabsTrigger value="upload" className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md rounded-md py-2 text-muted-foreground">From File/Image</TabsTrigger>
       </TabsList>
       <TabsContent value="topic" className="pt-6">
         <QuizForm onSubmit={handleStartQuiz} isLoading={gameState === 'loading'} />
