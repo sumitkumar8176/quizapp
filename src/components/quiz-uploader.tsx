@@ -10,9 +10,11 @@ import QuizCamera from "./quiz-camera";
 import { Label } from "@/components/ui/label";
 import { Input } from "./ui/input";
 import { translations } from "@/lib/translations";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { indianLanguages } from "@/lib/languages";
 
 type QuizUploaderProps = {
-  onUpload: (dataUri: string, numberOfQuestions: number) => void;
+  onUpload: (dataUri: string, numberOfQuestions: number, language: string) => void;
   isLoading: boolean;
   language: "english" | "hindi";
 };
@@ -21,6 +23,7 @@ export default function QuizUploader({ onUpload, isLoading, language }: QuizUplo
   const t = translations[language];
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [numberOfQuestions, setNumberOfQuestions] = useState(10);
+  const [quizLanguage, setQuizLanguage] = useState("English");
   const { toast } = useToast();
 
   const handleButtonClick = () => {
@@ -35,7 +38,7 @@ export default function QuizUploader({ onUpload, isLoading, language }: QuizUplo
     reader.onload = (e) => {
       const dataUri = e.target?.result as string;
       if (dataUri) {
-        onUpload(dataUri, numberOfQuestions);
+        onUpload(dataUri, numberOfQuestions, quizLanguage);
       } else {
         toast({
           variant: "destructive",
@@ -58,7 +61,7 @@ export default function QuizUploader({ onUpload, isLoading, language }: QuizUplo
   };
   
   const handleCapture = (dataUri: string, numberOfQuestions: number) => {
-    onUpload(dataUri, numberOfQuestions);
+    onUpload(dataUri, numberOfQuestions, quizLanguage);
   };
 
 
@@ -105,7 +108,7 @@ export default function QuizUploader({ onUpload, isLoading, language }: QuizUplo
                 </p>
               </div>
             </div>
-
+            
             <div className="space-y-2 text-left">
               <Label htmlFor="questions-upload">{t.numQuestions}</Label>
               <Input
@@ -118,6 +121,21 @@ export default function QuizUploader({ onUpload, isLoading, language }: QuizUplo
                 placeholder="e.g., 10"
               />
             </div>
+            
+            <div className="space-y-2 text-left">
+              <Label htmlFor="language-upload">{t.quizLanguage}</Label>
+              <Select value={quizLanguage} onValueChange={setQuizLanguage}>
+                <SelectTrigger id="language-upload">
+                  <SelectValue placeholder={t.selectLanguage} />
+                </SelectTrigger>
+                <SelectContent>
+                  {indianLanguages.map((lang) => (
+                    <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
 
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">

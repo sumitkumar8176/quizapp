@@ -9,11 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Lightbulb, Loader2 } from "lucide-react";
 import { translations } from "@/lib/translations";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { indianLanguages } from "@/lib/languages";
 
 const formSchema = z.object({
   topic: z.string().min(2, { message: "Topic must be at least 2 characters." }).max(50),
   numberOfQuestions: z.coerce.number().min(1, { message: "You must request at least 1 question." }),
   timerDuration: z.coerce.number().min(0, { message: "Timer must be a positive number." }).max(120, { message: "Timer cannot exceed 120 minutes." }).nullable(),
+  language: z.string().min(1, { message: "Please select a language." }),
 });
 
 type QuizFormProps = {
@@ -30,6 +33,7 @@ export default function QuizForm({ onSubmit, isLoading, language }: QuizFormProp
       topic: "",
       numberOfQuestions: 10,
       timerDuration: null,
+      language: "English",
     },
   });
 
@@ -77,6 +81,28 @@ export default function QuizForm({ onSubmit, isLoading, language }: QuizFormProp
             )}
           />
         </div>
+        <FormField
+          control={form.control}
+          name="language"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-lg">{t.quizLanguage}</FormLabel>
+               <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t.selectLanguage} />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {indianLanguages.map((lang) => (
+                    <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
           {isLoading ? (
             <>
@@ -94,5 +120,3 @@ export default function QuizForm({ onSubmit, isLoading, language }: QuizFormProp
     </Form>
   );
 }
-
-    

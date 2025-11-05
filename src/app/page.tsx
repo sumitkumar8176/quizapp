@@ -21,20 +21,11 @@ import { Navbar } from "@/components/navbar";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { translations } from "@/lib/translations";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 
 
 type GameState = "idle" | "loading" | "payment" | "playing" | "finished";
-type QuizFormValues = { topic: string; numberOfQuestions: number; timerDuration: number | null; };
-type QuizPyqFormValues = { exam: string; subject: string; topic: string; numberOfQuestions: number; timerDuration: number | null; };
-
-const indianLanguages = [
-  "English", "Hindi", "Assamese", "Bengali", "Bodo", "Dogri", "Gujarati", 
-  "Kannada", "Kashmiri", "Konkani", "Maithili", "Malayalam", "Manipuri", 
-  "Marathi", "Nepali", "Odia", "Punjabi", "Sanskrit", "Santali", 
-  "Sindhi", "Tamil", "Telugu", "Urdu"
-];
+type QuizFormValues = { topic: string; numberOfQuestions: number; timerDuration: number | null; language: string; };
+type QuizPyqFormValues = { exam: string; subject: string; topic: string; numberOfQuestions: number; timerDuration: number | null; language: string; };
 
 export default function Home() {
   const [gameState, setGameState] = useState<GameState>("idle");
@@ -45,7 +36,6 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("topic");
   const [selectedExamFromSidebar, setSelectedExamFromSidebar] = useState<string | null>(null);
   const [uiLanguage, setUiLanguage] = useState<"english" | "hindi">("english");
-  const [quizLanguage, setQuizLanguage] = useState<string>("English");
   const { toast } = useToast();
 
   const t = translations[uiLanguage];
@@ -56,7 +46,7 @@ export default function Home() {
     const formData = new FormData();
     formData.append("topic", values.topic);
     formData.append("numberOfQuestions", values.numberOfQuestions.toString());
-    formData.append("language", quizLanguage);
+    formData.append("language", values.language);
 
     const result = await createQuiz(formData);
 
@@ -84,7 +74,7 @@ export default function Home() {
     formData.append("subject", values.subject);
     formData.append("topic", values.topic);
     formData.append("numberOfQuestions", values.numberOfQuestions.toString());
-    formData.append("language", quizLanguage);
+    formData.append("language", values.language);
 
     const result = await createQuizFromPyq(formData);
 
@@ -104,13 +94,13 @@ export default function Home() {
     }
   };
 
-  const handleUploadQuiz = async (dataUri: string, numberOfQuestions: number) => {
+  const handleUploadQuiz = async (dataUri: string, numberOfQuestions: number, language: string) => {
     setGameState("loading");
 
     const formData = new FormData();
     formData.append("contentDataUri", dataUri);
     formData.append("numberOfQuestions", numberOfQuestions.toString());
-    formData.append("language", quizLanguage);
+    formData.append("language", language);
 
     const result = await createQuizFromContent(formData);
 
@@ -164,20 +154,6 @@ export default function Home() {
   
   const renderIdleState = () => (
     <div className="w-full">
-      <div className="mb-6 space-y-2">
-        <Label htmlFor="quiz-language" className="text-lg">{t.quizLanguage}</Label>
-        <Select value={quizLanguage} onValueChange={setQuizLanguage}>
-          <SelectTrigger id="quiz-language" className="w-full">
-            <SelectValue placeholder={t.selectLanguage} />
-          </SelectTrigger>
-          <SelectContent>
-            {indianLanguages.map((lang) => (
-              <SelectItem key={lang} value={lang}>{lang}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto sm:h-12 bg-transparent rounded-lg p-1 gap-2">
           <TabsTrigger
@@ -311,5 +287,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
