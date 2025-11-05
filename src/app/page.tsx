@@ -16,6 +16,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import QuizPayment from "@/components/quiz-payment";
 import QuizPyqForm from "@/components/quiz-pyq-form";
 import Sidebar from "@/components/sidebar";
+import { Navbar } from "@/components/navbar";
+
 
 type GameState = "idle" | "loading" | "payment" | "playing" | "finished";
 type QuizFormValues = { topic: string; numberOfQuestions: number; language: string; timerDuration: number | null; };
@@ -195,41 +197,44 @@ export default function Home() {
   return (
     <div className="flex min-h-screen w-full bg-background">
       <Sidebar onExamSelect={handleExamSelectFromSidebar} />
-      <main className="relative flex flex-1 flex-col items-center justify-center p-4">
-        <div className="w-full max-w-2xl">
-          <header className="mb-8 flex flex-col items-center text-center">
-            <div className="mb-4 flex items-center gap-3">
-              <Logo className="h-10 w-10 text-primary" />
-              <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-primary font-headline">
-                QuizWhiz
-              </h1>
-            </div>
-            <div className="flex items-center gap-2">
-              <p className="max-w-md text-muted-foreground">
-                Enter a topic and let our AI create a fun quiz for you. Test your knowledge and challenge yourself!
-              </p>
-            </div>
-          </header>
-          <Card className="w-full shadow-lg overflow-hidden">
-            <CardContent className="p-6 md:p-8 min-h-[350px] flex items-center justify-center">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={gameState}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="w-full"
-                >
-                  {renderGameState()}
-                </motion.div>
-              </AnimatePresence>
-            </CardContent>
-          </Card>
+      <main className="relative flex flex-1 flex-col items-center">
+        <Navbar />
+        <div className="flex flex-1 flex-col items-center justify-center p-4 w-full">
+          <div className="w-full max-w-2xl">
+            <header className="mb-8 flex flex-col items-center text-center">
+              <div className="mb-4 flex items-center gap-3">
+                <Logo className="h-10 w-10 text-primary" />
+                <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-primary font-headline">
+                  QuizWhiz
+                </h1>
+              </div>
+              <div className="flex items-center gap-2">
+                <p className="max-w-md text-muted-foreground">
+                  Enter a topic and let our AI create a fun quiz for you. Test your knowledge and challenge yourself!
+                </p>
+              </div>
+            </header>
+            <Card className="w-full shadow-lg overflow-hidden">
+              <CardContent className="p-6 md:p-8 min-h-[350px] flex items-center justify-center">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={gameState}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="w-full"
+                  >
+                    {renderGameState()}
+                  </motion.div>
+                </AnimatePresence>
+              </CardContent>
+            </Card>
+          </div>
+          <footer className="absolute bottom-4 right-4 text-sm text-muted-foreground">
+            -by sumit kumar
+          </footer>
         </div>
-        <footer className="absolute bottom-4 right-4 text-sm text-muted-foreground">
-          -by sumit kumar
-        </footer>
       </main>
     </div>
   );
