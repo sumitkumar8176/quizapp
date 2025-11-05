@@ -4,9 +4,10 @@ import type { Quiz } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { CheckCircle2, XCircle, RotateCw } from "lucide-react";
+import { CheckCircle2, XCircle, RotateCw, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import QuizRating from "./quiz-rating";
+import { useToast } from "@/hooks/use-toast";
 
 type QuizResultsProps = {
   quiz: Quiz;
@@ -17,6 +18,45 @@ type QuizResultsProps = {
 
 export default function QuizResults({ quiz, userAnswers, score, onPlayAgain }: QuizResultsProps) {
   const totalQuestions = quiz.length;
+  const { toast } = useToast();
+
+  const handleShare = async () => {
+    const shareText = `I scored ${score} out of ${totalQuestions} on this quiz! Check out QuizWhiz.`;
+    const shareData = {
+      title: 'My QuizWhiz Score',
+      text: shareText,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (error) {
+        console.error('Error sharing:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "There was an error trying to share your score.",
+        });
+      }
+    } else {
+      // Fallback for browsers that don't support Web Share API
+      try {
+        await navigator.clipboard.writeText(shareText);
+        toast({
+          title: "Score Copied!",
+          description: "Your score has been copied to the clipboard.",
+        });
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not copy score to clipboard.",
+        });
+      }
+    }
+  };
+
 
   return (
     <div className="space-y-8">
@@ -70,11 +110,18 @@ export default function QuizResults({ quiz, userAnswers, score, onPlayAgain }: Q
           })}
         </Accordion>
       </div>
+      
+      <div className="flex flex-col sm:flex-row gap-4">
+        <Button onClick={onPlayAgain} className="w-full" size="lg">
+          <RotateCw className="mr-2 h-5 w-5" />
+          Play Again
+        </Button>
+        <Button onClick={handleShare} variant="outline" className="w-full" size="lg">
+          <Share2 className="mr-2 h-5 w-5" />
+           Share Score
+        </Button>
+      </div>
 
-      <Button onClick={onPlayAgain} className="w-full" size="lg">
-        <RotateCw className="mr-2 h-5 w-5" />
-        Play Again
-      </Button>
     </div>
   );
 }
