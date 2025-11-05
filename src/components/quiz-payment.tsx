@@ -28,28 +28,34 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
   const showPaymentSection = trialsLeft <= 0;
 
   useEffect(() => {
+    // Load the number of trials used from local storage
     const trials = parseInt(localStorage.getItem('freeTrialsUsed') || '0', 10);
     setFreeTrialsUsed(trials);
 
+    // If no free trials are left, immediately start the payment verification process.
     if (trials >= FREE_TRIAL_LIMIT) {
       setPaymentStatus('verifying');
     }
   }, []);
 
   useEffect(() => {
+    let timer: NodeJS.Timeout;
+    // When status is 'verifying', simulate a 5-second payment check.
     if (paymentStatus === 'verifying') {
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         setPaymentStatus('confirmed');
-      }, 5000); // 5-second simulated verification
-      return () => clearTimeout(timer);
-    }
-    if (paymentStatus === 'confirmed') {
-      const timer = setTimeout(() => {
+      }, 5000); 
+    } 
+    // When status is 'confirmed', wait 1.5s for the animation, then start the quiz.
+    else if (paymentStatus === 'confirmed') {
+      timer = setTimeout(() => {
         onPaymentSuccessRef.current();
-      }, 1500); // Wait for confirmation animation
-      return () => clearTimeout(timer);
+      }, 1500);
     }
+    // Cleanup the timer if the component unmounts or status changes.
+    return () => clearTimeout(timer);
   }, [paymentStatus]);
+
 
   const handleFreeTrial = () => {
     const newTrialCount = freeTrialsUsed + 1;
@@ -102,7 +108,7 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
 
     return (
        <motion.div
-          key="payment"
+          key="free-trial"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20, scale: 0.9 }}
