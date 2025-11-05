@@ -21,11 +21,20 @@ import { Navbar } from "@/components/navbar";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { translations } from "@/lib/translations";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 
 type GameState = "idle" | "loading" | "payment" | "playing" | "finished";
 type QuizFormValues = { topic: string; numberOfQuestions: number; timerDuration: number | null; };
 type QuizPyqFormValues = { exam: string; subject: string; topic: string; numberOfQuestions: number; timerDuration: number | null; };
+
+const indianLanguages = [
+  "English", "Hindi", "Assamese", "Bengali", "Bodo", "Dogri", "Gujarati", 
+  "Kannada", "Kashmiri", "Konkani", "Maithili", "Malayalam", "Manipuri", 
+  "Marathi", "Nepali", "Odia", "Punjabi", "Sanskrit", "Santali", 
+  "Sindhi", "Tamil", "Telugu", "Urdu"
+];
 
 export default function Home() {
   const [gameState, setGameState] = useState<GameState>("idle");
@@ -35,10 +44,11 @@ export default function Home() {
   const [timerDuration, setTimerDuration] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("topic");
   const [selectedExamFromSidebar, setSelectedExamFromSidebar] = useState<string | null>(null);
-  const [language, setLanguage] = useState<"english" | "hindi">("english");
+  const [uiLanguage, setUiLanguage] = useState<"english" | "hindi">("english");
+  const [quizLanguage, setQuizLanguage] = useState<string>("English");
   const { toast } = useToast();
 
-  const t = translations[language];
+  const t = translations[uiLanguage];
 
   const handleStartQuiz = async (values: QuizFormValues) => {
     setGameState("loading");
@@ -46,7 +56,7 @@ export default function Home() {
     const formData = new FormData();
     formData.append("topic", values.topic);
     formData.append("numberOfQuestions", values.numberOfQuestions.toString());
-    formData.append("language", language);
+    formData.append("language", quizLanguage);
 
     const result = await createQuiz(formData);
 
@@ -74,7 +84,7 @@ export default function Home() {
     formData.append("subject", values.subject);
     formData.append("topic", values.topic);
     formData.append("numberOfQuestions", values.numberOfQuestions.toString());
-    formData.append("language", language);
+    formData.append("language", quizLanguage);
 
     const result = await createQuizFromPyq(formData);
 
@@ -100,7 +110,7 @@ export default function Home() {
     const formData = new FormData();
     formData.append("contentDataUri", dataUri);
     formData.append("numberOfQuestions", numberOfQuestions.toString());
-    formData.append("language", language);
+    formData.append("language", quizLanguage);
 
     const result = await createQuizFromContent(formData);
 
@@ -153,42 +163,58 @@ export default function Home() {
   };
   
   const renderIdleState = () => (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto sm:h-12 bg-transparent rounded-lg p-1 gap-2">
-        <TabsTrigger
-          value="topic"
-          className="bg-pink-200 text-pink-800 data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-md rounded-md py-2"
-        >
-          {t.fromTopic}
-        </TabsTrigger>
-        <TabsTrigger
-          value="pyq"
-          className="bg-blue-200 text-blue-800 data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-md rounded-md py-2"
-        >
-          {t.fromPYQ}
-        </TabsTrigger>
-        <TabsTrigger
-          value="upload"
-          className="bg-orange-200 text-orange-800 data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-md rounded-md py-2"
-        >
-          {t.fromFileImage}
-        </TabsTrigger>
-      </TabsList>
-      <TabsContent value="topic" className="pt-6">
-        <QuizForm onSubmit={handleStartQuiz} isLoading={gameState === 'loading'} language={language} />
-      </TabsContent>
-       <TabsContent value="pyq" className="pt-6">
-        <QuizPyqForm 
-          onSubmit={handleStartPyqQuiz} 
-          isLoading={gameState === 'loading'}
-          selectedExam={selectedExamFromSidebar}
-          language={language}
-        />
-      </TabsContent>
-      <TabsContent value="upload" className="pt-6">
-        <QuizUploader onUpload={handleUploadQuiz} isLoading={gameState === 'loading'} language={language}/>
-      </TabsContent>
-    </Tabs>
+    <div className="w-full">
+      <div className="mb-6 space-y-2">
+        <Label htmlFor="quiz-language" className="text-lg">{t.quizLanguage}</Label>
+        <Select value={quizLanguage} onValueChange={setQuizLanguage}>
+          <SelectTrigger id="quiz-language" className="w-full">
+            <SelectValue placeholder={t.selectLanguage} />
+          </SelectTrigger>
+          <SelectContent>
+            {indianLanguages.map((lang) => (
+              <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto sm:h-12 bg-transparent rounded-lg p-1 gap-2">
+          <TabsTrigger
+            value="topic"
+            className="bg-pink-200 text-pink-800 data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-md rounded-md py-2"
+          >
+            {t.fromTopic}
+          </TabsTrigger>
+          <TabsTrigger
+            value="pyq"
+            className="bg-blue-200 text-blue-800 data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-md rounded-md py-2"
+          >
+            {t.fromPYQ}
+          </TabsTrigger>
+          <TabsTrigger
+            value="upload"
+            className="bg-orange-200 text-orange-800 data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-md rounded-md py-2"
+          >
+            {t.fromFileImage}
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="topic" className="pt-6">
+          <QuizForm onSubmit={handleStartQuiz} isLoading={gameState === 'loading'} language={uiLanguage} />
+        </TabsContent>
+        <TabsContent value="pyq" className="pt-6">
+          <QuizPyqForm 
+            onSubmit={handleStartPyqQuiz} 
+            isLoading={gameState === 'loading'}
+            selectedExam={selectedExamFromSidebar}
+            language={uiLanguage}
+          />
+        </TabsContent>
+        <TabsContent value="upload" className="pt-6">
+          <QuizUploader onUpload={handleUploadQuiz} isLoading={gameState === 'loading'} language={uiLanguage}/>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 
   const renderGameState = () => {
@@ -198,10 +224,10 @@ export default function Home() {
       case "idle":
         return renderIdleState();
       case "payment":
-        return <QuizPayment onPaymentSuccess={handlePaymentSuccess} language={language}/>;
+        return <QuizPayment onPaymentSuccess={handlePaymentSuccess} language={uiLanguage}/>;
       case "playing":
         return quiz ? (
-          <QuizSession quiz={quiz} onFinish={handleFinishQuiz} timerDuration={timerDuration} language={language} />
+          <QuizSession quiz={quiz} onFinish={handleFinishQuiz} timerDuration={timerDuration} language={uiLanguage} />
         ) : renderIdleState();
       case "finished":
         return quiz ? (
@@ -210,7 +236,7 @@ export default function Home() {
             userAnswers={userAnswers}
             score={score}
             onPlayAgain={handlePlayAgain}
-            language={language}
+            language={uiLanguage}
           />
         ) : null;
       default:
@@ -220,27 +246,27 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen w-full bg-background">
-      <Sidebar onExamSelect={handleExamSelectFromSidebar} language={language} />
+      <Sidebar onExamSelect={handleExamSelectFromSidebar} language={uiLanguage} />
       <main className="relative flex flex-1 flex-col items-center">
-        <Navbar language={language} />
+        <Navbar language={uiLanguage} />
         <div className="flex flex-1 flex-col items-center p-4 w-full">
            <div className="w-full max-w-2xl flex justify-end mb-4 gap-2">
             <Button
-              onClick={() => setLanguage("english")}
+              onClick={() => setUiLanguage("english")}
               size="sm"
               className={cn(
                 "text-black bg-yellow-300 hover:bg-yellow-200",
-                language === "english" && "bg-white hover:bg-white/90"
+                uiLanguage === "english" && "bg-white hover:bg-white/90"
               )}
             >
               English
             </Button>
             <Button
-              onClick={() => setLanguage("hindi")}
+              onClick={() => setUiLanguage("hindi")}
               size="sm"
               className={cn(
                 "text-black bg-yellow-300 hover:bg-yellow-200",
-                language === "hindi" && "bg-white hover:bg-white/90"
+                uiLanguage === "hindi" && "bg-white hover:bg-white/90"
               )}
             >
               Hindi
@@ -285,3 +311,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

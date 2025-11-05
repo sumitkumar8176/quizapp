@@ -62,7 +62,7 @@ export const translations = {
     explanation: "Explanation",
     playAgain: "Play Again",
     shareScore: "Share Score",
-    shareMessage: (score: number, total: number) => `🎉 Congratulations! I scored ${score}/${total} in QuizWhiz! Think you can do better? 💪 Challenge your friends!`,
+    shareMessage: (score: number, total: number) => `🎉 Congratulations! I scored ${score}/${total} in Smart Quiz App! Think you can do better? 💪 Challenge your friends and see who’s the real quiz master!`,
     shareTitle: "My QuizWhiz Score!",
     scoreCopied: "Score Copied!",
     scoreCopiedDescription: "Your quiz score and a link have been copied to the clipboard.",
@@ -80,6 +80,8 @@ export const translations = {
     youRated: "You rated this quiz:",
     joinOthers: (count: number) => `Join ${count} other users who have rated this quiz!`,
     thankYouCommunity: "Thank you for being part of our growing quiz community!",
+    quizLanguage: "Quiz Language",
+    selectLanguage: "Select a language for the quiz",
   },
   hindi: {
     appDescription: "एक विषय दर्ज करें और हमारे AI को आपके लिए एक मजेदार प्रश्नोत्तरी बनाने दें। अपने ज्ञान का परीक्षण करें और खुद को चुनौती दें!",
@@ -143,7 +145,7 @@ export const translations = {
     explanation: "स्पष्टीकरण",
     playAgain: "फिर से खेलें",
     shareScore: "स्कोर साझा करें",
-    shareMessage: (score: number, total: number) => `🎉 बधाई हो! मैंने QuizWhiz में ${score}/${total} स्कोर किया! क्या आप बेहतर कर सकते हैं? 💪 अपने दोस्तों को चुनौती दें!`,
+    shareMessage: (score: number, total: number) => `🎉 बधाई हो! मैंने स्मार्ट क्विज़ ऐप में ${score}/${total} स्कोर किया! क्या आप बेहतर कर सकते हैं? 💪 अपने दोस्तों को चुनौती दें और देखें कि असली क्विज़ मास्टर कौन है!`,
     shareTitle: "मेरा QuizWhiz स्कोर!",
     scoreCopied: "स्कोर कॉपी किया गया!",
     scoreCopiedDescription: "आपका प्रश्नोत्तरी स्कोर और एक लिंक क्लिपबोर्ड पर कॉपी कर लिया गया है।",
@@ -161,5 +163,9 @@ export const translations = {
     youRated: "आपने इस प्रश्नोत्तरी को रेट किया:",
     joinOthers: (count: number) => `इस प्रश्नोत्तरी को रेट करने वाले ${count} अन्य उपयोगकर्ताओं से जुड़ें!`,
     thankYouCommunity: "हमारे बढ़ते प्रश्नोत्तरी समुदाय का हिस्सा बनने के लिए धन्यवाद!",
+    quizLanguage: "प्रश्नोत्तरी भाषा",
+    selectLanguage: "प्रश्नोत्तरी के लिए एक भाषा चुनें",
   }
 };
+
+    
