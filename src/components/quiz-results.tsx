@@ -22,40 +22,45 @@ export default function QuizResults({ quiz, userAnswers, score, onPlayAgain }: Q
   const percentage = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
   const { toast } = useToast();
 
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({
+        title: "Score Copied!",
+        description: "Your quiz score and a link have been copied to the clipboard.",
+      });
+    } catch (err) {
+      console.error('Failed to copy score:', err);
+      toast({
+        variant: "destructive",
+        title: "Copy Failed",
+        description: "Could not copy your score to the clipboard.",
+      });
+    }
+  };
+
   const handleShare = async () => {
-    const shareText = `🎉 Congratulations! You scored ${score}/${totalQuestions} in QuizWhiz!
-Think you can do better? 💪
-Challenge your friends and see who’s the real quiz master!`;
-    
+    const shareText = `🎉 Congratulations! You scored ${score}/${totalQuestions} in QuizWhiz!\nThink you can do better? 💪\nChallenge your friends and see who’s the real quiz master!`;
     const shareData = {
       title: 'My QuizWhiz Score!',
       text: shareText,
       url: window.location.href,
     };
+    const clipboardText = `${shareData.text}\n\nTake the quiz here: ${shareData.url}`;
 
     if (navigator.share) {
       try {
         await navigator.share(shareData);
-      } catch (error) {
-        console.error('Sharing failed:', error);
-        // This can happen if the user cancels the share dialog, so we don't show an error.
+      } catch (error: any) {
+        // Handle specific errors like user cancellation silently.
+        if (error.name !== 'AbortError' && error.name !== 'NotAllowedError') {
+          // For other errors, fall back to clipboard
+          copyToClipboard(clipboardText);
+        }
       }
     } else {
       // Fallback for browsers that don't support the Web Share API
-      try {
-        await navigator.clipboard.writeText(`${shareData.text}\n\nTake the quiz here: ${shareData.url}`);
-        toast({
-          title: "Score Copied!",
-          description: "Your quiz score and a link have been copied to the clipboard.",
-        });
-      } catch (err) {
-        console.error('Failed to copy score:', err);
-        toast({
-          variant: "destructive",
-          title: "Copy Failed",
-          description: "Could not copy your score to the clipboard.",
-        });
-      }
+      copyToClipboard(clipboardText);
     }
   };
 
