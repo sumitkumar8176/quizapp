@@ -24,18 +24,10 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
   const onPaymentSuccessRef = useRef(onPaymentSuccess);
   onPaymentSuccessRef.current = onPaymentSuccess;
 
-  const trialsLeft = FREE_TRIAL_LIMIT - freeTrialsUsed;
-  const showPaymentSection = trialsLeft <= 0;
-
   useEffect(() => {
     // Load the number of trials used from local storage
     const trials = parseInt(localStorage.getItem('freeTrialsUsed') || '0', 10);
     setFreeTrialsUsed(trials);
-
-    // If no free trials are left, immediately start the payment verification process.
-    if (trials >= FREE_TRIAL_LIMIT) {
-      setPaymentStatus('verifying');
-    }
   }, []);
 
   useEffect(() => {
@@ -61,9 +53,17 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
     const newTrialCount = freeTrialsUsed + 1;
     localStorage.setItem('freeTrialsUsed', newTrialCount.toString());
     setFreeTrialsUsed(newTrialCount);
+    // Directly start the confirmation and quiz start process for free trials
     setPaymentStatus('confirmed');
   };
+
+  const handleConfirmPayment = () => {
+    setPaymentStatus('verifying');
+  };
   
+  const trialsLeft = FREE_TRIAL_LIMIT - freeTrialsUsed;
+  const showPaymentSection = trialsLeft <= 0;
+
   const renderContent = () => {
     if (paymentStatus === 'confirmed') {
       return (
@@ -82,28 +82,41 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
     }
     
     if (showPaymentSection) {
+      if (paymentStatus === 'verifying') {
         return (
-             <motion.div
-                key="verifying"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20, scale: 0.9 }}
-                transition={{ duration: 0.3 }}
-                className="space-y-4 text-center w-full"
-            >
-                <div className="flex justify-center">
-                    <QRCode upiId={UPI_ID} amount={PAYMENT_AMOUNT} />
-                </div>
-                <div>
-                    <p className="font-semibold">UPI ID: {UPI_ID}</p>
-                    <p className="text-muted-foreground text-sm">Pay ₹{PAYMENT_AMOUNT} to start the quiz.</p>
-                </div>
-                <div className="flex items-center justify-center space-y-4 pt-4">
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  <p className="text-muted-foreground">Waiting for payment confirmation...</p>
-                </div>
-            </motion.div>
+          <motion.div
+            key="verifying-payment"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center justify-center space-y-4 text-center"
+          >
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <p className="text-lg font-semibold">Verifying Payment...</p>
+            <p className="text-muted-foreground">Please wait a moment.</p>
+          </motion.div>
         );
+      }
+
+      return (
+        <motion.div
+          key="payment"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="space-y-4 text-center w-full"
+        >
+          <div className="flex justify-center">
+            <QRCode upiId={UPI_ID} amount={PAYMENT_AMOUNT} />
+          </div>
+          <div>
+            <p className="font-semibold">UPI ID: {UPI_ID}</p>
+            <p className="text-muted-foreground text-sm">Pay ₹{PAYMENT_AMOUNT} to start the quiz.</p>
+          </div>
+          <Button onClick={handleConfirmPayment} className="w-full" size="lg">
+            I Have Paid
+          </Button>
+        </motion.div>
+      );
     }
 
     return (
@@ -111,9 +124,8 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
           key="free-trial"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20, scale: 0.9 }}
           transition={{ duration: 0.3 }}
-          className="space-y-4 w-full"
+          className="space-y-4 w-full text-center"
         >
           <Button onClick={handleFreeTrial} size="lg" className="w-full">
             Click here for free trial
