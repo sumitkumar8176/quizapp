@@ -3,6 +3,7 @@
 
 import { Button } from "./ui/button";
 import { Github, Instagram, Linkedin, Phone } from "lucide-react";
+import { translations } from "@/lib/translations";
 
 const examSubjects = {
   "UPSC Civil Services": ["History", "Geography", "Polity & Governance", "Economy", "Environment & Ecology", "Science & Technology", "Current Affairs"],
@@ -24,13 +25,15 @@ const indianExams = Object.keys(examSubjects);
 
 type SidebarProps = {
   onExamSelect: (exam: string) => void;
+  language: "english" | "hindi";
 };
 
-export default function Sidebar({ onExamSelect }: SidebarProps) {
+export default function Sidebar({ onExamSelect, language }: SidebarProps) {
+  const t = translations[language];
   return (
     <aside className="w-64 bg-destructive p-6 flex flex-col justify-between border-r text-destructive-foreground">
         <div>
-          <h1 className="text-xl font-bold">Practice quiz for any exams given below</h1>
+          <h1 className="text-xl font-bold">{t.sidebarTitle}</h1>
           <nav className="flex flex-col space-y-2 mt-6">
               {indianExams.map((exam) => (
                   <Button key={exam} variant="ghost" className="justify-start hover:bg-destructive/90 hover:text-destructive-foreground" onClick={() => onExamSelect(exam)}>{exam}</Button>
@@ -38,7 +41,7 @@ export default function Sidebar({ onExamSelect }: SidebarProps) {
           </nav>
         </div>
         <div className="mt-8">
-            <h2 className="text-lg font-semibold mb-4">Connect with me</h2>
+            <h2 className="text-lg font-semibold mb-4">{t.connectWithMe}</h2>
             <div className="space-y-3">
                 <a href="https://github.com/sumitkumar8176" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                     <Github className="h-5 w-5" />

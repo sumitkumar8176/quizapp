@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -8,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Star } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { translations } from '@/lib/translations';
 
 const ratings = [
   { value: '1', label: 'Poor', emoji: '😕' },
@@ -17,7 +19,8 @@ const ratings = [
   { value: '5', label: 'Excellent', emoji: '🔥' },
 ];
 
-export default function QuizRating() {
+export default function QuizRating({ language }: { language: "english" | "hindi" }) {
+  const t = translations[language];
   const [selectedRating, setSelectedRating] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [totalRatings, setTotalRatings] = useState<number | null>(null);
@@ -54,11 +57,11 @@ export default function QuizRating() {
               transition={{ duration: 0.3 }}
               className="space-y-4"
             >
-              <h2 className="text-2xl font-bold">🎯 Quiz Completed!</h2>
-              <p className="text-muted-foreground">Great job — you’ve finished your quiz on Smart Quick App 🚀</p>
+              <h2 className="text-2xl font-bold">{t.ratingTitle}</h2>
+              <p className="text-muted-foreground">{t.ratingDescription}</p>
               
               <div className="space-y-2 pt-4">
-                <p className="font-semibold">⭐ Please rate your quiz experience:</p>
+                <p className="font-semibold">{t.ratingPrompt}</p>
                 <RadioGroup 
                   onValueChange={setSelectedRating}
                   className="grid grid-cols-1 sm:grid-cols-5 gap-2"
@@ -80,11 +83,11 @@ export default function QuizRating() {
                 </RadioGroup>
               </div>
 
-              <p className="text-sm text-muted-foreground pt-2">💡 Your feedback helps us improve and add more exciting quiz features!</p>
+              <p className="text-sm text-muted-foreground pt-2">{t.ratingFeedback}</p>
 
               <Button onClick={handleSubmit} disabled={!selectedRating} size="lg" className="w-full">
                 <Star className="mr-2 h-4 w-4" />
-                Give Rating
+                {t.giveRating}
               </Button>
             </motion.div>
           ) : (
@@ -96,9 +99,9 @@ export default function QuizRating() {
               className="space-y-3 py-8"
             >
               <div className="text-5xl">💖</div>
-              <h2 className="text-2xl font-bold">Thank You for Your Feedback!</h2>
+              <h2 className="text-2xl font-bold">{t.thankYou}</h2>
               <div className="flex items-center justify-center gap-2">
-                <p className="text-muted-foreground">You rated this quiz:</p>
+                <p className="text-muted-foreground">{t.youRated}</p>
                 <div className="flex items-center gap-1 rounded-full bg-accent/20 px-3 py-1 text-accent-foreground">
                    <span className="text-xl">{getRatingEmoji(selectedRating)}</span>
                    <span className="font-semibold">{selectedRating}/5</span>
@@ -107,12 +110,12 @@ export default function QuizRating() {
 
               {totalRatings !== null && (
                  <p className="text-sm text-muted-foreground pt-4">
-                    Join <span className="font-semibold text-foreground">{totalRatings}</span> other users who have rated this quiz!
+                    {t.joinOthers(totalRatings)}
                 </p>
               )}
 
               <p className="text-muted-foreground max-w-sm mx-auto pt-2">
-                Thank you for being part of our growing quiz community!
+                {t.thankYouCommunity}
               </p>
             </motion.div>
           )}

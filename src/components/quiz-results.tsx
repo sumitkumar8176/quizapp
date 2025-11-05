@@ -9,55 +9,52 @@ import { CheckCircle2, XCircle, RotateCw, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import QuizRating from "./quiz-rating";
 import { useToast } from "@/hooks/use-toast";
+import { translations } from "@/lib/translations";
 
 type QuizResultsProps = {
   quiz: Quiz;
   userAnswers: string[];
   score: number;
   onPlayAgain: () => void;
+  language: "english" | "hindi";
 };
 
-export default function QuizResults({ quiz, userAnswers, score, onPlayAgain }: QuizResultsProps) {
+export default function QuizResults({ quiz, userAnswers, score, onPlayAgain, language }: QuizResultsProps) {
+  const t = translations[language];
   const totalQuestions = quiz.length;
   const percentage = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
   const { toast } = useToast();
 
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      toast({
-        title: "Score Copied!",
-        description: "Your quiz score and a link have been copied to the clipboard.",
-      });
-    } catch (err) {
-      console.error('Failed to copy score:', err);
-      toast({
-        variant: "destructive",
-        title: "Copy Failed",
-        description: "Could not copy your score to the clipboard.",
-      });
-    }
-  };
-
   const handleShare = async () => {
-    const shareText = `🎉 Congratulations! You scored ${score}/${totalQuestions} in QuizWhiz!\nThink you can do better? 💪\nChallenge your friends and see who’s the real quiz master!`;
+    const shareText = t.shareMessage(score, totalQuestions);
     const shareData = {
-      title: 'My QuizWhiz Score!',
+      title: t.shareTitle,
       text: shareText,
       url: window.location.href,
     };
-    const clipboardText = `${shareData.text}\n\nTake the quiz here: ${shareData.url}`;
 
-    if (navigator.share) {
-      try {
+    try {
+      if (navigator.share) {
         await navigator.share(shareData);
-      } catch (error) {
-        // If sharing fails (e.g., user cancels), fall back to clipboard
-        await copyToClipboard(clipboardText);
+      } else {
+        throw new Error("Web Share API not supported");
       }
-    } else {
-      // Fallback for browsers that don't support the Web Share API
-      await copyToClipboard(clipboardText);
+    } catch (error) {
+      console.log(error)
+      // Fallback to clipboard
+      try {
+        await navigator.clipboard.writeText(`${shareText}\n\n${shareData.url}`);
+        toast({
+          title: t.scoreCopied,
+          description: t.scoreCopiedDescription,
+        });
+      } catch (copyError) {
+        toast({
+          variant: "destructive",
+          title: t.copyFailed,
+          description: t.copyFailedDescription,
+        });
+      }
     }
   };
 
@@ -67,8 +64,8 @@ export default function QuizResults({ quiz, userAnswers, score, onPlayAgain }: Q
       
       <Card className="text-center">
         <CardHeader>
-          <CardTitle className="text-3xl font-bold">Quiz Complete!</CardTitle>
-          <CardDescription>Here's how you did.</CardDescription>
+          <CardTitle className="text-3xl font-bold">{t.quizComplete}</CardTitle>
+          <CardDescription>{t.resultsDescription}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
             <div className="relative mx-auto h-24 w-24">
@@ -80,14 +77,14 @@ export default function QuizResults({ quiz, userAnswers, score, onPlayAgain }: Q
                     <span className="text-2xl font-bold text-foreground">{percentage}%</span>
                 </div>
             </div>
-            <p className="text-lg font-medium text-foreground">You scored <span className="text-primary">{score}</span> out of {totalQuestions}</p>
+            <p className="text-lg font-medium text-foreground">{t.youScored(score, totalQuestions)}</p>
         </CardContent>
       </Card>
 
-      <QuizRating />
+      <QuizRating language={language}/>
 
       <div className="space-y-4">
-        <h3 className="text-xl font-semibold">Review Your Answers</h3>
+        <h3 className="text-xl font-semibold">{t.reviewAnswers}</h3>
         <Accordion type="single" collapsible className="w-full">
           {quiz.map((question, index) => {
             const userAnswer = userAnswers[index];
@@ -98,7 +95,7 @@ export default function QuizResults({ quiz, userAnswers, score, onPlayAgain }: Q
                 <AccordionTrigger className="text-left hover:no-underline">
                   <div className="flex items-center gap-3 flex-1">
                     {isCorrect ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : <XCircle className="h-5 w-5 text-destructive" />}
-                    <span className="flex-1">Question {index + 1}: Scored {isCorrect ? 1 : 0}/{1}</span>
+                    <span className="flex-1">{t.questionLabel(index + 1)}: {t.scored(isCorrect ? 1 : 0, 1)}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="space-y-4 pt-2">
@@ -117,14 +114,14 @@ export default function QuizResults({ quiz, userAnswers, score, onPlayAgain }: Q
                           {isCorrectAnswer ? <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" /> : 
                            (isUserAnswer ? <XCircle className="h-4 w-4 text-destructive flex-shrink-0" /> : <div className="w-4 h-4 flex-shrink-0"></div>)}
                           <span className="flex-1">{option}</span>
-                          {isUserAnswer && !isCorrectAnswer && <span className="text-xs text-destructive/80 font-semibold">(Your answer)</span>}
-                          {isCorrectAnswer && <span className="text-xs text-green-500/80 font-semibold">(Correct)</span>}
+                          {isUserAnswer && !isCorrectAnswer && <span className="text-xs text-destructive/80 font-semibold">{t.yourAnswer}</span>}
+                          {isCorrectAnswer && <span className="text-xs text-green-500/80 font-semibold">{t.correct}</span>}
                         </li>
                       );
                     })}
                   </ul>
                   <div className="p-4 bg-muted/50 rounded-md space-y-3">
-                    <h4 className="font-semibold text-accent">Explanation</h4>
+                    <h4 className="font-semibold text-accent">{t.explanation}</h4>
                     <p className="text-sm text-muted-foreground">{question.explanation}</p>
                   </div>
                 </AccordionContent>
@@ -137,11 +134,11 @@ export default function QuizResults({ quiz, userAnswers, score, onPlayAgain }: Q
       <div className="flex flex-col sm:flex-row gap-4">
         <Button onClick={onPlayAgain} className="w-full" size="lg">
           <RotateCw className="mr-2 h-5 w-5" />
-          Play Again
+          {t.playAgain}
         </Button>
         <Button onClick={handleShare} variant="outline" className="w-full" size="lg">
           <Share2 className="mr-2 h-5 w-5" />
-           Share Score
+           {t.shareScore}
         </Button>
       </div>
 

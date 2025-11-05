@@ -7,9 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { CheckCircle, Loader2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import QRCode from '@/components/qr-code';
+import { translations } from '@/lib/translations';
 
 type QuizPaymentProps = {
   onPaymentSuccess: () => void;
+  language: "english" | "hindi";
 };
 
 type PaymentStatus = 'pending' | 'verifying' | 'confirmed';
@@ -18,7 +20,8 @@ const FREE_TRIAL_LIMIT = 2;
 const UPI_ID = "your-upi-id@okhdfcbank";
 const PAYMENT_AMOUNT = 2;
 
-export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
+export default function QuizPayment({ onPaymentSuccess, language }: QuizPaymentProps) {
+  const t = translations[language];
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('pending');
   const [freeTrialsUsed, setFreeTrialsUsed] = useState(0);
   const onPaymentSuccessRef = useRef(onPaymentSuccess);
@@ -75,8 +78,8 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
           className="flex flex-col items-center justify-center space-y-4 py-12"
         >
           <CheckCircle className="h-16 w-16 text-green-500" />
-          <h3 className="text-2xl font-bold">Success!</h3>
-          <p className="text-muted-foreground">Your quiz is starting now...</p>
+          <h3 className="text-2xl font-bold">{t.success}</h3>
+          <p className="text-muted-foreground">{t.quizStarting}</p>
         </motion.div>
       );
     }
@@ -91,8 +94,8 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
             className="flex flex-col items-center justify-center space-y-4 text-center"
           >
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
-            <p className="text-lg font-semibold">Verifying Payment...</p>
-            <p className="text-muted-foreground">Please wait a moment.</p>
+            <p className="text-lg font-semibold">{t.verifyingPayment}</p>
+            <p className="text-muted-foreground">{t.pleaseWait}</p>
           </motion.div>
         );
       }
@@ -110,10 +113,10 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
           </div>
           <div>
             <p className="font-semibold">UPI ID: {UPI_ID}</p>
-            <p className="text-muted-foreground text-sm">Pay ₹{PAYMENT_AMOUNT} to start the quiz.</p>
+            <p className="text-muted-foreground text-sm">{t.payToStart(PAYMENT_AMOUNT)}</p>
           </div>
           <Button onClick={handleConfirmPayment} className="w-full" size="lg">
-            I Have Paid
+            {t.iHavePaid}
           </Button>
         </motion.div>
       );
@@ -128,7 +131,7 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
           className="space-y-4 w-full text-center"
         >
           <Button onClick={handleFreeTrial} size="lg" className="w-full">
-            Click here for free trial
+            {t.freeTrial}
           </Button>
         </motion.div>
     );
@@ -138,12 +141,12 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
     <Card className="w-full max-w-md mx-auto text-center border-0 shadow-none">
       <CardHeader>
         <CardTitle className="text-2xl">
-          Unlock Your Quiz
+          {t.unlockQuiz}
         </CardTitle>
         <CardDescription>
          {showPaymentSection 
-            ? "You have used all your free trials. Please pay to continue."
-            : `You have ${trialsLeft} free trial${trialsLeft !== 1 ? 's' : ''} remaining.`
+            ? t.noFreeTrials
+            : t.freeTrialsRemaining(trialsLeft)
           }
         </CardDescription>
       </CardHeader>

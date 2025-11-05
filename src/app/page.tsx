@@ -20,6 +20,7 @@ import Sidebar from "@/components/sidebar";
 import { Navbar } from "@/components/navbar";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { translations } from "@/lib/translations";
 
 
 type GameState = "idle" | "loading" | "payment" | "playing" | "finished";
@@ -34,8 +35,10 @@ export default function Home() {
   const [timerDuration, setTimerDuration] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("topic");
   const [selectedExamFromSidebar, setSelectedExamFromSidebar] = useState<string | null>(null);
-  const [language, setLanguage] = useState("english");
+  const [language, setLanguage] = useState<"english" | "hindi">("english");
   const { toast } = useToast();
+
+  const t = translations[language];
 
   const handleStartQuiz = async (values: QuizFormValues) => {
     setGameState("loading");
@@ -50,7 +53,7 @@ export default function Home() {
     if (result.error) {
       toast({
         variant: "destructive",
-        title: "Error Generating Quiz",
+        title: t.errorGeneratingQuiz,
         description: result.error,
       });
       setGameState("idle");
@@ -78,7 +81,7 @@ export default function Home() {
     if (result.error) {
       toast({
         variant: "destructive",
-        title: "Error Generating Quiz",
+        title: t.errorGeneratingQuiz,
         description: result.error,
       });
       setGameState("idle");
@@ -104,7 +107,7 @@ export default function Home() {
     if (result.error) {
       toast({
         variant: "destructive",
-        title: "Error Generating Quiz",
+        title: t.errorGeneratingQuiz,
         description: result.error,
       });
       setGameState("idle");
@@ -156,33 +159,34 @@ export default function Home() {
           value="topic"
           className="bg-pink-200 text-pink-800 data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-md rounded-md py-2"
         >
-          From Topic
+          {t.fromTopic}
         </TabsTrigger>
         <TabsTrigger
           value="pyq"
           className="bg-blue-200 text-blue-800 data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-md rounded-md py-2"
         >
-          From PYQ
+          {t.fromPYQ}
         </TabsTrigger>
         <TabsTrigger
           value="upload"
           className="bg-orange-200 text-orange-800 data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-md rounded-md py-2"
         >
-          From File/Image
+          {t.fromFileImage}
         </TabsTrigger>
       </TabsList>
       <TabsContent value="topic" className="pt-6">
-        <QuizForm onSubmit={handleStartQuiz} isLoading={gameState === 'loading'} />
+        <QuizForm onSubmit={handleStartQuiz} isLoading={gameState === 'loading'} language={language} />
       </TabsContent>
        <TabsContent value="pyq" className="pt-6">
         <QuizPyqForm 
           onSubmit={handleStartPyqQuiz} 
           isLoading={gameState === 'loading'}
           selectedExam={selectedExamFromSidebar}
+          language={language}
         />
       </TabsContent>
       <TabsContent value="upload" className="pt-6">
-        <QuizUploader onUpload={handleUploadQuiz} isLoading={gameState === 'loading'} />
+        <QuizUploader onUpload={handleUploadQuiz} isLoading={gameState === 'loading'} language={language}/>
       </TabsContent>
     </Tabs>
   );
@@ -194,10 +198,10 @@ export default function Home() {
       case "idle":
         return renderIdleState();
       case "payment":
-        return <QuizPayment onPaymentSuccess={handlePaymentSuccess} />;
+        return <QuizPayment onPaymentSuccess={handlePaymentSuccess} language={language}/>;
       case "playing":
         return quiz ? (
-          <QuizSession quiz={quiz} onFinish={handleFinishQuiz} timerDuration={timerDuration} />
+          <QuizSession quiz={quiz} onFinish={handleFinishQuiz} timerDuration={timerDuration} language={language} />
         ) : renderIdleState();
       case "finished":
         return quiz ? (
@@ -206,6 +210,7 @@ export default function Home() {
             userAnswers={userAnswers}
             score={score}
             onPlayAgain={handlePlayAgain}
+            language={language}
           />
         ) : null;
       default:
@@ -215,9 +220,9 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen w-full bg-background">
-      <Sidebar onExamSelect={handleExamSelectFromSidebar} />
+      <Sidebar onExamSelect={handleExamSelectFromSidebar} language={language} />
       <main className="relative flex flex-1 flex-col items-center">
-        <Navbar />
+        <Navbar language={language} />
         <div className="flex flex-1 flex-col items-center p-4 w-full">
            <div className="w-full max-w-2xl flex justify-end mb-4 gap-2">
             <Button
@@ -251,7 +256,7 @@ export default function Home() {
               </div>
               <div className="flex items-center gap-2">
                 <p className="max-w-md text-muted-foreground">
-                  Enter a topic and let our AI create a fun quiz for you. Test your knowledge and challenge yourself!
+                  {t.appDescription}
                 </p>
               </div>
             </header>

@@ -9,13 +9,16 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card } from "./ui/card";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
+import { translations } from "@/lib/translations";
 
 type QuizCameraProps = {
   onCapture: (dataUri: string, numberOfQuestions: number) => void;
   isLoading: boolean;
+  language: "english" | "hindi";
 };
 
-export default function QuizCamera({ onCapture, isLoading }: QuizCameraProps) {
+export default function QuizCamera({ onCapture, isLoading, language }: QuizCameraProps) {
+  const t = translations[language];
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
@@ -124,7 +127,7 @@ export default function QuizCamera({ onCapture, isLoading }: QuizCameraProps) {
       <canvas ref={canvasRef} className="hidden" />
 
       <div className="space-y-2">
-        <Label htmlFor="questions-camera">Number of questions</Label>
+        <Label htmlFor="questions-camera">{t.numQuestions}</Label>
         <Input 
           id="questions-camera" 
           type="number" 
@@ -140,23 +143,23 @@ export default function QuizCamera({ onCapture, isLoading }: QuizCameraProps) {
         <div className="grid grid-cols-2 gap-4">
           <Button onClick={handleRetake} variant="outline" disabled={isLoading}>
             <RefreshCw className="mr-2" />
-            Retake
+            {t.retake}
           </Button>
           <Button onClick={handleGenerateQuiz} disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Generating...
+                {t.generating}...
               </>
             ) : (
-              "Generate Quiz"
+              t.generateQuiz
             )}
           </Button>
         </div>
       ) : (
         <Button onClick={handleCapture} className="w-full" size="lg" disabled={isLoading}>
           <Camera className="mr-2" />
-          Capture Photo
+          {t.capturePhoto}
         </Button>
       )}
     </div>

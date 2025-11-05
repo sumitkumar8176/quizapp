@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -19,16 +20,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
+import { translations } from "@/lib/translations";
 
 
 type QuizSessionProps = {
   quiz: Quiz;
   onFinish: (answers: string[]) => void;
   timerDuration: number | null; // in minutes
+  language: "english" | "hindi";
 };
 
-export default function QuizSession({ quiz, onFinish, timerDuration }: QuizSessionProps) {
+export default function QuizSession({ quiz, onFinish, timerDuration, language }: QuizSessionProps) {
+  const t = translations[language];
   const [userAnswers, setUserAnswers] = useState<string[]>(new Array(quiz.length).fill(""));
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState<number | null>(timerDuration ? timerDuration * 60 : null);
@@ -85,7 +89,7 @@ export default function QuizSession({ quiz, onFinish, timerDuration }: QuizSessi
   };
 
   const formatTime = (seconds: number | null) => {
-    if (seconds === null) return "No timer";
+    if (seconds === null) return t.noTimer;
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
@@ -99,7 +103,7 @@ export default function QuizSession({ quiz, onFinish, timerDuration }: QuizSessi
     <div className="space-y-6">
        <div className="flex justify-between items-center">
          <div className="space-y-2 w-full">
-          <p className="text-sm text-muted-foreground">Question {currentQuestionIndex + 1} of {quiz.length}</p>
+          <p className="text-sm text-muted-foreground">{t.questionLabel(currentQuestionIndex + 1)} of {quiz.length}</p>
           <Progress value={((currentQuestionIndex + 1) / quiz.length) * 100} />
         </div>
         {timerDuration !== null && (
@@ -149,22 +153,22 @@ export default function QuizSession({ quiz, onFinish, timerDuration }: QuizSessi
           <AlertDialogTrigger asChild>
             <Button variant="destructive" size="sm" className="md:size-lg">
               <PartyPopper className="mr-2 h-5 w-5" />
-              Submit Quiz
+              {t.submitQuiz}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure you want to submit?</AlertDialogTitle>
+              <AlertDialogTitle>{t.areYouSure}</AlertDialogTitle>
               <AlertDialogDescription>
                 {unansweredQuestions > 0 
-                  ? `You have ${unansweredQuestions} unanswered question${unansweredQuestions > 1 ? 's' : ''}. You can still go back and review your answers before finishing.`
-                  : "You have answered all the questions. You can still go back and review your answers before finishing."
+                  ? t.unansweredQuestions(unansweredQuestions)
+                  : t.allAnswered
                 }
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Review Answers</AlertDialogCancel>
-              <AlertDialogAction onClick={handleSubmit}>Finish Quiz</AlertDialogAction>
+              <AlertDialogCancel>{t.reviewAnswers}</AlertDialogCancel>
+              <AlertDialogAction onClick={handleSubmit}>{t.finishQuiz}</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -172,16 +176,16 @@ export default function QuizSession({ quiz, onFinish, timerDuration }: QuizSessi
         <div className="flex items-center gap-2">
           <Button onClick={handlePrevious} disabled={currentQuestionIndex === 0} variant="outline">
             <ArrowLeft className="mr-2 h-5 w-5" />
-            Previous
+            {t.previous}
           </Button>
 
           <Button onClick={handleNext} disabled={isLastQuestion} variant="outline">
             <SkipForward className="mr-2 h-5 w-5" />
-            Skip
+            {t.skip}
           </Button>
           
           <Button onClick={handleNext} disabled={isLastQuestion}>
-            Next
+            {t.next}
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
         </div>

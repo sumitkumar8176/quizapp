@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BookCopy, Loader2 } from "lucide-react";
+import { translations } from "@/lib/translations";
 
 const formSchema = z.object({
   exam: z.string().min(1, { message: "Please select an exam." }),
@@ -45,9 +46,11 @@ type QuizPyqFormProps = {
   onSubmit: (values: z.infer<typeof formSchema>) => void;
   isLoading: boolean;
   selectedExam?: string | null;
+  language: "english" | "hindi";
 };
 
-export default function QuizPyqForm({ onSubmit, isLoading, selectedExam }: QuizPyqFormProps) {
+export default function QuizPyqForm({ onSubmit, isLoading, selectedExam, language }: QuizPyqFormProps) {
+  const t = translations[language];
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -80,7 +83,7 @@ export default function QuizPyqForm({ onSubmit, isLoading, selectedExam }: QuizP
           name="exam"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-lg">Select an Exam</FormLabel>
+              <FormLabel className="text-lg">{t.selectExam}</FormLabel>
               <Select onValueChange={(value) => {
                 field.onChange(value);
                 form.resetField('subject');
@@ -88,7 +91,7 @@ export default function QuizPyqForm({ onSubmit, isLoading, selectedExam }: QuizP
               }} value={field.value} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select an exam for PYQs" />
+                    <SelectValue placeholder={t.selectExamPlaceholder} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -109,11 +112,11 @@ export default function QuizPyqForm({ onSubmit, isLoading, selectedExam }: QuizP
               name="subject"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-lg">Select a Subject</FormLabel>
+                  <FormLabel className="text-lg">{t.selectSubject}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a subject" />
+                        <SelectValue placeholder={t.selectSubjectPlaceholder} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -132,9 +135,9 @@ export default function QuizPyqForm({ onSubmit, isLoading, selectedExam }: QuizP
               name="topic"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-lg">Enter a Topic</FormLabel>
+                  <FormLabel className="text-lg">{t.enterTopic}</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Modern History, Algebra, Thermodynamics" {...field} />
+                    <Input placeholder={t.pyqTopicPlaceholder} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -150,7 +153,7 @@ export default function QuizPyqForm({ onSubmit, isLoading, selectedExam }: QuizP
             name="numberOfQuestions"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-lg">Number of questions</FormLabel>
+                <FormLabel className="text-lg">{t.numQuestions}</FormLabel>
                 <FormControl>
                   <Input type="number" placeholder="e.g., 10" {...field} />
                 </FormControl>
@@ -163,9 +166,9 @@ export default function QuizPyqForm({ onSubmit, isLoading, selectedExam }: QuizP
             name="timerDuration"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-lg">Timer (minutes)</FormLabel>
+                <FormLabel className="text-lg">{t.timerLabel}</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="Optional" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? null : e.target.value)} />
+                  <Input type="number" placeholder={t.optional} {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? null : e.target.value)} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -176,12 +179,12 @@ export default function QuizPyqForm({ onSubmit, isLoading, selectedExam }: QuizP
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Generating...
+              {t.generating}...
             </>
           ) : (
             <>
               <BookCopy className="mr-2 h-5 w-5" />
-              Generate PYQ Quiz
+              {t.generatePYQQuiz}
             </>
           )}
         </Button>

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Lightbulb, Loader2 } from "lucide-react";
+import { translations } from "@/lib/translations";
 
 const formSchema = z.object({
   topic: z.string().min(2, { message: "Topic must be at least 2 characters." }).max(50),
@@ -18,9 +19,11 @@ const formSchema = z.object({
 type QuizFormProps = {
   onSubmit: (values: z.infer<typeof formSchema>) => void;
   isLoading: boolean;
+  language: "english" | "hindi";
 };
 
-export default function QuizForm({ onSubmit, isLoading }: QuizFormProps) {
+export default function QuizForm({ onSubmit, isLoading, language }: QuizFormProps) {
+  const t = translations[language];
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -38,9 +41,9 @@ export default function QuizForm({ onSubmit, isLoading }: QuizFormProps) {
           name="topic"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-lg">What do you want a quiz on?</FormLabel>
+              <FormLabel className="text-lg">{t.quizOnWhat}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., The Roman Empire, Quantum Physics, Taylor Swift" {...field} />
+                <Input placeholder={t.topicPlaceholder} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -52,7 +55,7 @@ export default function QuizForm({ onSubmit, isLoading }: QuizFormProps) {
             name="numberOfQuestions"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-lg">Number of questions</FormLabel>
+                <FormLabel className="text-lg">{t.numQuestions}</FormLabel>
                 <FormControl>
                   <Input type="number" placeholder="e.g., 10" {...field} />
                 </FormControl>
@@ -65,9 +68,9 @@ export default function QuizForm({ onSubmit, isLoading }: QuizFormProps) {
             name="timerDuration"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-lg">Timer (minutes)</FormLabel>
+                <FormLabel className="text-lg">{t.timerLabel}</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="Optional" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? null : e.target.value)} />
+                  <Input type="number" placeholder={t.optional} {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? null : e.target.value)} />
                 </FormControl>
                  <FormMessage />
               </FormItem>
@@ -78,12 +81,12 @@ export default function QuizForm({ onSubmit, isLoading }: QuizFormProps) {
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Generating...
+              {t.generating}...
             </>
           ) : (
             <>
               <Lightbulb className="mr-2 h-5 w-5" />
-              Generate Quiz
+              {t.generateQuiz}
             </>
           )}
         </Button>
