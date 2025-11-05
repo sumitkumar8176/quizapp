@@ -15,7 +15,6 @@ const UPI_ID = 'sumit.gusknp2022@okhdfcbank';
 const PAYMENT_AMOUNT = '2';
 const UPI_URL = `upi://pay?pa=${UPI_ID}&pn=Sumit%20Kumar&am=${PAYMENT_AMOUNT}&cu=INR`;
 const FREE_TRIAL_LIMIT = 2;
-const CONFIRM_BUTTON_DELAY = 10000; // 10 seconds
 
 export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
@@ -23,7 +22,6 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
   const [isVerifying, setIsVerifying] = useState(false);
   const [freeTrialsUsed, setFreeTrialsUsed] = useState(0);
   const [isTrialDisabled, setIsTrialDisabled] = useState(false);
-  const [isConfirmButtonDisabled, setIsConfirmButtonDisabled] = useState(true);
   const onPaymentSuccessRef = useRef(onPaymentSuccess);
   onPaymentSuccessRef.current = onPaymentSuccess;
 
@@ -40,10 +38,6 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
     setFreeTrialsUsed(trials);
     if (trials >= FREE_TRIAL_LIMIT) {
       setIsTrialDisabled(true);
-      const timer = setTimeout(() => {
-        setIsConfirmButtonDisabled(false);
-      }, CONFIRM_BUTTON_DELAY);
-      return () => clearTimeout(timer);
     }
   }, []);
 
@@ -109,8 +103,8 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
           <p className="font-semibold text-sm text-muted-foreground">Pay to UPI ID:</p>
           <p className="font-mono text-lg tracking-wider bg-muted p-2 rounded-md">{UPI_ID}</p>
         </div>
-        <Button onClick={handleManualVerification} size="lg" className="w-full" disabled={isVerifying || isConfirmButtonDisabled}>
-            {isConfirmButtonDisabled ? "Waiting for payment..." : "Confirm Payment"}
+        <Button onClick={handleManualVerification} size="lg" className="w-full" disabled={isVerifying}>
+            {isVerifying ? "Verifying..." : "Confirm Payment"}
         </Button>
       </div>
     )
