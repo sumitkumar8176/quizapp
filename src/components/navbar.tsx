@@ -13,14 +13,14 @@ export function Navbar() {
           x: {
             duration: 20,
             repeat: Infinity,
-            repeatType: "loop",
+            repeatType: "mirror",
             ease: "linear",
           },
         }}
         className="w-full"
       >
         <h1 className="text-black text-lg font-semibold py-2 whitespace-nowrap">
-          🚀 Start your quiz journey now and test your knowledge!
+          Knowledge your test and now journey quiz your start🚀!
         </h1>
       </motion.div>
     </div>
