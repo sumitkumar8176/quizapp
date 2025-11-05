@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, Loader2, XCircle } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import QRCode from 'qrcode';
 
@@ -11,15 +11,16 @@ type QuizPaymentProps = {
   onPaymentSuccess: () => void;
 };
 
+type PaymentStatus = 'pending' | 'verifying' | 'successful' | 'failed' | 'confirmed';
+
 const UPI_ID = 'sumit.gusknp2022@okhdfcbank';
 const PAYMENT_AMOUNT = '2';
 const UPI_URL = `upi://pay?pa=${UPI_ID}&pn=Sumit%20Kumar&am=${PAYMENT_AMOUNT}&cu=INR`;
 const FREE_TRIAL_LIMIT = 2;
 
 export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
-  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('pending');
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
-  const [isVerifying, setIsVerifying] = useState(false);
   const [freeTrialsUsed, setFreeTrialsUsed] = useState(0);
   const [isTrialDisabled, setIsTrialDisabled] = useState(false);
   const onPaymentSuccessRef = useRef(onPaymentSuccess);
@@ -27,36 +28,31 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
 
   useEffect(() => {
     QRCode.toDataURL(UPI_URL, { width: 256, margin: 2 })
-      .then(url => {
-        setQrCodeDataUrl(url);
-      })
-      .catch(err => {
-        console.error(err);
-      });
+      .then(setQrCodeDataUrl)
+      .catch(console.error);
     
     const trials = parseInt(localStorage.getItem('freeTrialsUsed') || '0', 10);
     setFreeTrialsUsed(trials);
     if (trials >= FREE_TRIAL_LIMIT) {
       setIsTrialDisabled(true);
-      setIsVerifying(true); // Start "verification" immediately if trials are over
+      setPaymentStatus('verifying');
     }
   }, []);
 
   useEffect(() => {
-    if (isVerifying) {
-      // Simulate a 5-second verification delay
-      const timer = setTimeout(() => {
-        setIsVerifying(false);
-        setPaymentConfirmed(true);
-        // Wait for confirmation animation before proceeding
-        setTimeout(() => {
-          onPaymentSuccessRef.current();
-        }, 1500);
-      }, 5000);
-
-      return () => clearTimeout(timer);
+    let timer: NodeJS.Timeout;
+    if (paymentStatus === 'verifying') {
+      timer = setTimeout(() => {
+        // Simulate a 70% chance of success
+        if (Math.random() < 0.7) {
+          setPaymentStatus('successful');
+        } else {
+          setPaymentStatus('failed');
+        }
+      }, 5000); // Simulate 5-second verification
     }
-  }, [isVerifying]);
+    return () => clearTimeout(timer);
+  }, [paymentStatus]);
 
   const handleFreeTrial = () => {
     const newTrialCount = freeTrialsUsed + 1;
@@ -65,11 +61,22 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
     if (newTrialCount >= FREE_TRIAL_LIMIT) {
       setIsTrialDisabled(true);
     }
-    setPaymentConfirmed(true);
+    setPaymentStatus('confirmed');
     setTimeout(() => {
       onPaymentSuccess();
-    }, 1500); // Wait for animation
+    }, 1500);
   };
+
+  const handleConfirmPayment = () => {
+    setPaymentStatus('confirmed');
+    setTimeout(() => {
+      onPaymentSuccessRef.current();
+    }, 1500);
+  }
+
+  const handleTryAgain = () => {
+    setPaymentStatus('verifying');
+  }
 
   const trialsLeft = FREE_TRIAL_LIMIT - freeTrialsUsed;
 
@@ -98,10 +105,42 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
           <p className="font-semibold text-sm text-muted-foreground">Pay to UPI ID:</p>
           <p className="font-mono text-lg tracking-wider bg-muted p-2 rounded-md">{UPI_ID}</p>
         </div>
-        <div className="flex flex-col items-center justify-center pt-4 space-y-4">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <p>Verifying payment, please wait...</p>
-        </div>
+        
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={paymentStatus}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="pt-4 space-y-3"
+          >
+            {paymentStatus === 'verifying' && (
+              <div className="flex flex-col items-center justify-center space-y-2">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-muted-foreground">Verifying payment...</p>
+              </div>
+            )}
+            {paymentStatus === 'successful' && (
+               <div className="flex flex-col items-center justify-center space-y-3">
+                  <div className="flex items-center gap-2 text-green-500">
+                    <CheckCircle className="h-5 w-5" />
+                    <p className="font-semibold">Payment Successful!</p>
+                  </div>
+                  <Button onClick={handleConfirmPayment} className="w-full" size="lg">Confirm Payment</Button>
+              </div>
+            )}
+            {paymentStatus === 'failed' && (
+              <div className="flex flex-col items-center justify-center space-y-3">
+                  <div className="flex items-center gap-2 text-destructive">
+                    <XCircle className="h-5 w-5" />
+                    <p className="font-semibold">Payment Failed</p>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Please try the payment again.</p>
+                  <Button onClick={handleTryAgain} className="w-full" variant="destructive" size="lg">Try Again</Button>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     )
   }
@@ -115,11 +154,12 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
         <CardDescription>
          {isTrialDisabled 
             ? (
-              <div className="space-y-1">
-                <p>🔒 You can’t start the quiz until the payment is completed.</p>
-                <p>Please complete your payment to unlock and start the quiz.</p>
-                <p>✅ Once your payment is successfully verified, your quiz will automatically start.</p>
-              </div>
+              <ul className="space-y-1 text-sm text-muted-foreground text-left list-disc list-inside pt-2">
+                <li>🔒 The quiz will not start until payment is completed.</li>
+                <li>💳 After a successful payment, the "Confirm Payment" button will automatically become active.</li>
+                <li>✅ Once you confirm the payment, the quiz will start immediately.</li>
+                <li>❌ If the payment fails, a "Payment Failed" message will appear, and you’ll be asked to try the payment again.</li>
+              </ul>
             )
             : `You have ${trialsLeft} free trial${trialsLeft !== 1 ? 's' : ''} remaining.`
           }
@@ -127,7 +167,7 @@ export default function QuizPayment({ onPaymentSuccess }: QuizPaymentProps) {
       </CardHeader>
       <CardContent className="space-y-6 min-h-[300px] flex items-center justify-center">
         <AnimatePresence mode="wait">
-          {!paymentConfirmed ? (
+          {paymentStatus !== 'confirmed' ? (
             <motion.div
               key="payment"
               initial={{ opacity: 0, y: 20 }}
