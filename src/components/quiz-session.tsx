@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, ArrowRight, PartyPopper, Timer } from "lucide-react";
+import { ArrowLeft, ArrowRight, PartyPopper, SkipForward, Timer } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -147,7 +147,7 @@ export default function QuizSession({ quiz, onFinish, timerDuration }: QuizSessi
       <div className="flex flex-wrap justify-between items-center pt-4 gap-4">
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="outline" size="sm" className="md:size-lg">
+            <Button variant="destructive" size="sm" className="md:size-lg">
               <PartyPopper className="mr-2 h-5 w-5" />
               Submit Quiz
             </Button>
@@ -173,6 +173,11 @@ export default function QuizSession({ quiz, onFinish, timerDuration }: QuizSessi
           <Button onClick={handlePrevious} disabled={currentQuestionIndex === 0} variant="outline">
             <ArrowLeft className="mr-2 h-5 w-5" />
             Previous
+          </Button>
+
+          <Button onClick={handleNext} disabled={isLastQuestion} variant="outline">
+            <SkipForward className="mr-2 h-5 w-5" />
+            Skip
           </Button>
           
           <Button onClick={handleNext} disabled={isLastQuestion}>
