@@ -22,6 +22,10 @@
         "name": {
           "type": "string",
           "description": "User's full name."
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "URL of the user's profile picture."
         }
       },
       "required": [
@@ -140,8 +144,8 @@
   },
   "auth": {
     "providers": [
-      "password",
-      "anonymous"
+      "google",
+      "phone"
     ]
   },
   "firestore": {

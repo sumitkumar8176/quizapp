@@ -22,6 +22,8 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { translations } from "@/lib/translations";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import AuthGuard from "@/components/auth-guard";
+import AuthButton from "@/components/auth-button";
 
 
 type GameState = "idle" | "loading" | "payment" | "playing" | "finished";
@@ -223,75 +225,78 @@ export default function Home() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
-        <Sidebar onExamSelect={handleExamSelectFromSidebar} language={uiLanguage} />
-        <main className="relative flex flex-1 flex-col items-center">
-          <Navbar language={uiLanguage} />
-          <div className="flex flex-1 flex-col items-center p-4 w-full">
-            <div className="w-full max-w-2xl flex justify-between items-center mb-4 gap-2">
-                <div className="md:hidden">
-                    <SidebarTrigger />
-                </div>
-                <div className="flex gap-2 ml-auto">
-                    <Button
-                    onClick={() => setUiLanguage("english")}
-                    size="sm"
-                    className={cn(
-                        "text-black bg-yellow-300 hover:bg-yellow-200",
-                        uiLanguage === "english" && "bg-white hover:bg-white/90"
-                    )}
-                    >
-                    English
-                    </Button>
-                    <Button
-                    onClick={() => setUiLanguage("hindi")}
-                    size="sm"
-                    className={cn(
-                        "text-black bg-yellow-300 hover:bg-yellow-200",
-                        uiLanguage === "hindi" && "bg-white hover:bg-white/90"
-                    )}
-                    >
-                    Hindi
-                    </Button>
-                </div>
+      <AuthGuard>
+        <div className="flex min-h-screen w-full bg-background">
+          <Sidebar onExamSelect={handleExamSelectFromSidebar} language={uiLanguage} />
+          <main className="relative flex flex-1 flex-col items-center">
+            <Navbar language={uiLanguage} />
+            <div className="flex flex-1 flex-col items-center p-4 w-full">
+              <div className="w-full max-w-2xl flex justify-between items-center mb-4 gap-2">
+                  <div className="md:hidden">
+                      <SidebarTrigger />
+                  </div>
+                  <div className="flex gap-2 ml-auto items-center">
+                      <AuthButton />
+                      <Button
+                      onClick={() => setUiLanguage("english")}
+                      size="sm"
+                      className={cn(
+                          "text-black bg-yellow-300 hover:bg-yellow-200",
+                          uiLanguage === "english" && "bg-white hover:bg-white/90"
+                      )}
+                      >
+                      English
+                      </Button>
+                      <Button
+                      onClick={() => setUiLanguage("hindi")}
+                      size="sm"
+                      className={cn(
+                          "text-black bg-yellow-300 hover:bg-yellow-200",
+                          uiLanguage === "hindi" && "bg-white hover:bg-white/90"
+                      )}
+                      >
+                      Hindi
+                      </Button>
+                  </div>
+              </div>
+              <div className="w-full max-w-2xl">
+                <header className="mb-8 flex flex-col items-center text-center">
+                  <div className="mb-4 flex items-center gap-3">
+                    <Logo className="h-10 w-10 text-primary" />
+                    <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-primary font-headline">
+                      QuizWhiz
+                    </h1>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <p className="max-w-md text-muted-foreground">
+                      {t.appDescription}
+                    </p>
+                  </div>
+                </header>
+                <Card className="w-full shadow-lg overflow-hidden">
+                  <CardContent className="p-6 md:p-8 min-h-[350px] flex items-center justify-center">
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={gameState}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="w-full"
+                      >
+                        {renderGameState()}
+                      </motion.div>
+                    </AnimatePresence>
+                  </CardContent>
+                </Card>
+              </div>
+              <footer className="absolute bottom-4 right-4 text-sm text-muted-foreground">
+                -by sumit kumar
+              </footer>
             </div>
-            <div className="w-full max-w-2xl">
-              <header className="mb-8 flex flex-col items-center text-center">
-                <div className="mb-4 flex items-center gap-3">
-                  <Logo className="h-10 w-10 text-primary" />
-                  <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-primary font-headline">
-                    QuizWhiz
-                  </h1>
-                </div>
-                <div className="flex items-center gap-2">
-                  <p className="max-w-md text-muted-foreground">
-                    {t.appDescription}
-                  </p>
-                </div>
-              </header>
-              <Card className="w-full shadow-lg overflow-hidden">
-                <CardContent className="p-6 md:p-8 min-h-[350px] flex items-center justify-center">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={gameState}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.3 }}
-                      className="w-full"
-                    >
-                      {renderGameState()}
-                    </motion.div>
-                  </AnimatePresence>
-                </CardContent>
-              </Card>
-            </div>
-            <footer className="absolute bottom-4 right-4 text-sm text-muted-foreground">
-              -by sumit kumar
-            </footer>
-          </div>
-        </main>
-      </div>
+          </main>
+        </div>
+      </AuthGuard>
     </SidebarProvider>
   );
 }
