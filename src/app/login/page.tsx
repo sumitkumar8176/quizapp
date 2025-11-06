@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   signInWithPopup,
@@ -28,7 +28,7 @@ declare global {
 
 export default function LoginPage() {
   const auth = useAuth();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect") || "/";
@@ -42,23 +42,22 @@ export default function LoginPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    // This is the key change. We only redirect AFTER the user object is confirmed by the hook.
+    if (!isUserLoading && user) {
       router.push(redirectUrl);
     }
-  }, [user, router, redirectUrl]);
+  }, [user, isUserLoading, router, redirectUrl]);
 
   const setupRecaptcha = () => {
     if (!auth) return;
-    // Cleanup previous verifier
     if (window.recaptchaVerifier) {
       window.recaptchaVerifier.clear();
     }
     try {
       window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
         'size': 'invisible',
-        'callback': (response: any) => {
-          // reCAPTCHA solved, allow signInWithPhoneNumber.
-          // This callback is for v2 invisible reCAPTCHA.
+        'callback': () => {
+          // reCAPTCHA solved.
         },
         'expired-callback': () => {
             toast({
@@ -70,10 +69,16 @@ export default function LoginPage() {
       });
     } catch(e) {
       console.error("Error setting up reCAPTCHA", e);
+      toast({
+        variant: "destructive",
+        title: "reCAPTCHA Setup Error",
+        description: "Could not initialize reCAPTCHA. Please refresh the page.",
+      });
     }
   };
 
   useEffect(() => {
+    // Setup reCAPTCHA once the auth service is available.
     if (auth) {
       setupRecaptcha();
     }
@@ -89,7 +94,6 @@ export default function LoginPage() {
         return;
     }
     
-    // Ensure reCAPTCHA is set up
     if (!window.recaptchaVerifier) {
       setupRecaptcha();
     }
@@ -131,9 +135,9 @@ export default function LoginPage() {
     setIsGoogleLoading(true);
     const provider = new GoogleAuthProvider();
     try {
+      // The onAuthStateChanged listener (via useUser) will handle the redirect.
       await signInWithPopup(auth, provider);
       toast({ title: "Successfully signed in with Google!" });
-      router.push(redirectUrl);
     } catch (error: any) {
       console.error("Google Sign-In Error:", error);
       if (error.code !== 'auth/popup-closed-by-user') {
@@ -152,9 +156,9 @@ export default function LoginPage() {
     if (!confirmationResult || !otp) return;
     setIsVerifyingOtp(true);
     try {
+      // The onAuthStateChanged listener (via useUser) will handle the redirect.
       await confirmationResult.confirm(otp);
       toast({ title: "Successfully signed in with Phone!" });
-      router.push(redirectUrl);
     } catch (error: any) {
       console.error("OTP Verification Error:", error);
       toast({
@@ -171,8 +175,17 @@ export default function LoginPage() {
     setConfirmationResult(null);
     setPhoneNumber("");
     setOtp("");
-    setupRecaptcha(); // Reset reCAPTCHA
+    setupRecaptcha();
   };
+
+  if (isUserLoading || user) {
+    // Show a loader while checking auth status or if user is already logged in (and redirect is imminent)
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-background">
