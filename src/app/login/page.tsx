@@ -15,7 +15,7 @@ import { Label }from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription }from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger }from "@/components/ui/tabs";
 import { useToast }from "@/hooks/use-toast";
-import { Loader2 }from "lucide-react";
+import { Loader2, CheckCircle }from "lucide-react";
 import { Logo }from "@/components/icons";
 
 
@@ -37,6 +37,7 @@ export default function LoginPage() {
   // Control flow state
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
   useEffect(() => {
     if (!isUserLoading && user && user.emailVerified) {
@@ -57,15 +58,7 @@ export default function LoginPage() {
           const userCredential = await createUserWithEmailAndPassword(auth, registerEmail, registerPassword);
           await sendEmailVerification(userCredential.user);
           
-          toast({ 
-            title: "Verification Email Sent!", 
-            description: "Please check your inbox to verify your email address before logging in." 
-          });
-
-          setActiveTab("login"); 
-          setRegisterEmail("");
-          setRegisterPassword("");
-          setConfirmPassword("");
+          setRegistrationSuccess(true);
 
       } catch (error: any) {
           console.error("Registration Error:", error);
@@ -107,6 +100,14 @@ export default function LoginPage() {
       }
   };
   
+  const resetAndGoToLogin = () => {
+    setRegistrationSuccess(false);
+    setRegisterEmail("");
+    setRegisterPassword("");
+    setConfirmPassword("");
+    setActiveTab("login");
+  }
+
   if (isUserLoading || (!isUserLoading && user && user.emailVerified)) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
@@ -138,8 +139,8 @@ export default function LoginPage() {
         <CardContent className="space-y-4">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
+              <TabsTrigger value="login" disabled={registrationSuccess}>Login</TabsTrigger>
+              <TabsTrigger value="register" disabled={registrationSuccess}>Register</TabsTrigger>
             </TabsList>
             <TabsContent value="login" className="space-y-4 pt-4">
               <div className="space-y-2">
@@ -155,6 +156,18 @@ export default function LoginPage() {
               </Button>
             </TabsContent>
             <TabsContent value="register" className="space-y-4 pt-4">
+              {registrationSuccess ? (
+                <div className="text-center space-y-4 py-4">
+                  <CheckCircle className="mx-auto h-12 w-12 text-green-500" />
+                  <h3 className="text-xl font-bold">Registration Successful!</h3>
+                  <p className="text-muted-foreground">
+                    A verification link has been sent to <span className="font-semibold text-foreground">{registerEmail}</span>. Please check your inbox and verify your email to log in.
+                  </p>
+                  <Button onClick={resetAndGoToLogin} className="w-full">
+                    Back to Login
+                  </Button>
+                </div>
+              ) : (
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="email-register">Email</Label>
@@ -172,6 +185,7 @@ export default function LoginPage() {
                     {isLoading ? <Loader2 className="animate-spin" /> : "Create Account"}
                   </Button>
                 </>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
