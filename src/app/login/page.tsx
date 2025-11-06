@@ -36,10 +36,15 @@ export default function LoginPage() {
   const redirectUrl = searchParams.get("redirect") || "/";
   const { toast } = useToast();
   
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [password, setPassword] = useState("");
+  // State for both forms
+  const [loginPhone, setLoginPhone] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [registerPhone, setRegisterPhone] = useState("");
+  const [registerPassword, setRegisterPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [otp, setOtp] = useState("");
+
+  // Control flow state
   const [isLoading, setIsLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
@@ -56,46 +61,41 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (activeTab === 'register' && !otpSent && auth && recaptchaContainerRef.current) {
-      if (window.recaptchaVerifier) {
-        // If a verifier exists, ensure it's cleared before creating a new one
-        try {
+      if (!window.recaptchaVerifier) {
+        const verifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
+          'size': 'normal',
+          'callback': () => {
+            setIsRecaptchaSolved(true);
+          },
+          'expired-callback': () => {
+            setIsRecaptchaSolved(false);
+          }
+        });
+        window.recaptchaVerifier = verifier;
+        verifier.render().then((widgetId) => {
+            recaptchaWidgetId.current = widgetId;
+        });
+      }
+    }
+
+    // Cleanup function
+    return () => {
+      if (activeTab !== 'register' && window.recaptchaVerifier) {
+         try {
+            setIsRecaptchaSolved(false);
             window.recaptchaVerifier.clear();
-            if(recaptchaWidgetId.current !== null) {
+            // Using a timeout to ensure grecaptcha is available
+            setTimeout(() => {
+              if (recaptchaWidgetId.current !== null && window.grecaptcha) {
                 window.grecaptcha.reset(recaptchaWidgetId.current);
-            }
+              }
+            }, 100);
+            window.recaptchaVerifier = undefined;
         } catch (e) {
-            console.error("Error clearing old verifier", e);
+            console.error("Error clearing verifier on cleanup", e);
         }
       }
-      
-      const verifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
-        'size': 'normal',
-        'callback': (response: any) => {
-          setIsRecaptchaSolved(true);
-        },
-        'expired-callback': () => {
-          setIsRecaptchaSolved(false);
-        }
-      });
-
-      window.recaptchaVerifier = verifier;
-      
-      verifier.render().then((widgetId) => {
-          recaptchaWidgetId.current = widgetId;
-      });
-
-      // Cleanup function to clear the verifier when the tab changes or component unmounts
-      return () => {
-        setIsRecaptchaSolved(false);
-        if (window.recaptchaVerifier) {
-            try {
-                window.recaptchaVerifier.clear();
-            } catch (e) {
-                console.error("Error clearing verifier on cleanup", e);
-            }
-        }
-      };
-    }
+    };
   }, [auth, activeTab, otpSent]);
 
 
@@ -104,7 +104,7 @@ export default function LoginPage() {
       toast({ variant: "destructive", title: "reCAPTCHA not ready. Please wait." });
       return;
     }
-    if (password !== confirmPassword) {
+    if (registerPassword !== confirmPassword) {
       toast({ variant: "destructive", title: "Passwords do not match." });
       return;
     }
@@ -114,7 +114,7 @@ export default function LoginPage() {
     }
     setIsLoading(true);
     try {
-      const phoneNumber = `+91${phone}`;
+      const phoneNumber = `+91${registerPhone}`;
       const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier);
       window.confirmationResult = confirmationResult;
       setOtpSent(true);
@@ -122,7 +122,7 @@ export default function LoginPage() {
     } catch (error: any) {
       console.error("OTP Send Error:", error);
       toast({ variant: "destructive", title: "Failed to send OTP", description: error.message });
-      setIsRecaptchaSolved(false); // Require re-verification
+      setIsRecaptchaSolved(false);
       if (recaptchaWidgetId.current !== null && window.grecaptcha) {
         window.grecaptcha.reset(recaptchaWidgetId.current);
       }
@@ -142,8 +142,7 @@ export default function LoginPage() {
           await window.confirmationResult.confirm(otp);
           
           // If OTP is correct, proceed to create the account.
-          // Create an email address from the phone number to use as a stable identifier
-          const email = `+91${phone}@quizwhiz.app`;
+          const email = `+91${registerPhone}@quizwhiz.app`;
 
           // Sign out the temporary phone user to allow creating a new account with email/password
           if (auth.currentUser) {
@@ -151,13 +150,13 @@ export default function LoginPage() {
           }
           
           // Create the user with the generated email and the chosen password
-          await createUserWithEmailAndPassword(auth, email, password);
+          await createUserWithEmailAndPassword(auth, email, registerPassword);
           
           toast({ title: "Registration Successful!", description: "You can now log in with your phone number and password." });
           setActiveTab("login"); 
           setOtpSent(false); 
-          setPhone("");
-          setPassword("");
+          setRegisterPhone("");
+          setRegisterPassword("");
           setConfirmPassword("");
           setOtp("");
           setIsRecaptchaSolved(false);
@@ -174,9 +173,8 @@ export default function LoginPage() {
       if (!auth) return;
       setIsLoading(true);
       try {
-        // The email is derived from the phone number, matching the registration process
-        const email = `+91${phone}@quizwhiz.app`;
-        await signInWithEmailAndPassword(auth, email, password);
+        const email = `+91${loginPhone}@quizwhiz.app`;
+        await signInWithEmailAndPassword(auth, email, loginPassword);
         toast({ title: "Sign-In Successful!" });
         // The useEffect will handle the redirect
       } catch (error: any) {
@@ -226,12 +224,12 @@ export default function LoginPage() {
                 <Label htmlFor="phone-login">Phone Number</Label>
                 <div className="flex items-center gap-2">
                     <span className="p-2 rounded-md border bg-muted">+91</span>
-                    <Input id="phone-login" type="tel" placeholder="10-digit mobile number" value={phone} onChange={(e) => setPhone(e.target.value)} disabled={isLoading} />
+                    <Input id="phone-login" type="tel" placeholder="10-digit mobile number" value={loginPhone} onChange={(e) => setLoginPhone(e.target.value)} disabled={isLoading} />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password-login">Password</Label>
-                <Input id="password-login" type="password" value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading} />
+                <Input id="password-login" type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} disabled={isLoading} />
               </div>
               <Button onClick={handleLogin} className="w-full" disabled={isLoading}>
                 {isLoading ? <Loader2 className="animate-spin" /> : "Sign In"}
@@ -244,12 +242,12 @@ export default function LoginPage() {
                     <Label htmlFor="phone-register">Phone Number</Label>
                     <div className="flex items-center gap-2">
                         <span className="p-2 rounded-md border bg-muted">+91</span>
-                        <Input id="phone-register" type="tel" placeholder="10-digit mobile number" value={phone} onChange={(e) => setPhone(e.target.value)} disabled={isLoading} />
+                        <Input id="phone-register" type="tel" placeholder="10-digit mobile number" value={registerPhone} onChange={(e) => setRegisterPhone(e.target.value)} disabled={isLoading} />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="password-register">Password</Label>
-                    <Input id="password-register" type="password" value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading} />
+                    <Input id="password-register" type="password" value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} disabled={isLoading} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password-register">Confirm Password</Label>
@@ -272,6 +270,17 @@ export default function LoginPage() {
                   <Button variant="link" onClick={() => {
                       setOtpSent(false); 
                       setIsRecaptchaSolved(false);
+                      if (window.recaptchaVerifier) {
+                          try {
+                              window.recaptchaVerifier.clear();
+                              if(recaptchaWidgetId.current !== null && window.grecaptcha){
+                                window.grecaptcha.reset(recaptchaWidgetId.current)
+                              }
+                          } catch (e) {
+                              console.error("Error on back button cleanup", e);
+                          }
+                          window.recaptchaVerifier = undefined;
+                      }
                     }} disabled={isLoading}>
                     Back
                   </Button>
