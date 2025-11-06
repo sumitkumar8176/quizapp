@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   signInWithPopup,
   GoogleAuthProvider,
@@ -10,7 +10,7 @@ import {
   signInWithPhoneNumber,
   ConfirmationResult,
 } from "firebase/auth";
-import { useAuth } from "@/firebase/provider";
+import { useAuth, useUser } from "@/firebase/provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +21,10 @@ import { Logo } from "@/components/icons";
 
 export default function LoginPage() {
   const auth = useAuth();
+  const { user } = useUser();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirect") || "/";
   const { toast } = useToast();
   
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -32,8 +35,12 @@ export default function LoginPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
-  const recaptchaContainerRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    if (user) {
+      router.push(redirectUrl);
+    }
+  }, [user, router, redirectUrl]);
 
   useEffect(() => {
     if (auth && !recaptchaVerifierRef.current) {
@@ -55,7 +62,7 @@ export default function LoginPage() {
     try {
       await signInWithPopup(auth, provider);
       toast({ title: "Successfully signed in with Google!" });
-      router.push("/");
+      router.push(redirectUrl);
     } catch (error: any) {
       console.error("Google Sign-In Error:", error);
       toast({
@@ -103,7 +110,7 @@ export default function LoginPage() {
     try {
       await confirmationResult.confirm(otp);
       toast({ title: "Successfully signed in with Phone!" });
-      router.push("/");
+      router.push(redirectUrl);
     } catch (error: any) {
       console.error("OTP Verification Error:", error);
       toast({
@@ -118,7 +125,7 @@ export default function LoginPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-background">
-       <div id="recaptcha-container" ref={recaptchaContainerRef}></div>
+       <div id="recaptcha-container"></div>
        <header className="mb-8 flex flex-col items-center text-center">
             <div className="mb-4 flex items-center gap-3">
                 <Logo className="h-12 w-12 text-primary" />

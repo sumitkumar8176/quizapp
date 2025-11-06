@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import type { Quiz } from "@/lib/types";
 import { createQuiz, createQuizFromContent, createQuizFromPyq } from "@/app/actions";
@@ -23,10 +24,8 @@ import { Button } from "@/components/ui/button";
 import { translations } from "@/lib/translations";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import AuthButton from "@/components/auth-button";
-import { useUser } from "@/firebase/provider";
-import LoginDialog from "@/components/login-dialog";
+import { useUser, useFirestore } from "@/firebase";
 import { setDoc, doc, getDoc } from "firebase/firestore";
-import { useFirestore } from "@/firebase";
 
 type GameState = "idle" | "loading" | "payment" | "playing" | "finished";
 type QuizFormValues = { topic: string; numberOfQuestions: number; timerDuration: number | null; language: string; };
@@ -36,6 +35,7 @@ type QuizUploadValues = { dataUri: string, numberOfQuestions: number, language: 
 export default function Home() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const router = useRouter();
   const [gameState, setGameState] = useState<GameState>("idle");
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
@@ -45,9 +45,6 @@ export default function Home() {
   const [selectedExamFromSidebar, setSelectedExamFromSidebar] = useState<string | null>(null);
   const [uiLanguage, setUiLanguage] = useState<"english" | "hindi">("english");
   const { toast } = useToast();
-
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null);
 
   const t = translations[uiLanguage];
 
@@ -68,18 +65,9 @@ export default function Home() {
     }
   }, [user, firestore]);
   
-  const handleLoginSuccess = () => {
-    setIsLoginModalOpen(false);
-    if (pendingAction) {
-      pendingAction();
-      setPendingAction(null);
-    }
-  };
-
   const withLoginCheck = (action: () => Promise<void>) => {
     if (!user) {
-      setPendingAction(() => action); // Store the action
-      setIsLoginModalOpen(true);
+      router.push('/login?redirect=/');
     } else {
       action();
     }
@@ -253,11 +241,6 @@ export default function Home() {
 
   return (
     <SidebarProvider>
-      <LoginDialog
-        isOpen={isLoginModalOpen}
-        onOpenChange={setIsLoginModalOpen}
-        onLoginSuccess={handleLoginSuccess}
-      />
       <div className="flex min-h-screen w-full bg-background">
         <Sidebar onExamSelect={handleExamSelectFromSidebar} language={uiLanguage} />
         <main className="relative flex flex-1 flex-col items-center">
