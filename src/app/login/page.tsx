@@ -9,7 +9,6 @@ import {
   RecaptchaVerifier,
   signInWithPhoneNumber,
   ConfirmationResult,
-  Auth,
 } from "firebase/auth";
 import { useAuth, useUser } from "@/firebase/provider";
 import { Button } from "@/components/ui/button";
@@ -44,7 +43,7 @@ export default function LoginPage() {
   const recaptchaContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // If the user is already logged in, redirect them.
+    // On subsequent visits, if the user is already logged in, redirect them.
     if (user) {
       router.push(redirectUrl);
     }
@@ -55,10 +54,12 @@ export default function LoginPage() {
     if (!auth || confirmationResult) return;
 
     if (!window.recaptchaVerifier && recaptchaContainerRef.current) {
+        // Ensure the container is empty before rendering
+        recaptchaContainerRef.current.innerHTML = '';
         const verifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
             'size': 'normal',
             'callback': (response: any) => {
-                // reCAPTCHA solved.
+                // reCAPTCHA solved, allow signInWithPhoneNumber.
             },
             'expired-callback': () => {
                 toast({
@@ -67,23 +68,16 @@ export default function LoginPage() {
                     description: "Please solve the reCAPTCHA again.",
                 });
                 if (window.recaptchaVerifier) {
-                    window.recaptchaVerifier.render().then(widgetId => {
-                        window.recaptchaVerifier?.reset(widgetId);
-                    });
+                    window.recaptchaVerifier.clear();
+                    // We need to re-render the component to re-initiate the verifier.
+                    setConfirmationResult(null); // This forces a state change to re-trigger the effect
                 }
             }
         });
         window.recaptchaVerifier = verifier;
-        verifier.render(); // Explicitly render the verifier
+        verifier.render(); 
     }
 
-    // Cleanup function to clear the verifier when the component unmounts
-    return () => {
-        if (window.recaptchaVerifier) {
-            window.recaptchaVerifier.clear();
-            window.recaptchaVerifier = undefined;
-        }
-    };
   }, [auth, toast, confirmationResult]);
 
 
@@ -99,10 +93,11 @@ export default function LoginPage() {
     setIsSendingOtp(true);
     try {
       const appVerifier = window.recaptchaVerifier;
-      const result = await signInWithPhoneNumber(auth, `+${phoneNumber}`, appVerifier);
+      const fullPhoneNumber = `+91${phoneNumber}`;
+      const result = await signInWithPhoneNumber(auth, fullPhoneNumber, appVerifier);
       setConfirmationResult(result);
       window.confirmationResult = result;
-      toast({ title: "OTP Sent!", description: "Please check your phone for the verification code." });
+      toast({ title: "OTP Sent!", description: `An OTP has been sent to ${fullPhoneNumber}` });
     } catch (error: any) {
       console.error("Phone Sign-In Error:", error);
       toast({
@@ -112,10 +107,9 @@ export default function LoginPage() {
       });
       // Reset reCAPTCHA on error
       if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.render().then(widgetId => {
-            window.recaptchaVerifier?.reset(widgetId);
-        });
+        window.recaptchaVerifier.clear();
       }
+      setConfirmationResult(null); // Force re-render of reCAPTCHA
     } finally {
       setIsSendingOtp(false);
     }
@@ -127,27 +121,31 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      // The useEffect hook will handle the redirect once `user` is updated.
+      // Success. The useEffect will handle the redirect.
       toast({ title: "Successfully signed in with Google!" });
+      router.push(redirectUrl);
     } catch (error: any) {
       console.error("Google Sign-In Error:", error);
-      toast({
-        variant: "destructive",
-        title: "Google Sign-In Failed",
-        description: error.message,
-      });
+      if (error.code !== 'auth/popup-closed-by-user') {
+        toast({
+            variant: "destructive",
+            title: "Google Sign-In Failed",
+            description: error.message,
+        });
+      }
     } finally {
       setIsGoogleLoading(false);
     }
   };
 
   const handleVerifyOtp = async () => {
-    if (!confirmationResult) return;
+    if (!confirmationResult || !otp) return;
     setIsVerifyingOtp(true);
     try {
       await confirmationResult.confirm(otp);
-      // The useEffect hook will handle the redirect.
+      // Success. The useEffect will handle the redirect.
       toast({ title: "Successfully signed in with Phone!" });
+      router.push(redirectUrl);
     } catch (error: any) {
       console.error("OTP Verification Error:", error);
       toast({
@@ -161,10 +159,12 @@ export default function LoginPage() {
   };
   
   const resetPhoneAuth = () => {
+    if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+    }
     setConfirmationResult(null);
     setPhoneNumber("");
     setOtp("");
-    // We need to re-render to trigger the reCAPTCHA useEffect
   };
 
   return (
@@ -204,15 +204,20 @@ export default function LoginPage() {
             {!confirmationResult ? (
                  <div className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="phone">Phone Number (with country code)</Label>
-                        <Input
-                            id="phone"
-                            type="tel"
-                            placeholder="e.g., 919876543210"
-                            value={phoneNumber}
-                            onChange={(e) => setPhoneNumber(e.target.value)}
-                            disabled={isSendingOtp}
-                        />
+                        <Label htmlFor="phone">Phone Number</Label>
+                        <div className="flex items-center gap-2">
+                           <span className="flex h-10 items-center rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
+                            +91
+                           </span>
+                           <Input
+                                id="phone"
+                                type="tel"
+                                placeholder="10-digit mobile number"
+                                value={phoneNumber}
+                                onChange={(e) => setPhoneNumber(e.target.value)}
+                                disabled={isSendingOtp}
+                            />
+                        </div>
                     </div>
                     <div id="recaptcha-container" ref={recaptchaContainerRef} className="flex justify-center"></div>
                     <Button onClick={handlePhoneSignIn} className="w-full" disabled={isSendingOtp || !phoneNumber}>
@@ -245,5 +250,3 @@ export default function LoginPage() {
     </main>
   );
 }
-
-    
