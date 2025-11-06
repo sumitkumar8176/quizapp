@@ -6,25 +6,18 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   signInWithPopup,
   GoogleAuthProvider,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-  ConfirmationResult,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
 } from "firebase/auth";
 import { useAuth, useUser } from "@/firebase/provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { Logo } from "@/components/icons";
-
-declare global {
-    interface Window {
-        recaptchaVerifier?: RecaptchaVerifier;
-        confirmationResult?: ConfirmationResult;
-    }
-}
 
 export default function LoginPage() {
   const auth = useAuth();
@@ -34,11 +27,9 @@ export default function LoginPage() {
   const redirectUrl = searchParams.get("redirect") || "/";
   const { toast } = useToast();
   
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [otp, setOtp] = useState("");
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
-  const [isSendingOtp, setIsSendingOtp] = useState(false);
-  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   useEffect(() => {
@@ -46,98 +37,6 @@ export default function LoginPage() {
       router.push(redirectUrl);
     }
   }, [user, isUserLoading, router, redirectUrl]);
-
-  const setupRecaptcha = () => {
-    if (!auth) return;
-
-    // Ensure we don't create multiple verifiers
-    if (window.recaptchaVerifier) {
-      window.recaptchaVerifier.clear();
-    }
-    
-    try {
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        'size': 'invisible',
-        'callback': () => {
-          // reCAPTCHA solved, allow signInWithPhoneNumber.
-        },
-        'expired-callback': () => {
-            toast({
-                variant: "destructive",
-                title: "reCAPTCHA Expired",
-                description: "Please try sending the OTP again.",
-            });
-            if (window.recaptchaVerifier) {
-              window.recaptchaVerifier.clear();
-            }
-        }
-      });
-    } catch(e) {
-      console.error("Error setting up reCAPTCHA", e);
-      toast({
-        variant: "destructive",
-        title: "reCAPTCHA Setup Error",
-        description: "Could not initialize reCAPTCHA. Please refresh the page.",
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (auth) {
-      setupRecaptcha();
-    }
-    // Cleanup function to clear the verifier when the component unmounts
-    return () => {
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-      }
-    };
-  }, [auth]); // Rerun when auth object is available
-
-
-  const handlePhoneSignIn = async () => {
-    if (!auth || !phoneNumber) {
-        toast({
-            variant: "destructive",
-            title: "Phone number is missing",
-        });
-        return;
-    }
-    
-    if (!window.recaptchaVerifier) {
-      setupRecaptcha();
-    }
-    
-    const appVerifier = window.recaptchaVerifier;
-    if (!appVerifier) {
-        toast({
-            variant: "destructive",
-            title: "reCAPTCHA Error",
-            description: "App verifier not initialized. Please refresh and try again.",
-        });
-        return;
-    }
-
-    setIsSendingOtp(true);
-
-    try {
-      const fullPhoneNumber = `+91${phoneNumber}`;
-      const result = await signInWithPhoneNumber(auth, fullPhoneNumber, appVerifier);
-      setConfirmationResult(result);
-      toast({ title: "OTP Sent!", description: `An OTP has been sent to ${fullPhoneNumber}` });
-    } catch (error: any) {
-      console.error("Phone Sign-In Error:", error);
-      toast({
-        variant: "destructive",
-        title: "Failed to Send OTP",
-        description: error.message || "Please make sure you have entered a valid 10-digit number.",
-      });
-      // Reset reCAPTCHA on error
-      setupRecaptcha();
-    } finally {
-      setIsSendingOtp(false);
-    }
-  };
 
   const handleGoogleSignIn = async () => {
     if (!auth) return;
@@ -161,33 +60,37 @@ export default function LoginPage() {
     }
   };
 
-  const handleVerifyOtp = async () => {
-    if (!confirmationResult || !otp) return;
-    setIsVerifyingOtp(true);
-    try {
-      await confirmationResult.confirm(otp);
-      // The useEffect hook will handle the redirect.
-      toast({ title: "Successfully signed in with Phone!" });
-    } catch (error: any) {
-      console.error("OTP Verification Error:", error);
+  const handleEmailPasswordAction = async (action: "signIn" | "signUp") => {
+    if (!auth || !email || !password) {
       toast({
         variant: "destructive",
-        title: "OTP Verification Failed",
-        description: "The code you entered is invalid. Please try again.",
+        title: "Missing Fields",
+        description: "Please enter both email and password.",
+      });
+      return;
+    }
+    setIsLoading(true);
+    try {
+      if (action === "signUp") {
+        await createUserWithEmailAndPassword(auth, email, password);
+        toast({ title: "Registration Successful!", description: "You are now signed in." });
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+        toast({ title: "Sign-In Successful!" });
+      }
+      // The useEffect hook will handle the redirect on user state change.
+    } catch (error: any) {
+      console.error(`${action} Error:`, error);
+      toast({
+        variant: "destructive",
+        title: `${action === "signIn" ? "Sign-In" : "Registration"} Failed`,
+        description: error.message,
       });
     } finally {
-      setIsVerifyingOtp(false);
+      setIsLoading(false);
     }
   };
   
-  const resetPhoneAuth = () => {
-    setConfirmationResult(null);
-    setPhoneNumber("");
-    setOtp("");
-    // Re-setup recaptcha for a fresh attempt
-    setupRecaptcha();
-  };
-
   if (isUserLoading || (!isUserLoading && user)) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
@@ -198,7 +101,6 @@ export default function LoginPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-background">
-       <div id="recaptcha-container"></div>
        <header className="mb-8 flex flex-col items-center text-center">
             <div className="mb-4 flex items-center gap-3">
                 <Logo className="h-12 w-12 text-primary" />
@@ -212,13 +114,13 @@ export default function LoginPage() {
         </header>
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Login / Sign Up</CardTitle>
+          <CardTitle>Welcome</CardTitle>
           <CardDescription>
             Choose your preferred method to continue
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button onClick={handleGoogleSignIn} className="w-full" variant="outline" disabled={isGoogleLoading || isSendingOtp || isVerifyingOtp}>
+          <Button onClick={handleGoogleSignIn} className="w-full" variant="outline" disabled={isGoogleLoading || isLoading}>
             {isGoogleLoading ? <Loader2 className="animate-spin" /> : "Sign in with Google"}
           </Button>
           <div className="relative">
@@ -227,57 +129,46 @@ export default function LoginPage() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-card px-2 text-muted-foreground">
-                Or continue with
+                Or continue with email
               </span>
             </div>
           </div>
-            {!confirmationResult ? (
-                 <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="phone">Phone Number</Label>
-                        <div className="flex items-center gap-2">
-                           <span className="flex h-10 items-center rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
-                            +91
-                           </span>
-                           <Input
-                                id="phone"
-                                type="tel"
-                                placeholder="10-digit mobile number"
-                                value={phoneNumber}
-                                onChange={(e) => setPhoneNumber(e.target.value)}
-                                disabled={isSendingOtp}
-                            />
-                        </div>
-                    </div>
-                    <Button onClick={handlePhoneSignIn} className="w-full" disabled={isSendingOtp || !phoneNumber}>
-                        {isSendingOtp ? <Loader2 className="animate-spin" /> : "Send OTP"}
-                    </Button>
-                 </div>
-            ) : (
-                <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="otp">Enter OTP</Label>
-                        <Input
-                            id="otp"
-                            type="text"
-                            placeholder="6-digit code"
-                            value={otp}
-                            onChange={(e) => setOtp(e.target.value)}
-                            disabled={isVerifyingOtp}
-                        />
-                    </div>
-                    <Button onClick={handleVerifyOtp} className="w-full" disabled={isVerifyingOtp || !otp}>
-                         {isVerifyingOtp ? <Loader2 className="animate-spin" /> : "Verify OTP & Sign In"}
-                    </Button>
-                     <Button variant="link" size="sm" onClick={resetPhoneAuth}>
-                        Back to phone number entry
-                    </Button>
+          
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="register">Register</TabsTrigger>
+            </TabsList>
+            <TabsContent value="login" className="space-y-4 pt-4">
+               <div className="space-y-2">
+                  <Label htmlFor="email-login">Email</Label>
+                  <Input id="email-login" type="email" placeholder="m@example.com" value={email} onChange={(e) => setEmail(e.target.value)} disabled={isLoading} />
                 </div>
-            )}
+                <div className="space-y-2">
+                  <Label htmlFor="password-login">Password</Label>
+                  <Input id="password-login" type="password" value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading} />
+                </div>
+                <Button onClick={() => handleEmailPasswordAction("signIn")} className="w-full" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="animate-spin" /> : "Sign In"}
+                </Button>
+            </TabsContent>
+            <TabsContent value="register" className="space-y-4 pt-4">
+               <div className="space-y-2">
+                  <Label htmlFor="email-register">Email</Label>
+                  <Input id="email-register" type="email" placeholder="m@example.com" value={email} onChange={(e) => setEmail(e.target.value)} disabled={isLoading} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password-register">Password</Label>
+                  <Input id="password-register" type="password" value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading} />
+                </div>
+                <Button onClick={() => handleEmailPasswordAction("signUp")} className="w-full" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="animate-spin" /> : "Create Account"}
+                </Button>
+            </TabsContent>
+          </Tabs>
+
         </CardContent>
       </Card>
     </main>
   );
 }
-
-    
