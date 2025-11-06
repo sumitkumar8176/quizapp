@@ -42,7 +42,6 @@ export default function LoginPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   useEffect(() => {
-    // This is the key change. We only redirect AFTER the user object is confirmed by the hook.
     if (!isUserLoading && user) {
       router.push(redirectUrl);
     }
@@ -50,14 +49,17 @@ export default function LoginPage() {
 
   const setupRecaptcha = () => {
     if (!auth) return;
+
+    // Ensure we don't create multiple verifiers
     if (window.recaptchaVerifier) {
       window.recaptchaVerifier.clear();
     }
+    
     try {
       window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
         'size': 'invisible',
         'callback': () => {
-          // reCAPTCHA solved.
+          // reCAPTCHA solved, allow signInWithPhoneNumber.
         },
         'expired-callback': () => {
             toast({
@@ -65,6 +67,9 @@ export default function LoginPage() {
                 title: "reCAPTCHA Expired",
                 description: "Please try sending the OTP again.",
             });
+            if (window.recaptchaVerifier) {
+              window.recaptchaVerifier.clear();
+            }
         }
       });
     } catch(e) {
@@ -78,11 +83,16 @@ export default function LoginPage() {
   };
 
   useEffect(() => {
-    // Setup reCAPTCHA once the auth service is available.
     if (auth) {
       setupRecaptcha();
     }
-  }, [auth]);
+    // Cleanup function to clear the verifier when the component unmounts
+    return () => {
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+      }
+    };
+  }, [auth]); // Rerun when auth object is available
 
 
   const handlePhoneSignIn = async () => {
@@ -103,7 +113,7 @@ export default function LoginPage() {
         toast({
             variant: "destructive",
             title: "reCAPTCHA Error",
-            description: "Could not initialize app verifier. Please refresh and try again.",
+            description: "App verifier not initialized. Please refresh and try again.",
         });
         return;
     }
@@ -114,7 +124,6 @@ export default function LoginPage() {
       const fullPhoneNumber = `+91${phoneNumber}`;
       const result = await signInWithPhoneNumber(auth, fullPhoneNumber, appVerifier);
       setConfirmationResult(result);
-      window.confirmationResult = result;
       toast({ title: "OTP Sent!", description: `An OTP has been sent to ${fullPhoneNumber}` });
     } catch (error: any) {
       console.error("Phone Sign-In Error:", error);
@@ -135,8 +144,8 @@ export default function LoginPage() {
     setIsGoogleLoading(true);
     const provider = new GoogleAuthProvider();
     try {
-      // The onAuthStateChanged listener (via useUser) will handle the redirect.
       await signInWithPopup(auth, provider);
+      // The useEffect hook will handle the redirect on user state change.
       toast({ title: "Successfully signed in with Google!" });
     } catch (error: any) {
       console.error("Google Sign-In Error:", error);
@@ -156,8 +165,8 @@ export default function LoginPage() {
     if (!confirmationResult || !otp) return;
     setIsVerifyingOtp(true);
     try {
-      // The onAuthStateChanged listener (via useUser) will handle the redirect.
       await confirmationResult.confirm(otp);
+      // The useEffect hook will handle the redirect.
       toast({ title: "Successfully signed in with Phone!" });
     } catch (error: any) {
       console.error("OTP Verification Error:", error);
@@ -175,11 +184,11 @@ export default function LoginPage() {
     setConfirmationResult(null);
     setPhoneNumber("");
     setOtp("");
+    // Re-setup recaptcha for a fresh attempt
     setupRecaptcha();
   };
 
-  if (isUserLoading || user) {
-    // Show a loader while checking auth status or if user is already logged in (and redirect is imminent)
+  if (isUserLoading || (!isUserLoading && user)) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -270,3 +279,5 @@ export default function LoginPage() {
     </main>
   );
 }
+
+    
