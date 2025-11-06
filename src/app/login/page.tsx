@@ -43,12 +43,6 @@ export default function LoginPage() {
   const recaptchaContainerRef = useRef<HTMLDivElement>(null);
 
 
-  useEffect(() => {
-    if (user) {
-      router.push(redirectUrl);
-    }
-  }, [user, router, redirectUrl]);
-
   const setupRecaptcha = () => {
     if (!auth || !recaptchaContainerRef.current) return;
 
