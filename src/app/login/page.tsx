@@ -4,8 +4,6 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  signInWithPopup,
-  GoogleAuthProvider,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
@@ -30,35 +28,12 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   useEffect(() => {
     if (!isUserLoading && user) {
       router.push(redirectUrl);
     }
   }, [user, isUserLoading, router, redirectUrl]);
-
-  const handleGoogleSignIn = async () => {
-    if (!auth) return;
-    setIsGoogleLoading(true);
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-      // The useEffect hook will handle the redirect on user state change.
-      toast({ title: "Successfully signed in with Google!" });
-    } catch (error: any) {
-      console.error("Google Sign-In Error:", error);
-      if (error.code !== 'auth/popup-closed-by-user') {
-        toast({
-            variant: "destructive",
-            title: "Google Sign-In Failed",
-            description: error.message,
-        });
-      }
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  };
 
   const handleEmailPasswordAction = async (action: "signIn" | "signUp") => {
     if (!auth || !email || !password) {
@@ -116,24 +91,10 @@ export default function LoginPage() {
         <CardHeader>
           <CardTitle>Welcome</CardTitle>
           <CardDescription>
-            Choose your preferred method to continue
+            Enter your credentials to continue
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button onClick={handleGoogleSignIn} className="w-full" variant="outline" disabled={isGoogleLoading || isLoading}>
-            {isGoogleLoading ? <Loader2 className="animate-spin" /> : "Sign in with Google"}
-          </Button>
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                Or continue with email
-              </span>
-            </div>
-          </div>
-          
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Login</TabsTrigger>
@@ -166,7 +127,6 @@ export default function LoginPage() {
                 </Button>
             </TabsContent>
           </Tabs>
-
         </CardContent>
       </Card>
     </main>
