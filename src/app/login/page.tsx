@@ -24,6 +24,7 @@ declare global {
   interface Window {
     recaptchaVerifier?: RecaptchaVerifier;
     confirmationResult?: ConfirmationResult;
+    grecaptcha?: any;
   }
 }
 
@@ -42,10 +43,10 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
-  const [isRecaptchaVerified, setIsRecaptchaVerified] = useState(false);
+  const [isRecaptchaSolved, setIsRecaptchaSolved] = useState(false);
 
-  // A ref for the visible reCAPTCHA container
   const recaptchaContainerRef = useRef<HTMLDivElement>(null);
+  const recaptchaWidgetId = useRef<number | null>(null);
 
   useEffect(() => {
     if (!isUserLoading && user) {
@@ -53,72 +54,78 @@ export default function LoginPage() {
     }
   }, [user, isUserLoading, router, redirectUrl]);
 
-  // Effect to set up reCAPTCHA
   useEffect(() => {
-    if (!auth || activeTab !== 'register' || otpSent) return;
-
-    if (!window.recaptchaVerifier && recaptchaContainerRef.current) {
-        // Clear out the container to ensure no old reCAPTCHA is lingering
-        recaptchaContainerRef.current.innerHTML = '';
-        
-        const verifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
-            'size': 'normal',
-            'callback': (response) => {
-                // reCAPTCHA solved, allow OTP to be sent
-                setIsRecaptchaVerified(true);
-            },
-            'expired-callback': () => {
-                // Response expired. User needs to solve reCAPTCHA again.
-                setIsRecaptchaVerified(false);
-            }
-        });
-        window.recaptchaVerifier = verifier;
-    }
-    
-    // Cleanup when tab changes or OTP is sent
-    return () => {
-        if (window.recaptchaVerifier) {
+    if (activeTab === 'register' && !otpSent && auth && recaptchaContainerRef.current) {
+      if (window.recaptchaVerifier) {
+        // If a verifier exists, ensure it's cleared before creating a new one
+        try {
             window.recaptchaVerifier.clear();
-            window.recaptchaVerifier = undefined;
-            if(recaptchaContainerRef.current) {
-                recaptchaContainerRef.current.innerHTML = '';
+            if(recaptchaWidgetId.current !== null) {
+                window.grecaptcha.reset(recaptchaWidgetId.current);
+            }
+        } catch (e) {
+            console.error("Error clearing old verifier", e);
+        }
+      }
+      
+      const verifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
+        'size': 'normal',
+        'callback': (response: any) => {
+          setIsRecaptchaSolved(true);
+        },
+        'expired-callback': () => {
+          setIsRecaptchaSolved(false);
+        }
+      });
+
+      window.recaptchaVerifier = verifier;
+      
+      verifier.render().then((widgetId) => {
+          recaptchaWidgetId.current = widgetId;
+      });
+
+      // Cleanup function to clear the verifier when the tab changes or component unmounts
+      return () => {
+        setIsRecaptchaSolved(false);
+        if (window.recaptchaVerifier) {
+            try {
+                window.recaptchaVerifier.clear();
+            } catch (e) {
+                console.error("Error clearing verifier on cleanup", e);
             }
         }
+      };
     }
   }, [auth, activeTab, otpSent]);
 
+
   const handleSendOtp = async () => {
-    if (!auth) return;
+    if (!auth || !window.recaptchaVerifier) {
+      toast({ variant: "destructive", title: "reCAPTCHA not ready. Please wait." });
+      return;
+    }
     if (password !== confirmPassword) {
       toast({ variant: "destructive", title: "Passwords do not match." });
       return;
     }
-    if (!isRecaptchaVerified) {
-        toast({ variant: "destructive", title: "Please verify reCAPTCHA." });
+    if (!isRecaptchaSolved) {
+        toast({ variant: "destructive", title: "Please solve the reCAPTCHA." });
         return;
     }
     setIsLoading(true);
     try {
-      const verifier = window.recaptchaVerifier;
-      if (!verifier) {
-          throw new Error("RecaptchaVerifier not initialized. Please wait a moment and try again.");
-      }
       const phoneNumber = `+91${phone}`;
-      const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, verifier);
+      const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier);
       window.confirmationResult = confirmationResult;
       setOtpSent(true);
       toast({ title: "OTP Sent!", description: "Please check your phone for the verification code." });
     } catch (error: any) {
       console.error("OTP Send Error:", error);
       toast({ variant: "destructive", title: "Failed to send OTP", description: error.message });
-      setIsRecaptchaVerified(false);
-      // Reset reCAPTCHA
-       if(window.recaptchaVerifier) {
-           window.recaptchaVerifier.render().then((widgetId) => {
-                // @ts-ignore
-                grecaptcha.reset(widgetId);
-            });
-       }
+      setIsRecaptchaSolved(false); // Require re-verification
+      if (recaptchaWidgetId.current !== null) {
+        window.grecaptcha.reset(recaptchaWidgetId.current);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -131,13 +138,18 @@ export default function LoginPage() {
       }
       setIsLoading(true);
       try {
-          const phoneUserCredential = await window.confirmationResult.confirm(otp);
+          // This confirms the OTP and signs the user in with their phone number temporarily
+          await window.confirmationResult.confirm(otp);
+          
+          // Create an email address from the phone number to use as a stable identifier
           const email = `+91${phone}@quizwhiz.app`;
 
+          // Sign out the temporary phone user to allow creating a new account with email/password
           if (auth.currentUser) {
             await auth.signOut();
           }
           
+          // Create the user with the generated email and the chosen password
           await createUserWithEmailAndPassword(auth, email, password);
           
           toast({ title: "Registration Successful!", description: "You can now log in with your phone number and password." });
@@ -147,7 +159,7 @@ export default function LoginPage() {
           setPassword("");
           setConfirmPassword("");
           setOtp("");
-          setIsRecaptchaVerified(false);
+          setIsRecaptchaSolved(false);
 
       } catch (error: any) {
           console.error("Registration Error:", error);
@@ -161,9 +173,11 @@ export default function LoginPage() {
       if (!auth) return;
       setIsLoading(true);
       try {
+        // The email is derived from the phone number, matching the registration process
         const email = `+91${phone}@quizwhiz.app`;
         await signInWithEmailAndPassword(auth, email, password);
         toast({ title: "Sign-In Successful!" });
+        // The useEffect will handle the redirect
       } catch (error: any) {
         console.error("Login Error:", error);
         toast({ variant: "destructive", title: "Sign-In Failed", description: "Incorrect phone number or password." });
@@ -240,8 +254,8 @@ export default function LoginPage() {
                     <Label htmlFor="confirm-password-register">Confirm Password</Label>
                     <Input id="confirm-password-register" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} disabled={isLoading} />
                   </div>
-                  <div ref={recaptchaContainerRef} className="flex justify-center"></div>
-                  <Button onClick={handleSendOtp} className="w-full" disabled={isLoading || !isRecaptchaVerified}>
+                  <div ref={recaptchaContainerRef} className="flex justify-center my-4"></div>
+                  <Button onClick={handleSendOtp} className="w-full" disabled={isLoading || !isRecaptchaSolved}>
                     {isLoading ? <Loader2 className="animate-spin" /> : "Send OTP"}
                   </Button>
                 </>
@@ -256,7 +270,7 @@ export default function LoginPage() {
                   </Button>
                   <Button variant="link" onClick={() => {
                       setOtpSent(false); 
-                      setIsRecaptchaVerified(false);
+                      setIsRecaptchaSolved(false);
                     }} disabled={isLoading}>
                     Back
                   </Button>
