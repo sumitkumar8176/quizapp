@@ -1,8 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type { Quiz } from "@/lib/types";
 import { createQuiz, createQuizFromContent, createQuizFromPyq } from "@/app/actions";
@@ -23,9 +22,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { translations } from "@/lib/translations";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import AuthButton from "@/components/auth-button";
-import { useUser, useFirestore } from "@/firebase";
-import { setDoc, doc, getDoc, serverTimestamp } from "firebase/firestore";
 
 type GameState = "idle" | "loading" | "payment" | "playing" | "finished";
 type QuizFormValues = { topic: string; numberOfQuestions: number; timerDuration: number | null; language: string; };
@@ -33,9 +29,6 @@ type QuizPyqFormValues = { exam: string; subject: string; topic: string; numberO
 type QuizUploadValues = { dataUri: string, numberOfQuestions: number, language: string };
 
 export default function Home() {
-  const { user, isUserLoading } = useUser();
-  const firestore = useFirestore();
-  const router = useRouter();
   const [gameState, setGameState] = useState<GameState>("idle");
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
@@ -47,101 +40,64 @@ export default function Home() {
   const { toast } = useToast();
 
   const t = translations[uiLanguage];
-
-  useEffect(() => {
-    if (user && firestore) {
-      const userDocRef = doc(firestore, "users", user.uid);
-      getDoc(userDocRef).then(docSnap => {
-        if (!docSnap.exists()) {
-          setDoc(userDocRef, {
-            id: user.uid,
-            email: user.email,
-            name: user.displayName,
-            photoURL: user.photoURL,
-            phoneNumber: user.phoneNumber,
-            createdAt: serverTimestamp(),
-          }, { merge: true });
-        }
-      });
-    }
-  }, [user, firestore]);
   
-  const withLoginCheck = (action: () => Promise<void>) => async () => {
-    if (isUserLoading) return; // Don't do anything while auth state is loading
-    
-    if (!user) {
-      router.push('/login?redirect=/');
-    } else {
-      await action();
+  const handleStartQuiz = async (values: QuizFormValues) => {
+    setGameState("loading");
+    const formData = new FormData();
+    formData.append("topic", values.topic);
+    formData.append("numberOfQuestions", values.numberOfQuestions.toString());
+    formData.append("language", values.language);
+    const result = await createQuiz(formData);
+    if (result.error) {
+      toast({ variant: "destructive", title: t.errorGeneratingQuiz, description: result.error });
+      setGameState("idle");
+    } else if (result.data) {
+      const newQuiz = result.data;
+      setQuiz(newQuiz);
+      setUserAnswers(new Array(newQuiz.length).fill(""));
+      setTimerDuration(values.timerDuration);
+      setGameState("payment");
     }
   };
-  
-  const handleStartQuiz = (values: QuizFormValues) => {
-    const action = async () => {
-      setGameState("loading");
-      const formData = new FormData();
-      formData.append("topic", values.topic);
-      formData.append("numberOfQuestions", values.numberOfQuestions.toString());
-      formData.append("language", values.language);
-      const result = await createQuiz(formData);
-      if (result.error) {
-        toast({ variant: "destructive", title: t.errorGeneratingQuiz, description: result.error });
-        setGameState("idle");
-      } else if (result.data) {
-        const newQuiz = result.data;
-        setQuiz(newQuiz);
-        setUserAnswers(new Array(newQuiz.length).fill(""));
-        setTimerDuration(values.timerDuration);
-        setGameState("payment");
-      }
-    };
-    withLoginCheck(action)();
+
+  const handleStartPyqQuiz = async (values: QuizPyqFormValues) => {
+    setGameState("loading");
+    const formData = new FormData();
+    formData.append("exam", values.exam);
+    formData.append("subject", values.subject);
+    formData.append("topic", values.topic);
+    formData.append("numberOfQuestions", values.numberOfQuestions.toString());
+    formData.append("language", values.language);
+    const result = await createQuizFromPyq(formData);
+    if (result.error) {
+      toast({ variant: "destructive", title: t.errorGeneratingQuiz, description: result.error });
+      setGameState("idle");
+    } else if (result.data) {
+      const newQuiz = result.data;
+      setQuiz(newQuiz);
+      setUserAnswers(new Array(newQuiz.length).fill(""));
+      setTimerDuration(values.timerDuration);
+      setGameState("payment");
+    }
   };
 
-  const handleStartPyqQuiz = (values: QuizPyqFormValues) => {
-    const action = async () => {
-      setGameState("loading");
-      const formData = new FormData();
-      formData.append("exam", values.exam);
-      formData.append("subject", values.subject);
-      formData.append("topic", values.topic);
-      formData.append("numberOfQuestions", values.numberOfQuestions.toString());
-      formData.append("language", values.language);
-      const result = await createQuizFromPyq(formData);
-      if (result.error) {
-        toast({ variant: "destructive", title: t.errorGeneratingQuiz, description: result.error });
-        setGameState("idle");
-      } else if (result.data) {
-        const newQuiz = result.data;
-        setQuiz(newQuiz);
-        setUserAnswers(new Array(newQuiz.length).fill(""));
-        setTimerDuration(values.timerDuration);
-        setGameState("payment");
-      }
-    };
-    withLoginCheck(action)();
-  };
-
-  const handleUploadQuiz = (values: QuizUploadValues) => {
-    const action = async () => {
-      setGameState("loading");
-      const formData = new FormData();
-      formData.append("contentDataUri", values.dataUri);
-      formData.append("numberOfQuestions", values.numberOfQuestions.toString());
-      formData.append("language", values.language);
-      const result = await createQuizFromContent(formData);
-      if (result.error) {
-        toast({ variant: "destructive", title: t.errorGeneratingQuiz, description: result.error });
-        setGameState("idle");
-      } else if (result.data) {
-        const newQuiz = result.data;
-        setQuiz(newQuiz);
-        setUserAnswers(new Array(newQuiz.length).fill(""));
-        setTimerDuration(null); // No timer for uploaded quizzes for now
-        setGameState("payment");
-      }
-    };
-    withLoginCheck(action)();
+  const handleUploadQuiz = async (values: QuizUploadValues) => {
+    setGameState("loading");
+    const formData = new FormData();
+    formData.append("contentDataUri", values.dataUri);
+    formData.append("numberOfQuestions", values.numberOfQuestions.toString());
+    formData.append("language", values.language);
+    const result = await createQuizFromContent(formData);
+    if (result.error) {
+      toast({ variant: "destructive", title: t.errorGeneratingQuiz, description: result.error });
+      setGameState("idle");
+    } else if (result.data) {
+      const newQuiz = result.data;
+      setQuiz(newQuiz);
+      setUserAnswers(new Array(newQuiz.length).fill(""));
+      setTimerDuration(null); // No timer for uploaded quizzes for now
+      setGameState("payment");
+    }
   };
 
 
@@ -221,10 +177,6 @@ export default function Home() {
   );
 
   const renderGameState = () => {
-    if (isUserLoading && gameState !== 'idle') {
-        return <Loading />;
-    }
-
     switch (gameState) {
       case "loading":
         return <Loading />;
@@ -263,7 +215,6 @@ export default function Home() {
                     <SidebarTrigger />
                 </div>
                 <div className="flex gap-2 ml-auto items-center">
-                    <AuthButton />
                     <Button
                     onClick={() => setUiLanguage("english")}
                     size="sm"
@@ -326,5 +277,3 @@ export default function Home() {
     </SidebarProvider>
   );
 }
-
-    
