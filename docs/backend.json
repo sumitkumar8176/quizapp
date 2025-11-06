@@ -1,0 +1,240 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the QuizWhiz application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "User's phone number for login and account recovery."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address for login and communication.",
+          "format": "email"
+        },
+        "name": {
+          "type": "string",
+          "description": "User's full name."
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "Quiz": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Quiz",
+      "type": "object",
+      "description": "Represents a quiz generated for a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Quiz entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Quiz)"
+        },
+        "topic": {
+          "type": "string",
+          "description": "The topic of the quiz."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the quiz was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "topic",
+        "createdAt"
+      ]
+    },
+    "Question": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Question",
+      "type": "object",
+      "description": "Represents a question within a quiz.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Question entity."
+        },
+        "quizId": {
+          "type": "string",
+          "description": "Reference to Quiz. (Relationship: Quiz 1:N Question)"
+        },
+        "text": {
+          "type": "string",
+          "description": "The text of the question."
+        },
+        "correctAnswer": {
+          "type": "string",
+          "description": "The correct answer to the question."
+        },
+        "options": {
+          "type": "array",
+          "description": "Array of possible answers for the question.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "quizId",
+        "text",
+        "correctAnswer",
+        "options"
+      ]
+    },
+    "UserAnswer": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserAnswer",
+      "type": "object",
+      "description": "Represents a user's answer to a specific question in a quiz.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserAnswer entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N UserAnswer)"
+        },
+        "questionId": {
+          "type": "string",
+          "description": "Reference to Question. (Relationship: Question 1:N UserAnswer)"
+        },
+        "quizId": {
+          "type": "string",
+          "description": "Reference to Quiz. (Relationship: Quiz 1:N UserAnswer)"
+        },
+        "answer": {
+          "type": "string",
+          "description": "The user's answer to the question."
+        },
+        "isCorrect": {
+          "type": "boolean",
+          "description": "Indicates whether the user's answer was correct."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "questionId",
+        "quizId",
+        "answer",
+        "isCorrect"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles. Path-based ownership ensures only the authenticated user can access their own data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/quizzes/{quizId}",
+        "definition": {
+          "entityName": "Quiz",
+          "schema": {
+            "$ref": "#/backend/entities/Quiz"
+          },
+          "description": "Stores quizzes created by a user. Path-based ownership ensures only the user can access their own quizzes.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "quizId",
+              "description": "The unique identifier of the quiz."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/quizzes/{quizId}/questions/{questionId}",
+        "definition": {
+          "entityName": "Question",
+          "schema": {
+            "$ref": "#/backend/entities/Question"
+          },
+          "description": "Stores questions related to a specific quiz. Path-based ownership ensures only the user can access questions related to their quizzes.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "quizId",
+              "description": "The unique identifier of the quiz."
+            },
+            {
+              "name": "questionId",
+              "description": "The unique identifier of the question."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/quizzes/{quizId}/questions/{questionId}/userAnswers/{userAnswerId}",
+        "definition": {
+          "entityName": "UserAnswer",
+          "schema": {
+            "$ref": "#/backend/entities/UserAnswer"
+          },
+          "description": "Stores user answers to questions in a quiz. Path-based ownership ensures only the user can access their answers.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "quizId",
+              "description": "The unique identifier of the quiz."
+            },
+            {
+              "name": "questionId",
+              "description": "The unique identifier of the question."
+            },
+            {
+              "name": "userAnswerId",
+              "description": "The unique identifier of the user answer."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to securely manage user data, quizzes, questions, and user answers while adhering to the principles of Authorization Independence and Structural Segregation. User data is stored in a path-based structure under `/users/{userId}`, ensuring private access. Quizzes are also stored under the user's path (`/users/{userId}/quizzes/{quizId}`), continuing the hierarchical ownership pattern. Questions related to a quiz are nested further down under `/users/{userId}/quizzes/{quizId}/questions/{questionId}`. User answers are similarly nested at `/users/{userId}/quizzes/{quizId}/questions/{questionId}/userAnswers/{userAnswerId}`. This hierarchical structure enforces clear ownership and simplifies security rules based on user ID. Authorization Independence is achieved since the security rules only depend on `request.auth.uid` and the path structure. There are no `get()` requests in the security rules, ensuring atomic operations and preventing rule explosion. QAPs are inherently supported due to the segregated structure. Listing quizzes, questions, and answers is secured by requiring the correct `userId` in the path. Because all documents in a collection share the same security requirements, structural segregation prevents mixing data with differing access needs."
+  }
+}
