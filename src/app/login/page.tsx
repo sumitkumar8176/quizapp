@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   signInWithPopup,
@@ -19,6 +19,12 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { Logo } from "@/components/icons";
 
+declare global {
+    interface Window {
+        recaptchaVerifier?: RecaptchaVerifier;
+    }
+}
+
 export default function LoginPage() {
   const auth = useAuth();
   const { user } = useUser();
@@ -34,26 +40,51 @@ export default function LoginPage() {
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
-
   useEffect(() => {
     if (user) {
       router.push(redirectUrl);
     }
   }, [user, router, redirectUrl]);
 
-  useEffect(() => {
-    if (auth && !recaptchaVerifierRef.current) {
-        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
-            size: "invisible",
-            callback: () => {
-              // reCAPTCHA solved, allow signInWithPhoneNumber.
-            },
-          });
-        recaptchaVerifierRef.current.render();
-    }
-  }, [auth]);
 
+  const setupRecaptcha = () => {
+    if (!auth) return;
+    if (window.recaptchaVerifier) {
+      window.recaptchaVerifier.clear();
+    }
+    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+      'size': 'normal',
+      'callback': (response: any) => {
+        // reCAPTCHA solved, allow signInWithPhoneNumber.
+        // ...
+      },
+      'expired-callback': () => {
+        // Response expired. Ask user to solve reCAPTCHA again.
+        // ...
+      }
+    });
+  };
+
+  const handlePhoneSignIn = async () => {
+    if (!auth || !window.recaptchaVerifier) return;
+    setIsSendingOtp(true);
+    try {
+      const appVerifier = window.recaptchaVerifier;
+      const result = await signInWithPhoneNumber(auth, `+${phoneNumber}`, appVerifier);
+      setConfirmationResult(result);
+      toast({ title: "OTP Sent!", description: "Please check your phone for the verification code." });
+    } catch (error: any) {
+      console.error("Phone Sign-In Error:", error);
+      toast({
+        variant: "destructive",
+        title: "Failed to Send OTP",
+        description: error.message,
+      });
+      setupRecaptcha(); // Reset reCAPTCHA on error
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
 
   const handleGoogleSignIn = async () => {
     if (!auth) return;
@@ -72,35 +103,6 @@ export default function LoginPage() {
       });
     } finally {
       setIsGoogleLoading(false);
-    }
-  };
-
-  const handlePhoneSignIn = async () => {
-    if (!auth || !recaptchaVerifierRef.current) return;
-    setIsSendingOtp(true);
-    try {
-      const result = await signInWithPhoneNumber(auth, `+${phoneNumber}`, recaptchaVerifierRef.current);
-      setConfirmationResult(result);
-      toast({ title: "OTP Sent!", description: "Please check your phone for the verification code." });
-    } catch (error: any) {
-      console.error("Phone Sign-In Error:", error);
-      toast({
-        variant: "destructive",
-        title: "Failed to Send OTP",
-        description: error.message,
-      });
-       // Reset reCAPTCHA
-       if (recaptchaVerifierRef.current) {
-         recaptchaVerifierRef.current.render().then((widgetId) => {
-            // @ts-ignore
-            if (window.grecaptcha) {
-              // @ts-ignore
-              window.grecaptcha.reset(widgetId);
-            }
-        });
-      }
-    } finally {
-      setIsSendingOtp(false);
     }
   };
 
@@ -125,7 +127,6 @@ export default function LoginPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-background">
-       <div id="recaptcha-container"></div>
        <header className="mb-8 flex flex-col items-center text-center">
             <div className="mb-4 flex items-center gap-3">
                 <Logo className="h-12 w-12 text-primary" />
@@ -161,7 +162,7 @@ export default function LoginPage() {
             {!confirmationResult ? (
                  <div className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="phone">Phone Number</Label>
+                        <Label htmlFor="phone">Phone Number (with country code)</Label>
                         <Input
                             id="phone"
                             type="tel"
@@ -171,6 +172,7 @@ export default function LoginPage() {
                             disabled={isSendingOtp}
                         />
                     </div>
+                    <div id="recaptcha-container" className="flex justify-center"></div>
                     <Button onClick={handlePhoneSignIn} className="w-full" disabled={isSendingOtp || !phoneNumber}>
                         {isSendingOtp ? <Loader2 className="animate-spin" /> : "Send OTP"}
                     </Button>
