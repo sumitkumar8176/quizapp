@@ -6,6 +6,7 @@ import { useRouter, useSearchParams }from "next/navigation";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  sendEmailVerification,
 } from "firebase/auth";
 import { useAuth, useUser }from "@/firebase/provider";
 import { Button }from "@/components/ui/button";
@@ -38,7 +39,7 @@ export default function LoginPage() {
   const [activeTab, setActiveTab] = useState("login");
 
   useEffect(() => {
-    if (!isUserLoading && user) {
+    if (!isUserLoading && user && user.emailVerified) {
       router.push(redirectUrl);
     }
   }, [user, isUserLoading, router, redirectUrl]);
@@ -53,8 +54,14 @@ export default function LoginPage() {
 
       setIsLoading(true);
       try {
-          await createUserWithEmailAndPassword(auth, registerEmail, registerPassword);
-          toast({ title: "Registration Successful!", description: "You can now log in with your email and password." });
+          const userCredential = await createUserWithEmailAndPassword(auth, registerEmail, registerPassword);
+          await sendEmailVerification(userCredential.user);
+          
+          toast({ 
+            title: "Verification Email Sent!", 
+            description: "Please check your inbox to verify your email address before logging in." 
+          });
+
           setActiveTab("login"); 
           setRegisterEmail("");
           setRegisterPassword("");
@@ -80,9 +87,18 @@ export default function LoginPage() {
       if (!auth) return;
       setIsLoading(true);
       try {
-        await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
-        toast({ title: "Sign-In Successful!" });
-        // The useEffect will handle the redirect
+        const userCredential = await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+        if (userCredential.user.emailVerified) {
+          toast({ title: "Sign-In Successful!" });
+          // The useEffect will handle the redirect
+        } else {
+          await auth.signOut(); // Sign out the user because their email is not verified
+          toast({ 
+            variant: "destructive", 
+            title: "Email Not Verified", 
+            description: "Please verify your email address before logging in. Check your inbox for the verification link."
+          });
+        }
       } catch (error: any) {
         console.error("Login Error:", error);
         toast({ variant: "destructive", title: "Sign-In Failed", description: "Incorrect email or password." });
@@ -91,7 +107,7 @@ export default function LoginPage() {
       }
   };
   
-  if (isUserLoading || (!isUserLoading && user)) {
+  if (isUserLoading || (!isUserLoading && user && user.emailVerified)) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
