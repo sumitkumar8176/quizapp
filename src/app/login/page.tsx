@@ -4,14 +4,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
-  getAuth,
   signInWithPopup,
   GoogleAuthProvider,
   RecaptchaVerifier,
   signInWithPhoneNumber,
   ConfirmationResult,
 } from "firebase/auth";
-import { useFirebase } from "@/firebase/provider";
+import { useAuth } from "@/firebase/provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +20,7 @@ import { Loader2 } from "lucide-react";
 import { Logo } from "@/components/icons";
 
 export default function LoginPage() {
-  const { auth, isUserLoading, user } = useFirebase();
+  const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   
@@ -30,15 +29,11 @@ export default function LoginPage() {
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
   const recaptchaContainerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (user && !isUserLoading) {
-      router.push("/");
-    }
-  }, [user, isUserLoading, router]);
 
   useEffect(() => {
     if (auth && recaptchaContainerRef.current && !recaptchaVerifierRef.current) {
@@ -54,6 +49,7 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     if (!auth) return;
+    setIsGoogleLoading(true);
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
@@ -66,6 +62,8 @@ export default function LoginPage() {
         title: "Google Sign-In Failed",
         description: error.message,
       });
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
@@ -87,7 +85,9 @@ export default function LoginPage() {
       if (recaptchaVerifierRef.current) {
         recaptchaVerifierRef.current.render().then((widgetId) => {
             // @ts-ignore
-            window.grecaptcha.reset(widgetId);
+            if (window.grecaptcha) {
+              window.grecaptcha.reset(widgetId);
+            }
         });
       }
     } finally {
@@ -114,14 +114,6 @@ export default function LoginPage() {
     }
   };
 
-  if (isUserLoading || user) {
-    return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-background">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-background">
        <div ref={recaptchaContainerRef}></div>
@@ -144,15 +136,15 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button onClick={handleGoogleSignIn} className="w-full" variant="outline">
-            Sign in with Google
+          <Button onClick={handleGoogleSignIn} className="w-full" variant="outline" disabled={isGoogleLoading}>
+            {isGoogleLoading ? <Loader2 className="animate-spin" /> : "Sign in with Google"}
           </Button>
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
+              <span className="bg-card px-2 text-muted-foreground">
                 Or continue with
               </span>
             </div>
@@ -200,3 +192,5 @@ export default function LoginPage() {
     </main>
   );
 }
+
+    

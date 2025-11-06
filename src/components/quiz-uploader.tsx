@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { indianLanguages } from "@/lib/languages";
 
 type QuizUploaderProps = {
-  onUpload: (dataUri: string, numberOfQuestions: number, language: string) => void;
+  onUpload: (values: { dataUri: string; numberOfQuestions: number; language: string; }) => void;
   isLoading: boolean;
   language: "english" | "hindi";
 };
@@ -38,7 +38,7 @@ export default function QuizUploader({ onUpload, isLoading, language }: QuizUplo
     reader.onload = (e) => {
       const dataUri = e.target?.result as string;
       if (dataUri) {
-        onUpload(dataUri, numberOfQuestions, quizLanguage);
+        onUpload({dataUri, numberOfQuestions, language: quizLanguage});
       } else {
         toast({
           variant: "destructive",
@@ -61,7 +61,7 @@ export default function QuizUploader({ onUpload, isLoading, language }: QuizUplo
   };
   
   const handleCapture = (dataUri: string, numberOfQuestions: number) => {
-    onUpload(dataUri, numberOfQuestions, quizLanguage);
+    onUpload({ dataUri, numberOfQuestions, language: quizLanguage });
   };
 
 
@@ -92,6 +92,7 @@ export default function QuizUploader({ onUpload, isLoading, language }: QuizUplo
               onChange={handleFileChange}
               className="hidden"
               accept="image/*,.pdf,.doc,.docx,.txt"
+              disabled={isLoading}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
@@ -124,7 +125,7 @@ export default function QuizUploader({ onUpload, isLoading, language }: QuizUplo
             
             <div className="space-y-2 text-left">
               <Label htmlFor="language-upload">{t.quizLanguage}</Label>
-              <Select value={quizLanguage} onValueChange={setQuizLanguage}>
+              <Select value={quizLanguage} onValueChange={setQuizLanguage} disabled={isLoading}>
                 <SelectTrigger id="language-upload">
                   <SelectValue placeholder={t.selectLanguage} />
                 </SelectTrigger>
@@ -161,3 +162,5 @@ export default function QuizUploader({ onUpload, isLoading, language }: QuizUplo
     </div>
   );
 }
+
+    

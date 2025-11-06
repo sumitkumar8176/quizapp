@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type { Quiz } from "@/lib/types";
 import { createQuiz, createQuizFromContent, createQuizFromPyq } from "@/app/actions";
@@ -22,15 +22,17 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { translations } from "@/lib/translations";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import AuthGuard from "@/components/auth-guard";
 import AuthButton from "@/components/auth-button";
-
+import { useUser } from "@/firebase/provider";
+import LoginDialog from "@/components/login-dialog";
 
 type GameState = "idle" | "loading" | "payment" | "playing" | "finished";
 type QuizFormValues = { topic: string; numberOfQuestions: number; timerDuration: number | null; language: string; };
 type QuizPyqFormValues = { exam: string; subject: string; topic: string; numberOfQuestions: number; timerDuration: number | null; language: string; };
+type QuizUploadValues = { dataUri: string, numberOfQuestions: number, language: string };
 
 export default function Home() {
+  const { user } = useUser();
   const [gameState, setGameState] = useState<GameState>("idle");
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
@@ -41,87 +43,93 @@ export default function Home() {
   const [uiLanguage, setUiLanguage] = useState<"english" | "hindi">("english");
   const { toast } = useToast();
 
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null);
+
   const t = translations[uiLanguage];
 
-  const handleStartQuiz = async (values: QuizFormValues) => {
-    setGameState("loading");
-
-    const formData = new FormData();
-    formData.append("topic", values.topic);
-    formData.append("numberOfQuestions", values.numberOfQuestions.toString());
-    formData.append("language", values.language);
-
-    const result = await createQuiz(formData);
-
-    if (result.error) {
-      toast({
-        variant: "destructive",
-        title: t.errorGeneratingQuiz,
-        description: result.error,
-      });
-      setGameState("idle");
-    } else if (result.data) {
-      const newQuiz = result.data;
-      setQuiz(newQuiz);
-      setUserAnswers(new Array(newQuiz.length).fill(""));
-      setTimerDuration(values.timerDuration);
-      setGameState("payment");
+  useEffect(() => {
+    // If user logs in and there's a pending action, execute it.
+    if (user && pendingAction) {
+      pendingAction();
+      setPendingAction(null);
     }
+  }, [user, pendingAction]);
+
+  const withLoginCheck = (action: () => Promise<void>) => {
+    if (!user) {
+      setIsLoginModalOpen(true);
+      setPendingAction(() => action); // Store the action to be executed after login
+    } else {
+      action(); // User is already logged in, execute immediately
+    }
+  };
+  
+  const handleStartQuiz = async (values: QuizFormValues) => {
+    withLoginCheck(async () => {
+      setGameState("loading");
+      const formData = new FormData();
+      formData.append("topic", values.topic);
+      formData.append("numberOfQuestions", values.numberOfQuestions.toString());
+      formData.append("language", values.language);
+      const result = await createQuiz(formData);
+      if (result.error) {
+        toast({ variant: "destructive", title: t.errorGeneratingQuiz, description: result.error });
+        setGameState("idle");
+      } else if (result.data) {
+        const newQuiz = result.data;
+        setQuiz(newQuiz);
+        setUserAnswers(new Array(newQuiz.length).fill(""));
+        setTimerDuration(values.timerDuration);
+        setGameState("payment");
+      }
+    });
   };
 
   const handleStartPyqQuiz = async (values: QuizPyqFormValues) => {
-    setGameState("loading");
-
-    const formData = new FormData();
-    formData.append("exam", values.exam);
-    formData.append("subject", values.subject);
-    formData.append("topic", values.topic);
-    formData.append("numberOfQuestions", values.numberOfQuestions.toString());
-    formData.append("language", values.language);
-
-    const result = await createQuizFromPyq(formData);
-
-    if (result.error) {
-      toast({
-        variant: "destructive",
-        title: t.errorGeneratingQuiz,
-        description: result.error,
-      });
-      setGameState("idle");
-    } else if (result.data) {
-      const newQuiz = result.data;
-      setQuiz(newQuiz);
-      setUserAnswers(new Array(newQuiz.length).fill(""));
-      setTimerDuration(values.timerDuration);
-      setGameState("payment");
-    }
+    withLoginCheck(async () => {
+      setGameState("loading");
+      const formData = new FormData();
+      formData.append("exam", values.exam);
+      formData.append("subject", values.subject);
+      formData.append("topic", values.topic);
+      formData.append("numberOfQuestions", values.numberOfQuestions.toString());
+      formData.append("language", values.language);
+      const result = await createQuizFromPyq(formData);
+      if (result.error) {
+        toast({ variant: "destructive", title: t.errorGeneratingQuiz, description: result.error });
+        setGameState("idle");
+      } else if (result.data) {
+        const newQuiz = result.data;
+        setQuiz(newQuiz);
+        setUserAnswers(new Array(newQuiz.length).fill(""));
+        setTimerDuration(values.timerDuration);
+        setGameState("payment");
+      }
+    });
   };
 
-  const handleUploadQuiz = async (dataUri: string, numberOfQuestions: number, language: string) => {
-    setGameState("loading");
-
-    const formData = new FormData();
-    formData.append("contentDataUri", dataUri);
-    formData.append("numberOfQuestions", numberOfQuestions.toString());
-    formData.append("language", language);
-
-    const result = await createQuizFromContent(formData);
-
-    if (result.error) {
-      toast({
-        variant: "destructive",
-        title: t.errorGeneratingQuiz,
-        description: result.error,
-      });
-      setGameState("idle");
-    } else if (result.data) {
-      const newQuiz = result.data;
-      setQuiz(newQuiz);
-      setUserAnswers(new Array(newQuiz.length).fill(""));
-      setTimerDuration(null); // No timer for uploaded quizzes for now
-      setGameState("payment");
-    }
+  const handleUploadQuiz = async (values: QuizUploadValues) => {
+    withLoginCheck(async () => {
+      setGameState("loading");
+      const formData = new FormData();
+      formData.append("contentDataUri", values.dataUri);
+      formData.append("numberOfQuestions", values.numberOfQuestions.toString());
+      formData.append("language", values.language);
+      const result = await createQuizFromContent(formData);
+      if (result.error) {
+        toast({ variant: "destructive", title: t.errorGeneratingQuiz, description: result.error });
+        setGameState("idle");
+      } else if (result.data) {
+        const newQuiz = result.data;
+        setQuiz(newQuiz);
+        setUserAnswers(new Array(newQuiz.length).fill(""));
+        setTimerDuration(null); // No timer for uploaded quizzes for now
+        setGameState("payment");
+      }
+    });
   };
+
 
   const handlePaymentSuccess = () => {
     setGameState("playing");
@@ -225,78 +233,86 @@ export default function Home() {
 
   return (
     <SidebarProvider>
-      <AuthGuard>
-        <div className="flex min-h-screen w-full bg-background">
-          <Sidebar onExamSelect={handleExamSelectFromSidebar} language={uiLanguage} />
-          <main className="relative flex flex-1 flex-col items-center">
-            <Navbar language={uiLanguage} />
-            <div className="flex flex-1 flex-col items-center p-4 w-full">
-              <div className="w-full max-w-2xl flex justify-between items-center mb-4 gap-2">
-                  <div className="md:hidden">
-                      <SidebarTrigger />
-                  </div>
-                  <div className="flex gap-2 ml-auto items-center">
-                      <AuthButton />
-                      <Button
-                      onClick={() => setUiLanguage("english")}
-                      size="sm"
-                      className={cn(
-                          "text-black bg-yellow-300 hover:bg-yellow-200",
-                          uiLanguage === "english" && "bg-white hover:bg-white/90"
-                      )}
-                      >
-                      English
-                      </Button>
-                      <Button
-                      onClick={() => setUiLanguage("hindi")}
-                      size="sm"
-                      className={cn(
-                          "text-black bg-yellow-300 hover:bg-yellow-200",
-                          uiLanguage === "hindi" && "bg-white hover:bg-white/90"
-                      )}
-                      >
-                      Hindi
-                      </Button>
-                  </div>
-              </div>
-              <div className="w-full max-w-2xl">
-                <header className="mb-8 flex flex-col items-center text-center">
-                  <div className="mb-4 flex items-center gap-3">
-                    <Logo className="h-10 w-10 text-primary" />
-                    <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-primary font-headline">
-                      QuizWhiz
-                    </h1>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <p className="max-w-md text-muted-foreground">
-                      {t.appDescription}
-                    </p>
-                  </div>
-                </header>
-                <Card className="w-full shadow-lg overflow-hidden">
-                  <CardContent className="p-6 md:p-8 min-h-[350px] flex items-center justify-center">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={gameState}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.3 }}
-                        className="w-full"
-                      >
-                        {renderGameState()}
-                      </motion.div>
-                    </AnimatePresence>
-                  </CardContent>
-                </Card>
-              </div>
-              <footer className="absolute bottom-4 right-4 text-sm text-muted-foreground">
-                -by sumit kumar
-              </footer>
+      <LoginDialog
+        isOpen={isLoginModalOpen}
+        onOpenChange={setIsLoginModalOpen}
+        onLoginSuccess={() => {
+          setIsLoginModalOpen(false);
+          // The useEffect will handle the pending action
+        }}
+      />
+      <div className="flex min-h-screen w-full bg-background">
+        <Sidebar onExamSelect={handleExamSelectFromSidebar} language={uiLanguage} />
+        <main className="relative flex flex-1 flex-col items-center">
+          <Navbar language={uiLanguage} />
+          <div className="flex flex-1 flex-col items-center p-4 w-full">
+            <div className="w-full max-w-2xl flex justify-between items-center mb-4 gap-2">
+                <div className="md:hidden">
+                    <SidebarTrigger />
+                </div>
+                <div className="flex gap-2 ml-auto items-center">
+                    <AuthButton />
+                    <Button
+                    onClick={() => setUiLanguage("english")}
+                    size="sm"
+                    className={cn(
+                        "text-black bg-yellow-300 hover:bg-yellow-200",
+                        uiLanguage === "english" && "bg-white hover:bg-white/90"
+                    )}
+                    >
+                    English
+                    </Button>
+                    <Button
+                    onClick={() => setUiLanguage("hindi")}
+                    size="sm"
+                    className={cn(
+                        "text-black bg-yellow-300 hover:bg-yellow-200",
+                        uiLanguage === "hindi" && "bg-white hover:bg-white/90"
+                    )}
+                    >
+                    Hindi
+                    </Button>
+                </div>
             </div>
-          </main>
-        </div>
-      </AuthGuard>
+            <div className="w-full max-w-2xl">
+              <header className="mb-8 flex flex-col items-center text-center">
+                <div className="mb-4 flex items-center gap-3">
+                  <Logo className="h-10 w-10 text-primary" />
+                  <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-primary font-headline">
+                    QuizWhiz
+                  </h1>
+                </div>
+                <div className="flex items-center gap-2">
+                  <p className="max-w-md text-muted-foreground">
+                    {t.appDescription}
+                  </p>
+                </div>
+              </header>
+              <Card className="w-full shadow-lg overflow-hidden">
+                <CardContent className="p-6 md:p-8 min-h-[350px] flex items-center justify-center">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={gameState}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.3 }}
+                      className="w-full"
+                    >
+                      {renderGameState()}
+                    </motion.div>
+                  </AnimatePresence>
+                </CardContent>
+              </Card>
+            </div>
+            <footer className="absolute bottom-4 right-4 text-sm text-muted-foreground">
+              -by sumit kumar
+            </footer>
+          </div>
+        </main>
+      </div>
     </SidebarProvider>
   );
 }
+
+    
