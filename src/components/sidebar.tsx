@@ -103,5 +103,3 @@ export default function Sidebar({ onExamSelect, language }: SidebarProps) {
     </SidebarPrimitive>
   );
 }
-
-    
