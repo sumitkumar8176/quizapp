@@ -123,7 +123,7 @@ export default function LoginPage() {
       console.error("OTP Send Error:", error);
       toast({ variant: "destructive", title: "Failed to send OTP", description: error.message });
       setIsRecaptchaSolved(false); // Require re-verification
-      if (recaptchaWidgetId.current !== null) {
+      if (recaptchaWidgetId.current !== null && window.grecaptcha) {
         window.grecaptcha.reset(recaptchaWidgetId.current);
       }
     } finally {
@@ -133,14 +133,15 @@ export default function LoginPage() {
 
   const handleRegister = async () => {
       if (!window.confirmationResult) {
-          toast({ variant: "destructive", title: "OTP not verified", description: "Please verify your phone number first." });
+          toast({ variant: "destructive", title: "OTP not verified", description: "Please send an OTP first." });
           return;
       }
       setIsLoading(true);
       try {
-          // This confirms the OTP and signs the user in with their phone number temporarily
+          // CRITICAL: First, confirm the OTP. This is the main security check.
           await window.confirmationResult.confirm(otp);
           
+          // If OTP is correct, proceed to create the account.
           // Create an email address from the phone number to use as a stable identifier
           const email = `+91${phone}@quizwhiz.app`;
 
@@ -163,7 +164,7 @@ export default function LoginPage() {
 
       } catch (error: any) {
           console.error("Registration Error:", error);
-          toast({ variant: "destructive", title: "Registration Failed", description: error.message });
+          toast({ variant: "destructive", title: "Registration Failed", description: "The OTP may be incorrect or expired." });
       } finally {
           setIsLoading(false);
       }
@@ -283,5 +284,3 @@ export default function LoginPage() {
     </main>
   );
 }
-
-    
