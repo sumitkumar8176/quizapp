@@ -11,8 +11,6 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Logo } from "./icons";
@@ -51,11 +49,11 @@ export default function Sidebar({ onExamSelect, language }: SidebarProps) {
   };
 
   return (
-    <SidebarPrimitive collapsible="offcanvas" className="hidden bg-destructive text-destructive-foreground md:block">
+    <SidebarPrimitive collapsible="icon" className="hidden bg-destructive text-destructive-foreground md:flex">
         <SidebarHeader>
             <div className="flex items-center gap-2">
                 <Logo className="h-8 w-8" />
-                <h1 className="text-xl font-bold">{t.sidebarTitle}</h1>
+                <h1 className="text-xl font-bold group-data-[collapsible=icon]:hidden">{t.sidebarTitle}</h1>
             </div>
         </SidebarHeader>
         <ScrollArea className="flex-1">
@@ -66,10 +64,11 @@ export default function Sidebar({ onExamSelect, language }: SidebarProps) {
                             <SidebarMenuItem key={exam}>
                                 <Button
                                     variant="ghost"
-                                    className="w-full justify-start hover:bg-destructive/80 hover:text-destructive-foreground"
+                                    className="w-full justify-start hover:bg-destructive/80 hover:text-destructive-foreground group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2"
                                     onClick={() => handleExamClick(exam)}
                                 >
-                                    {exam}
+                                    <span className="group-data-[collapsible=icon]:hidden">{exam}</span>
+                                    <span className="hidden group-data-[collapsible=icon]:inline">{exam.substring(0,2)}</span>
                                 </Button>
                             </SidebarMenuItem>
                         ))}
@@ -77,8 +76,7 @@ export default function Sidebar({ onExamSelect, language }: SidebarProps) {
                 </SidebarGroup>
             </SidebarContent>
         </ScrollArea>
-        <SidebarFooter>
-            <div className="border-t border-destructive-foreground/20 pt-4">
+        <div className="border-t border-destructive-foreground/20 pt-4 group-data-[collapsible=icon]:hidden px-2">
                 <h2 className="text-lg font-semibold mb-4">{t.connectWithMe}</h2>
                 <div className="space-y-3">
                     <a href="https://github.com/sumitkumar8176" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
@@ -99,7 +97,6 @@ export default function Sidebar({ onExamSelect, language }: SidebarProps) {
                     </div>
                 </div>
             </div>
-        </SidebarFooter>
     </SidebarPrimitive>
   );
 }

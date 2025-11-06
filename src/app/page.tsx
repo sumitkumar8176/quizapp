@@ -232,7 +232,7 @@ export default function Home() {
                 <div className="md:hidden">
                     <SidebarTrigger />
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 ml-auto">
                     <Button
                     onClick={() => setUiLanguage("english")}
                     size="sm"
