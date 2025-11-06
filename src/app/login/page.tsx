@@ -1,12 +1,9 @@
 
 "use client";
 
-import { useState, useEffect, useRef }from "react";
+import { useState, useEffect }from "react";
 import { useRouter, useSearchParams }from "next/navigation";
 import {
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-  type ConfirmationResult,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
@@ -20,13 +17,6 @@ import { useToast }from "@/hooks/use-toast";
 import { Loader2 }from "lucide-react";
 import { Logo }from "@/components/icons";
 
-declare global {
-  interface Window {
-    recaptchaVerifier?: RecaptchaVerifier;
-    confirmationResult?: ConfirmationResult;
-    grecaptcha?: any;
-  }
-}
 
 export default function LoginPage() {
   const auth = useAuth();
@@ -37,21 +27,15 @@ export default function LoginPage() {
   const { toast } = useToast();
   
   // State for both forms
-  const [loginPhone, setLoginPhone] = useState("");
+  const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
-  const [registerPhone, setRegisterPhone] = useState("");
+  const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [otp, setOtp] = useState("");
 
   // Control flow state
   const [isLoading, setIsLoading] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
-  const [isRecaptchaSolved, setIsRecaptchaSolved] = useState(false);
-
-  const recaptchaContainerRef = useRef<HTMLDivElement>(null);
-  const recaptchaWidgetId = useRef<number | null>(null);
 
   useEffect(() => {
     if (!isUserLoading && user) {
@@ -59,111 +43,34 @@ export default function LoginPage() {
     }
   }, [user, isUserLoading, router, redirectUrl]);
 
-  useEffect(() => {
-    if (activeTab === 'register' && !otpSent && auth && recaptchaContainerRef.current) {
-      if (!window.recaptchaVerifier) {
-        const verifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
-          'size': 'normal',
-          'callback': () => {
-            setIsRecaptchaSolved(true);
-          },
-          'expired-callback': () => {
-            setIsRecaptchaSolved(false);
-          }
-        });
-        window.recaptchaVerifier = verifier;
-        verifier.render().then((widgetId) => {
-            recaptchaWidgetId.current = widgetId;
-        });
-      }
-    }
-
-    // Cleanup function
-    return () => {
-      // This cleanup runs when the tab changes OR the component unmounts
-      if (window.recaptchaVerifier) {
-        try {
-            window.recaptchaVerifier.clear();
-            setIsRecaptchaSolved(false);
-            const container = recaptchaContainerRef.current;
-            if (container) {
-              container.innerHTML = '';
-            }
-        } catch (e) {
-            console.error("Error clearing verifier on cleanup", e);
-        }
-        window.recaptchaVerifier = undefined;
-      }
-    };
-  }, [auth, activeTab, otpSent]);
-
-
-  const handleSendOtp = async () => {
-    if (!auth || !window.recaptchaVerifier) {
-      toast({ variant: "destructive", title: "reCAPTCHA not ready. Please wait." });
-      return;
-    }
-    if (registerPassword !== confirmPassword) {
-      toast({ variant: "destructive", title: "Passwords do not match." });
-      return;
-    }
-    if (!isRecaptchaSolved) {
-        toast({ variant: "destructive", title: "Please solve the reCAPTCHA." });
-        return;
-    }
-    setIsLoading(true);
-    try {
-      const phoneNumber = `+91${registerPhone}`;
-      const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier);
-      window.confirmationResult = confirmationResult;
-      setOtpSent(true);
-      toast({ title: "OTP Sent!", description: "Please check your phone for the verification code." });
-    } catch (error: any) {
-      console.error("OTP Send Error:", error);
-      toast({ variant: "destructive", title: "Failed to send OTP", description: error.message });
-      setIsRecaptchaSolved(false);
-      // Reset reCAPTCHA on failure
-      if (window.grecaptcha && recaptchaWidgetId.current !== null) {
-          window.grecaptcha.reset(recaptchaWidgetId.current);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleRegister = async () => {
-      if (!window.confirmationResult) {
-          toast({ variant: "destructive", title: "OTP not verified", description: "Please send an OTP first." });
-          return;
+      if (registerPassword !== confirmPassword) {
+        toast({ variant: "destructive", title: "Passwords do not match." });
+        return;
       }
+      if (!auth) return;
+
       setIsLoading(true);
       try {
-          // CRITICAL: First, confirm the OTP. This is the main security check.
-          await window.confirmationResult.confirm(otp);
-          
-          // If OTP is correct, proceed to create the account.
-          const email = `+91${registerPhone}@quizwhiz.app`;
-
-          // Sign out the temporary phone user to allow creating a new account with email/password
-          if (auth.currentUser) {
-            await auth.signOut();
-          }
-          
-          // Create the user with the generated email and the chosen password
-          await createUserWithEmailAndPassword(auth, email, registerPassword);
-          
-          toast({ title: "Registration Successful!", description: "You can now log in with your phone number and password." });
+          await createUserWithEmailAndPassword(auth, registerEmail, registerPassword);
+          toast({ title: "Registration Successful!", description: "You can now log in with your email and password." });
           setActiveTab("login"); 
-          setOtpSent(false); 
-          setRegisterPhone("");
+          setRegisterEmail("");
           setRegisterPassword("");
           setConfirmPassword("");
-          setOtp("");
-          setIsRecaptchaSolved(false);
 
       } catch (error: any) {
           console.error("Registration Error:", error);
-          toast({ variant: "destructive", title: "Registration Failed", description: "The OTP may be incorrect or expired." });
+          let description = "An unexpected error occurred.";
+          if (error.code === 'auth/email-already-in-use') {
+            description = "This email address is already in use by another account.";
+          } else if (error.code === 'auth/invalid-email') {
+            description = "Please enter a valid email address.";
+          } else if (error.code === 'auth/weak-password') {
+            description = "The password is too weak. Please use at least 6 characters.";
+          }
+          toast({ variant: "destructive", title: "Registration Failed", description });
       } finally {
           setIsLoading(false);
       }
@@ -173,13 +80,12 @@ export default function LoginPage() {
       if (!auth) return;
       setIsLoading(true);
       try {
-        const email = `+91${loginPhone}@quizwhiz.app`;
-        await signInWithEmailAndPassword(auth, email, loginPassword);
+        await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
         toast({ title: "Sign-In Successful!" });
         // The useEffect will handle the redirect
       } catch (error: any) {
         console.error("Login Error:", error);
-        toast({ variant: "destructive", title: "Sign-In Failed", description: "Incorrect phone number or password." });
+        toast({ variant: "destructive", title: "Sign-In Failed", description: "Incorrect email or password." });
       } finally {
         setIsLoading(false);
       }
@@ -221,11 +127,8 @@ export default function LoginPage() {
             </TabsList>
             <TabsContent value="login" className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="phone-login">Phone Number</Label>
-                <div className="flex items-center gap-2">
-                    <span className="p-2 rounded-md border bg-muted">+91</span>
-                    <Input id="phone-login" type="tel" placeholder="10-digit mobile number" value={loginPhone} onChange={(e) => setLoginPhone(e.target.value)} disabled={isLoading} />
-                </div>
+                <Label htmlFor="email-login">Email</Label>
+                <Input id="email-login" type="email" placeholder="you@example.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} disabled={isLoading} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password-login">Password</Label>
@@ -236,14 +139,10 @@ export default function LoginPage() {
               </Button>
             </TabsContent>
             <TabsContent value="register" className="space-y-4 pt-4">
-              {!otpSent ? (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="phone-register">Phone Number</Label>
-                    <div className="flex items-center gap-2">
-                        <span className="p-2 rounded-md border bg-muted">+91</span>
-                        <Input id="phone-register" type="tel" placeholder="10-digit mobile number" value={registerPhone} onChange={(e) => setRegisterPhone(e.target.value)} disabled={isLoading} />
-                    </div>
+                    <Label htmlFor="email-register">Email</Label>
+                    <Input id="email-register" type="email" placeholder="you@example.com" value={registerEmail} onChange={(e) => setRegisterEmail(e.target.value)} disabled={isLoading} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="password-register">Password</Label>
@@ -253,25 +152,10 @@ export default function LoginPage() {
                     <Label htmlFor="confirm-password-register">Confirm Password</Label>
                     <Input id="confirm-password-register" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} disabled={isLoading} />
                   </div>
-                  <div ref={recaptchaContainerRef} className="flex justify-center my-4"></div>
-                  <Button onClick={handleSendOtp} className="w-full" disabled={isLoading || !isRecaptchaSolved}>
-                    {isLoading ? <Loader2 className="animate-spin" /> : "Send OTP"}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="otp-input">Enter OTP</Label>
-                    <Input id="otp-input" type="text" placeholder="6-digit code" value={otp} onChange={(e) => setOtp(e.target.value)} disabled={isLoading} />
-                  </div>
                   <Button onClick={handleRegister} className="w-full" disabled={isLoading}>
                     {isLoading ? <Loader2 className="animate-spin" /> : "Create Account"}
                   </Button>
-                  <Button variant="link" onClick={() => { setOtpSent(false); }} disabled={isLoading}>
-                    Back
-                  </Button>
                 </>
-              )}
             </TabsContent>
           </Tabs>
         </CardContent>
@@ -279,5 +163,3 @@ export default function LoginPage() {
     </main>
   );
 }
-
-    
