@@ -25,6 +25,8 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import AuthButton from "@/components/auth-button";
 import { useUser } from "@/firebase/provider";
 import LoginDialog from "@/components/login-dialog";
+import { setDoc, doc, getDoc } from "firebase/firestore";
+import { useFirestore } from "@/firebase";
 
 type GameState = "idle" | "loading" | "payment" | "playing" | "finished";
 type QuizFormValues = { topic: string; numberOfQuestions: number; timerDuration: number | null; language: string; };
@@ -32,7 +34,8 @@ type QuizPyqFormValues = { exam: string; subject: string; topic: string; numberO
 type QuizUploadValues = { dataUri: string, numberOfQuestions: number, language: string };
 
 export default function Home() {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
   const [gameState, setGameState] = useState<GameState>("idle");
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
@@ -49,19 +52,36 @@ export default function Home() {
   const t = translations[uiLanguage];
 
   useEffect(() => {
-    // If user logs in and there's a pending action, execute it.
-    if (user && pendingAction) {
+    if (user && firestore) {
+      const userDocRef = doc(firestore, "users", user.uid);
+      getDoc(userDocRef).then(docSnap => {
+        if (!docSnap.exists()) {
+          setDoc(userDocRef, {
+            id: user.uid,
+            email: user.email,
+            name: user.displayName,
+            photoURL: user.photoURL,
+            phoneNumber: user.phoneNumber,
+          }, { merge: true });
+        }
+      });
+    }
+  }, [user, firestore]);
+  
+  const handleLoginSuccess = () => {
+    setIsLoginModalOpen(false);
+    if (pendingAction) {
       pendingAction();
       setPendingAction(null);
     }
-  }, [user, pendingAction]);
+  };
 
   const withLoginCheck = (action: () => Promise<void>) => {
     if (!user) {
+      setPendingAction(() => action); // Store the action
       setIsLoginModalOpen(true);
-      setPendingAction(() => action); // Store the action to be executed after login
     } else {
-      action(); // User is already logged in, execute immediately
+      action();
     }
   };
   
@@ -236,10 +256,7 @@ export default function Home() {
       <LoginDialog
         isOpen={isLoginModalOpen}
         onOpenChange={setIsLoginModalOpen}
-        onLoginSuccess={() => {
-          setIsLoginModalOpen(false);
-          // The useEffect will handle the pending action
-        }}
+        onLoginSuccess={handleLoginSuccess}
       />
       <div className="flex min-h-screen w-full bg-background">
         <Sidebar onExamSelect={handleExamSelectFromSidebar} language={uiLanguage} />
@@ -314,5 +331,6 @@ export default function Home() {
     </SidebarProvider>
   );
 }
+    
 
     

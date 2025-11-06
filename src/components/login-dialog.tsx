@@ -8,8 +8,9 @@ import {
   RecaptchaVerifier,
   signInWithPhoneNumber,
   ConfirmationResult,
+  User,
 } from "firebase/auth";
-import { useAuth, useUser } from "@/firebase/provider";
+import { useAuth } from "@/firebase/provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,12 +27,11 @@ import { Loader2 } from "lucide-react";
 type LoginDialogProps = {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onLoginSuccess?: () => void;
+  onLoginSuccess: () => void;
 };
 
 export default function LoginDialog({ isOpen, onOpenChange, onLoginSuccess }: LoginDialogProps) {
   const auth = useAuth();
-  const { user } = useUser();
   const { toast } = useToast();
 
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -44,35 +44,31 @@ export default function LoginDialog({ isOpen, onOpenChange, onLoginSuccess }: Lo
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
   const recaptchaContainerRef = useRef<HTMLDivElement>(null);
 
+  // This effect ensures that a successful login from ANY method triggers the callback.
+  const handleSuccessfulLogin = (user: User) => {
+    toast({ title: `Welcome, ${user.displayName || "user"}!` });
+    onLoginSuccess();
+  };
+
   useEffect(() => {
-    // If the dialog is open and we have the container, initialize reCAPTCHA
     if (isOpen && auth && recaptchaContainerRef.current && !recaptchaVerifierRef.current) {
       recaptchaVerifierRef.current = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
         size: "invisible",
         callback: () => {
-          // reCAPTCHA solved, allow signInWithPhoneNumber.
+          // reCAPTCHA solved.
         },
       });
-      // Render it once it's created
       recaptchaVerifierRef.current.render();
     }
   }, [isOpen, auth]);
 
-  useEffect(() => {
-    // When the user successfully logs in, call the success callback
-    if (user && isOpen) {
-      onLoginSuccess?.();
-    }
-  }, [user, isOpen, onLoginSuccess]);
-  
   const handleGoogleSignIn = async () => {
     if (!auth) return;
     setIsGoogleLoading(true);
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
-      toast({ title: "Successfully signed in with Google!" });
-      // The useEffect hook will handle the success callback
+      const result = await signInWithPopup(auth, provider);
+      handleSuccessfulLogin(result.user);
     } catch (error: any) {
       console.error("Google Sign-In Error:", error);
       toast({
@@ -99,14 +95,9 @@ export default function LoginDialog({ isOpen, onOpenChange, onLoginSuccess }: Lo
         title: "Failed to Send OTP",
         description: error.message,
       });
-      // Reset reCAPTCHA
-      if (recaptchaVerifierRef.current) {
-        recaptchaVerifierRef.current.render().then((widgetId) => {
-            // @ts-ignore
-            if (window.grecaptcha) {
-              window.grecaptcha.reset(widgetId);
-            }
-        });
+       if (recaptchaVerifierRef.current) {
+        // @ts-ignore
+        window.grecaptcha.reset();
       }
     } finally {
       setIsSendingOtp(false);
@@ -117,9 +108,8 @@ export default function LoginDialog({ isOpen, onOpenChange, onLoginSuccess }: Lo
     if (!confirmationResult) return;
     setIsVerifyingOtp(true);
     try {
-      await confirmationResult.confirm(otp);
-      toast({ title: "Successfully signed in with Phone!" });
-      // The useEffect hook will handle the success callback
+      const result = await confirmationResult.confirm(otp);
+      handleSuccessfulLogin(result.user);
     } catch (error: any) {
       console.error("OTP Verification Error:", error);
       toast({
