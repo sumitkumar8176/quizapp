@@ -4,10 +4,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  getAuth,
   RecaptchaVerifier,
   signInWithPhoneNumber,
-  type Auth,
   type ConfirmationResult,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -45,6 +43,7 @@ export default function LoginPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
 
+  // A ref for the invisible reCAPTCHA container
   const recaptchaContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -57,21 +56,22 @@ export default function LoginPage() {
   useEffect(() => {
     if (!auth || activeTab !== 'register') return;
 
-    if (!window.recaptchaVerifier && recaptchaContainerRef.current) {
+    if (!window.recaptchaVerifier) {
+      // Ensure the container exists before creating the verifier
+      if (recaptchaContainerRef.current) {
         const verifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
-            'size': 'invisible',
-            'callback': (response: any) => {
-              // reCAPTCHA solved, allow signInWithPhoneNumber.
-            }
+          'size': 'invisible',
+          'callback': () => {
+            // This callback is called when the reCAPTCHA is successfully solved.
+            // The handleSendOtp function will proceed from here.
+          }
         });
         window.recaptchaVerifier = verifier;
+      }
     }
-
-    return () => {
-        // Cleanup verifier
-        window.recaptchaVerifier?.clear();
-        window.recaptchaVerifier = undefined;
-    };
+    
+    // No cleanup needed in this setup, as the verifier is tied to the window object
+    // and should persist for the login session.
   }, [auth, activeTab]);
 
   const handleSendOtp = async () => {
@@ -84,7 +84,7 @@ export default function LoginPage() {
     try {
       const verifier = window.recaptchaVerifier;
       if (!verifier) {
-          throw new Error("RecaptchaVerifier not initialized.");
+          throw new Error("RecaptchaVerifier not initialized. Please wait a moment and try again.");
       }
       const phoneNumber = `+91${phone}`;
       const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, verifier);
@@ -94,8 +94,11 @@ export default function LoginPage() {
     } catch (error: any) {
       console.error("OTP Send Error:", error);
       toast({ variant: "destructive", title: "Failed to send OTP", description: error.message });
-      // Reset reCAPTCHA
-      window.recaptchaVerifier?.clear();
+      // Reset reCAPTCHA if it exists
+      window.recaptchaVerifier?.render().then((widgetId) => {
+        // @ts-ignore
+        grecaptcha.reset(widgetId);
+      });
     } finally {
       setIsLoading(false);
     }
@@ -108,30 +111,26 @@ export default function LoginPage() {
       }
       setIsLoading(true);
       try {
-          // Confirm OTP
-          const userCredential = await window.confirmationResult.confirm(otp);
-          const user = userCredential.user;
+          // Confirm OTP to get the user credential from phone auth
+          const phoneUserCredential = await window.confirmationResult.confirm(otp);
+          const phoneUser = phoneUserCredential.user;
 
-          // Since phone auth doesn't have a password, we can't directly add one.
-          // A more complex flow involving custom tokens or linking accounts would be needed.
-          // For now, we will create a separate email/password user as a placeholder for the logic.
-          // This is a limitation of client-side flows.
-          // The "email" will be the phone number with a dummy domain.
-          const email = `${user.phoneNumber}@quizwhiz.app`;
-          
-          // This part is tricky. After phone auth, we don't have a user object to just "add a password".
-          // The most direct way on the client is to create an email/password user and consider the phone verified.
-          // In a real-world app, you'd link credentials or use a backend.
-          
-          // Let's sign out the phone user and create an email/password user
+          // The challenge is that Firebase Auth doesn't let you add a password to a phone-only user on the client.
+          // The standard approach is to create an email/password account and link the phone credential.
+          // However, for a phone-centric login, we create a user with an "email" derived from the phone number.
+          const email = `+91${phone}@quizwhiz.app`;
+
+          // Sign out the temporary phone user to avoid conflicts
           await auth.signOut();
-
+          
+          // Create a new user with the derived email and the provided password.
+          // This becomes the primary account.
           const newUserCredential = await createUserWithEmailAndPassword(auth, email, password);
           
-          toast({ title: "Registration Successful!", description: "You can now log in." });
+          toast({ title: "Registration Successful!", description: "You can now log in with your phone number and password." });
           setActiveTab("login"); // Switch to login tab
-          setOtpSent(false); // Reset state
-          // Clear fields
+          setOtpSent(false); // Reset OTP state
+          // Clear fields for the next user
           setPhone("");
           setPassword("");
           setConfirmPassword("");
@@ -149,14 +148,14 @@ export default function LoginPage() {
       if (!auth) return;
       setIsLoading(true);
       try {
-        // We log in using the phone number as the "email" part of the credential
+        // Log in using the same phone-derived email convention used during registration.
         const email = `+91${phone}@quizwhiz.app`;
         await signInWithEmailAndPassword(auth, email, password);
         toast({ title: "Sign-In Successful!" });
-        // The useEffect will handle redirect
+        // The useEffect at the top will handle the redirect.
       } catch (error: any) {
         console.error("Login Error:", error);
-        toast({ variant: "destructive", title: "Sign-In Failed", description: error.message });
+        toast({ variant: "destructive", title: "Sign-In Failed", description: "Incorrect phone number or password." });
       } finally {
         setIsLoading(false);
       }
@@ -172,6 +171,9 @@ export default function LoginPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-background">
+      {/* Invisible reCAPTCHA container */}
+      <div ref={recaptchaContainerRef}></div>
+
       <header className="mb-8 flex flex-col items-center text-center">
         <div className="mb-4 flex items-center gap-3">
           <Logo className="h-12 w-12 text-primary" />
@@ -248,7 +250,6 @@ export default function LoginPage() {
                   </Button>
                 </>
               )}
-              <div ref={recaptchaContainerRef}></div>
             </TabsContent>
           </Tabs>
         </CardContent>
@@ -256,5 +257,3 @@ export default function LoginPage() {
     </main>
   );
 }
-
-    
