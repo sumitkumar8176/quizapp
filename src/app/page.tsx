@@ -25,7 +25,7 @@ import { translations } from "@/lib/translations";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import AuthButton from "@/components/auth-button";
 import { useUser, useFirestore } from "@/firebase";
-import { setDoc, doc, getDoc } from "firebase/firestore";
+import { setDoc, doc, getDoc, serverTimestamp } from "firebase/firestore";
 
 type GameState = "idle" | "loading" | "payment" | "playing" | "finished";
 type QuizFormValues = { topic: string; numberOfQuestions: number; timerDuration: number | null; language: string; };
@@ -59,22 +59,25 @@ export default function Home() {
             name: user.displayName,
             photoURL: user.photoURL,
             phoneNumber: user.phoneNumber,
+            createdAt: serverTimestamp(),
           }, { merge: true });
         }
       });
     }
   }, [user, firestore]);
   
-  const withLoginCheck = (action: () => Promise<void>) => {
+  const withLoginCheck = (action: () => Promise<void>) => async () => {
+    if (isUserLoading) return; // Don't do anything while auth state is loading
+    
     if (!user) {
       router.push('/login?redirect=/');
     } else {
-      action();
+      await action();
     }
   };
   
-  const handleStartQuiz = async (values: QuizFormValues) => {
-    withLoginCheck(async () => {
+  const handleStartQuiz = (values: QuizFormValues) => {
+    const action = async () => {
       setGameState("loading");
       const formData = new FormData();
       formData.append("topic", values.topic);
@@ -91,11 +94,12 @@ export default function Home() {
         setTimerDuration(values.timerDuration);
         setGameState("payment");
       }
-    });
+    };
+    withLoginCheck(action)();
   };
 
-  const handleStartPyqQuiz = async (values: QuizPyqFormValues) => {
-    withLoginCheck(async () => {
+  const handleStartPyqQuiz = (values: QuizPyqFormValues) => {
+    const action = async () => {
       setGameState("loading");
       const formData = new FormData();
       formData.append("exam", values.exam);
@@ -114,11 +118,12 @@ export default function Home() {
         setTimerDuration(values.timerDuration);
         setGameState("payment");
       }
-    });
+    };
+    withLoginCheck(action)();
   };
 
-  const handleUploadQuiz = async (values: QuizUploadValues) => {
-    withLoginCheck(async () => {
+  const handleUploadQuiz = (values: QuizUploadValues) => {
+    const action = async () => {
       setGameState("loading");
       const formData = new FormData();
       formData.append("contentDataUri", values.dataUri);
@@ -135,13 +140,16 @@ export default function Home() {
         setTimerDuration(null); // No timer for uploaded quizzes for now
         setGameState("payment");
       }
-    });
+    };
+    withLoginCheck(action)();
   };
 
 
   const handlePaymentSuccess = () => {
     setGameState("playing");
   };
+
+
 
   const handleFinishQuiz = (answers: string[]) => {
     if (!quiz) return;
@@ -213,6 +221,10 @@ export default function Home() {
   );
 
   const renderGameState = () => {
+    if (isUserLoading && gameState !== 'idle') {
+        return <Loading />;
+    }
+
     switch (gameState) {
       case "loading":
         return <Loading />;
@@ -314,6 +326,5 @@ export default function Home() {
     </SidebarProvider>
   );
 }
-    
 
     

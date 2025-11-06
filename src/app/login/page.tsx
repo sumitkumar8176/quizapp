@@ -2,13 +2,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   signInWithPopup,
   GoogleAuthProvider,
   RecaptchaVerifier,
   signInWithPhoneNumber,
   ConfirmationResult,
+  Auth,
 } from "firebase/auth";
 import { useAuth, useUser } from "@/firebase/provider";
 import { Button } from "@/components/ui/button";
@@ -42,45 +43,65 @@ export default function LoginPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const recaptchaContainerRef = useRef<HTMLDivElement>(null);
 
-
-  const setupRecaptcha = () => {
-    if (!auth || !recaptchaContainerRef.current) return;
-
-    if (window.recaptchaVerifier) {
-      window.recaptchaVerifier.clear();
-    }
-    
-    window.recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
-      'size': 'normal',
-      'callback': (response: any) => {
-        // reCAPTCHA solved, allow signInWithPhoneNumber.
-      },
-      'expired-callback': () => {
-        // Response expired. Ask user to solve reCAPTCHA again.
-        toast({
-            variant: "destructive",
-            title: "reCAPTCHA Expired",
-            description: "Please solve the reCAPTCHA again.",
-        });
-      }
-    });
-  };
-
-  // Setup reCAPTCHA on component mount
   useEffect(() => {
-    if (!confirmationResult) {
-        setupRecaptcha();
+    // If the user is already logged in, redirect them.
+    if (user) {
+      router.push(redirectUrl);
     }
-  }, [auth, confirmationResult]);
+  }, [user, router, redirectUrl]);
+
+  // This effect sets up the reCAPTCHA verifier.
+  useEffect(() => {
+    if (!auth || confirmationResult) return;
+
+    if (!window.recaptchaVerifier && recaptchaContainerRef.current) {
+        const verifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
+            'size': 'normal',
+            'callback': (response: any) => {
+                // reCAPTCHA solved.
+            },
+            'expired-callback': () => {
+                toast({
+                    variant: "destructive",
+                    title: "reCAPTCHA Expired",
+                    description: "Please solve the reCAPTCHA again.",
+                });
+                if (window.recaptchaVerifier) {
+                    window.recaptchaVerifier.render().then(widgetId => {
+                        window.recaptchaVerifier?.reset(widgetId);
+                    });
+                }
+            }
+        });
+        window.recaptchaVerifier = verifier;
+        verifier.render(); // Explicitly render the verifier
+    }
+
+    // Cleanup function to clear the verifier when the component unmounts
+    return () => {
+        if (window.recaptchaVerifier) {
+            window.recaptchaVerifier.clear();
+            window.recaptchaVerifier = undefined;
+        }
+    };
+  }, [auth, toast, confirmationResult]);
 
 
   const handlePhoneSignIn = async () => {
-    if (!auth || !window.recaptchaVerifier || !phoneNumber) return;
+    if (!auth || !window.recaptchaVerifier || !phoneNumber) {
+        toast({
+            variant: "destructive",
+            title: "Setup Incomplete",
+            description: "reCAPTCHA verifier not ready or phone number missing.",
+        });
+        return;
+    }
     setIsSendingOtp(true);
     try {
       const appVerifier = window.recaptchaVerifier;
       const result = await signInWithPhoneNumber(auth, `+${phoneNumber}`, appVerifier);
       setConfirmationResult(result);
+      window.confirmationResult = result;
       toast({ title: "OTP Sent!", description: "Please check your phone for the verification code." });
     } catch (error: any) {
       console.error("Phone Sign-In Error:", error);
@@ -89,7 +110,12 @@ export default function LoginPage() {
         title: "Failed to Send OTP",
         description: error.message,
       });
-      setupRecaptcha(); // Reset reCAPTCHA on error
+      // Reset reCAPTCHA on error
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.render().then(widgetId => {
+            window.recaptchaVerifier?.reset(widgetId);
+        });
+      }
     } finally {
       setIsSendingOtp(false);
     }
@@ -101,8 +127,8 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
+      // The useEffect hook will handle the redirect once `user` is updated.
       toast({ title: "Successfully signed in with Google!" });
-      router.push(redirectUrl);
     } catch (error: any) {
       console.error("Google Sign-In Error:", error);
       toast({
@@ -120,8 +146,8 @@ export default function LoginPage() {
     setIsVerifyingOtp(true);
     try {
       await confirmationResult.confirm(otp);
+      // The useEffect hook will handle the redirect.
       toast({ title: "Successfully signed in with Phone!" });
-      router.push(redirectUrl);
     } catch (error: any) {
       console.error("OTP Verification Error:", error);
       toast({
@@ -138,6 +164,7 @@ export default function LoginPage() {
     setConfirmationResult(null);
     setPhoneNumber("");
     setOtp("");
+    // We need to re-render to trigger the reCAPTCHA useEffect
   };
 
   return (
@@ -187,7 +214,7 @@ export default function LoginPage() {
                             disabled={isSendingOtp}
                         />
                     </div>
-                    <div ref={recaptchaContainerRef} className="flex justify-center"></div>
+                    <div id="recaptcha-container" ref={recaptchaContainerRef} className="flex justify-center"></div>
                     <Button onClick={handlePhoneSignIn} className="w-full" disabled={isSendingOtp || !phoneNumber}>
                         {isSendingOtp ? <Loader2 className="animate-spin" /> : "Send OTP"}
                     </Button>
@@ -218,3 +245,5 @@ export default function LoginPage() {
     </main>
   );
 }
+
+    
