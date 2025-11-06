@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, useRef }from "react";
+import { useRouter, useSearchParams }from "next/navigation";
 import {
   RecaptchaVerifier,
   signInWithPhoneNumber,
@@ -10,15 +10,15 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
-import { useAuth, useUser } from "@/firebase/provider";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
-import { Logo } from "@/components/icons";
+import { useAuth, useUser }from "@/firebase/provider";
+import { Button }from "@/components/ui/button";
+import { Input }from "@/components/ui/input";
+import { Label }from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription }from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger }from "@/components/ui/tabs";
+import { useToast }from "@/hooks/use-toast";
+import { Loader2 }from "lucide-react";
+import { Logo }from "@/components/icons";
 
 declare global {
   interface Window {
@@ -42,8 +42,9 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
+  const [isRecaptchaVerified, setIsRecaptchaVerified] = useState(false);
 
-  // A ref for the invisible reCAPTCHA container
+  // A ref for the visible reCAPTCHA container
   const recaptchaContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -54,31 +55,47 @@ export default function LoginPage() {
 
   // Effect to set up reCAPTCHA
   useEffect(() => {
-    if (!auth || activeTab !== 'register') return;
+    if (!auth || activeTab !== 'register' || otpSent) return;
 
-    if (!window.recaptchaVerifier) {
-      // Ensure the container exists before creating the verifier
-      if (recaptchaContainerRef.current) {
+    if (!window.recaptchaVerifier && recaptchaContainerRef.current) {
+        // Clear out the container to ensure no old reCAPTCHA is lingering
+        recaptchaContainerRef.current.innerHTML = '';
+        
         const verifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
-          'size': 'invisible',
-          'callback': () => {
-            // This callback is called when the reCAPTCHA is successfully solved.
-            // The handleSendOtp function will proceed from here.
-          }
+            'size': 'normal',
+            'callback': (response) => {
+                // reCAPTCHA solved, allow OTP to be sent
+                setIsRecaptchaVerified(true);
+            },
+            'expired-callback': () => {
+                // Response expired. User needs to solve reCAPTCHA again.
+                setIsRecaptchaVerified(false);
+            }
         });
         window.recaptchaVerifier = verifier;
-      }
     }
     
-    // No cleanup needed in this setup, as the verifier is tied to the window object
-    // and should persist for the login session.
-  }, [auth, activeTab]);
+    // Cleanup when tab changes or OTP is sent
+    return () => {
+        if (window.recaptchaVerifier) {
+            window.recaptchaVerifier.clear();
+            window.recaptchaVerifier = undefined;
+            if(recaptchaContainerRef.current) {
+                recaptchaContainerRef.current.innerHTML = '';
+            }
+        }
+    }
+  }, [auth, activeTab, otpSent]);
 
   const handleSendOtp = async () => {
     if (!auth) return;
     if (password !== confirmPassword) {
       toast({ variant: "destructive", title: "Passwords do not match." });
       return;
+    }
+    if (!isRecaptchaVerified) {
+        toast({ variant: "destructive", title: "Please verify reCAPTCHA." });
+        return;
     }
     setIsLoading(true);
     try {
@@ -94,11 +111,14 @@ export default function LoginPage() {
     } catch (error: any) {
       console.error("OTP Send Error:", error);
       toast({ variant: "destructive", title: "Failed to send OTP", description: error.message });
-      // Reset reCAPTCHA if it exists
-      window.recaptchaVerifier?.render().then((widgetId) => {
-        // @ts-ignore
-        grecaptcha.reset(widgetId);
-      });
+      setIsRecaptchaVerified(false);
+      // Reset reCAPTCHA
+       if(window.recaptchaVerifier) {
+           window.recaptchaVerifier.render().then((widgetId) => {
+                // @ts-ignore
+                grecaptcha.reset(widgetId);
+            });
+       }
     } finally {
       setIsLoading(false);
     }
@@ -111,30 +131,23 @@ export default function LoginPage() {
       }
       setIsLoading(true);
       try {
-          // Confirm OTP to get the user credential from phone auth
           const phoneUserCredential = await window.confirmationResult.confirm(otp);
-          const phoneUser = phoneUserCredential.user;
-
-          // The challenge is that Firebase Auth doesn't let you add a password to a phone-only user on the client.
-          // The standard approach is to create an email/password account and link the phone credential.
-          // However, for a phone-centric login, we create a user with an "email" derived from the phone number.
           const email = `+91${phone}@quizwhiz.app`;
 
-          // Sign out the temporary phone user to avoid conflicts
-          await auth.signOut();
+          if (auth.currentUser) {
+            await auth.signOut();
+          }
           
-          // Create a new user with the derived email and the provided password.
-          // This becomes the primary account.
-          const newUserCredential = await createUserWithEmailAndPassword(auth, email, password);
+          await createUserWithEmailAndPassword(auth, email, password);
           
           toast({ title: "Registration Successful!", description: "You can now log in with your phone number and password." });
-          setActiveTab("login"); // Switch to login tab
-          setOtpSent(false); // Reset OTP state
-          // Clear fields for the next user
+          setActiveTab("login"); 
+          setOtpSent(false); 
           setPhone("");
           setPassword("");
           setConfirmPassword("");
           setOtp("");
+          setIsRecaptchaVerified(false);
 
       } catch (error: any) {
           console.error("Registration Error:", error);
@@ -148,11 +161,9 @@ export default function LoginPage() {
       if (!auth) return;
       setIsLoading(true);
       try {
-        // Log in using the same phone-derived email convention used during registration.
         const email = `+91${phone}@quizwhiz.app`;
         await signInWithEmailAndPassword(auth, email, password);
         toast({ title: "Sign-In Successful!" });
-        // The useEffect at the top will handle the redirect.
       } catch (error: any) {
         console.error("Login Error:", error);
         toast({ variant: "destructive", title: "Sign-In Failed", description: "Incorrect phone number or password." });
@@ -171,9 +182,6 @@ export default function LoginPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-background">
-      {/* Invisible reCAPTCHA container */}
-      <div ref={recaptchaContainerRef}></div>
-
       <header className="mb-8 flex flex-col items-center text-center">
         <div className="mb-4 flex items-center gap-3">
           <Logo className="h-12 w-12 text-primary" />
@@ -232,7 +240,8 @@ export default function LoginPage() {
                     <Label htmlFor="confirm-password-register">Confirm Password</Label>
                     <Input id="confirm-password-register" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} disabled={isLoading} />
                   </div>
-                  <Button onClick={handleSendOtp} className="w-full" disabled={isLoading}>
+                  <div ref={recaptchaContainerRef} className="flex justify-center"></div>
+                  <Button onClick={handleSendOtp} className="w-full" disabled={isLoading || !isRecaptchaVerified}>
                     {isLoading ? <Loader2 className="animate-spin" /> : "Send OTP"}
                   </Button>
                 </>
@@ -245,7 +254,10 @@ export default function LoginPage() {
                   <Button onClick={handleRegister} className="w-full" disabled={isLoading}>
                     {isLoading ? <Loader2 className="animate-spin" /> : "Create Account"}
                   </Button>
-                  <Button variant="link" onClick={() => setOtpSent(false)} disabled={isLoading}>
+                  <Button variant="link" onClick={() => {
+                      setOtpSent(false); 
+                      setIsRecaptchaVerified(false);
+                    }} disabled={isLoading}>
                     Back
                   </Button>
                 </>
@@ -257,3 +269,5 @@ export default function LoginPage() {
     </main>
   );
 }
+
+    
