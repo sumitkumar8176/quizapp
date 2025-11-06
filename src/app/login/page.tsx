@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   signInWithPopup,
@@ -22,6 +22,7 @@ import { Logo } from "@/components/icons";
 declare global {
     interface Window {
         recaptchaVerifier?: RecaptchaVerifier;
+        confirmationResult?: ConfirmationResult;
     }
 }
 
@@ -39,6 +40,8 @@ export default function LoginPage() {
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const recaptchaContainerRef = useRef<HTMLDivElement>(null);
+
 
   useEffect(() => {
     if (user) {
@@ -46,27 +49,39 @@ export default function LoginPage() {
     }
   }, [user, router, redirectUrl]);
 
-
   const setupRecaptcha = () => {
-    if (!auth) return;
+    if (!auth || !recaptchaContainerRef.current) return;
+
     if (window.recaptchaVerifier) {
       window.recaptchaVerifier.clear();
     }
-    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+    
+    window.recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
       'size': 'normal',
       'callback': (response: any) => {
         // reCAPTCHA solved, allow signInWithPhoneNumber.
-        // ...
       },
       'expired-callback': () => {
         // Response expired. Ask user to solve reCAPTCHA again.
-        // ...
+        toast({
+            variant: "destructive",
+            title: "reCAPTCHA Expired",
+            description: "Please solve the reCAPTCHA again.",
+        });
       }
     });
   };
 
+  // Setup reCAPTCHA on component mount
+  useEffect(() => {
+    if (!confirmationResult) {
+        setupRecaptcha();
+    }
+  }, [auth, confirmationResult]);
+
+
   const handlePhoneSignIn = async () => {
-    if (!auth || !window.recaptchaVerifier) return;
+    if (!auth || !window.recaptchaVerifier || !phoneNumber) return;
     setIsSendingOtp(true);
     try {
       const appVerifier = window.recaptchaVerifier;
@@ -124,6 +139,12 @@ export default function LoginPage() {
       setIsVerifyingOtp(false);
     }
   };
+  
+  const resetPhoneAuth = () => {
+    setConfirmationResult(null);
+    setPhoneNumber("");
+    setOtp("");
+  };
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-background">
@@ -172,7 +193,7 @@ export default function LoginPage() {
                             disabled={isSendingOtp}
                         />
                     </div>
-                    <div id="recaptcha-container" className="flex justify-center"></div>
+                    <div ref={recaptchaContainerRef} className="flex justify-center"></div>
                     <Button onClick={handlePhoneSignIn} className="w-full" disabled={isSendingOtp || !phoneNumber}>
                         {isSendingOtp ? <Loader2 className="animate-spin" /> : "Send OTP"}
                     </Button>
@@ -193,7 +214,7 @@ export default function LoginPage() {
                     <Button onClick={handleVerifyOtp} className="w-full" disabled={isVerifyingOtp || !otp}>
                          {isVerifyingOtp ? <Loader2 className="animate-spin" /> : "Verify OTP & Sign In"}
                     </Button>
-                     <Button variant="link" size="sm" onClick={() => setConfirmationResult(null)}>
+                     <Button variant="link" size="sm" onClick={resetPhoneAuth}>
                         Back to phone number entry
                     </Button>
                 </div>
