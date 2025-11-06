@@ -42,7 +42,6 @@ export default function LoginDialog({ isOpen, onOpenChange, onLoginSuccess }: Lo
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
-  const recaptchaContainerRef = useRef<HTMLDivElement>(null);
 
   // This effect ensures that a successful login from ANY method triggers the callback.
   const handleSuccessfulLogin = (user: User) => {
@@ -51,14 +50,15 @@ export default function LoginDialog({ isOpen, onOpenChange, onLoginSuccess }: Lo
   };
 
   useEffect(() => {
-    if (isOpen && auth && recaptchaContainerRef.current && !recaptchaVerifierRef.current) {
-      recaptchaVerifierRef.current = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
-        size: "invisible",
-        callback: () => {
-          // reCAPTCHA solved.
-        },
-      });
-      recaptchaVerifierRef.current.render();
+    if (isOpen && auth && !recaptchaVerifierRef.current) {
+        // The container MUST exist in the DOM before attempting to render the verifier
+        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container-dialog', {
+            size: "invisible",
+            callback: () => {
+            // reCAPTCHA solved.
+            },
+        });
+        recaptchaVerifierRef.current.render();
     }
   }, [isOpen, auth]);
 
@@ -96,8 +96,13 @@ export default function LoginDialog({ isOpen, onOpenChange, onLoginSuccess }: Lo
         description: error.message,
       });
        if (recaptchaVerifierRef.current) {
-        // @ts-ignore
-        window.grecaptcha.reset();
+        recaptchaVerifierRef.current.render().then((widgetId) => {
+            // @ts-ignore
+            if (window.grecaptcha) {
+                // @ts-ignore
+                window.grecaptcha.reset(widgetId);
+            }
+        });
       }
     } finally {
       setIsSendingOtp(false);
@@ -135,7 +140,7 @@ export default function LoginDialog({ isOpen, onOpenChange, onLoginSuccess }: Lo
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
-        <div ref={recaptchaContainerRef}></div>
+        <div id="recaptcha-container-dialog"></div>
         <DialogHeader>
           <DialogTitle>Login / Sign Up</DialogTitle>
           <DialogDescription>
@@ -201,5 +206,3 @@ export default function LoginDialog({ isOpen, onOpenChange, onLoginSuccess }: Lo
     </Dialog>
   );
 }
-
-    

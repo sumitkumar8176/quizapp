@@ -36,13 +36,14 @@ export default function LoginPage() {
 
 
   useEffect(() => {
-    if (auth && recaptchaContainerRef.current && !recaptchaVerifierRef.current) {
-        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
+    if (auth && !recaptchaVerifierRef.current) {
+        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
             size: "invisible",
             callback: () => {
               // reCAPTCHA solved, allow signInWithPhoneNumber.
             },
           });
+        recaptchaVerifierRef.current.render();
     }
   }, [auth]);
 
@@ -82,10 +83,11 @@ export default function LoginPage() {
         description: error.message,
       });
        // Reset reCAPTCHA
-      if (recaptchaVerifierRef.current) {
-        recaptchaVerifierRef.current.render().then((widgetId) => {
+       if (recaptchaVerifierRef.current) {
+         recaptchaVerifierRef.current.render().then((widgetId) => {
             // @ts-ignore
             if (window.grecaptcha) {
+              // @ts-ignore
               window.grecaptcha.reset(widgetId);
             }
         });
@@ -116,7 +118,7 @@ export default function LoginPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-background">
-       <div ref={recaptchaContainerRef}></div>
+       <div id="recaptcha-container" ref={recaptchaContainerRef}></div>
        <header className="mb-8 flex flex-col items-center text-center">
             <div className="mb-4 flex items-center gap-3">
                 <Logo className="h-12 w-12 text-primary" />
@@ -192,5 +194,3 @@ export default function LoginPage() {
     </main>
   );
 }
-
-    
