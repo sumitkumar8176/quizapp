@@ -80,20 +80,19 @@ export default function LoginPage() {
 
     // Cleanup function
     return () => {
-      if (activeTab !== 'register' && window.recaptchaVerifier) {
-         try {
-            setIsRecaptchaSolved(false);
+      // This cleanup runs when the tab changes OR the component unmounts
+      if (window.recaptchaVerifier) {
+        try {
             window.recaptchaVerifier.clear();
-            // Using a timeout to ensure grecaptcha is available
-            setTimeout(() => {
-              if (recaptchaWidgetId.current !== null && window.grecaptcha) {
-                window.grecaptcha.reset(recaptchaWidgetId.current);
-              }
-            }, 100);
-            window.recaptchaVerifier = undefined;
+            setIsRecaptchaSolved(false);
+            const container = recaptchaContainerRef.current;
+            if (container) {
+              container.innerHTML = '';
+            }
         } catch (e) {
             console.error("Error clearing verifier on cleanup", e);
         }
+        window.recaptchaVerifier = undefined;
       }
     };
   }, [auth, activeTab, otpSent]);
@@ -123,8 +122,9 @@ export default function LoginPage() {
       console.error("OTP Send Error:", error);
       toast({ variant: "destructive", title: "Failed to send OTP", description: error.message });
       setIsRecaptchaSolved(false);
-      if (recaptchaWidgetId.current !== null && window.grecaptcha) {
-        window.grecaptcha.reset(recaptchaWidgetId.current);
+      // Reset reCAPTCHA on failure
+      if (window.grecaptcha && recaptchaWidgetId.current !== null) {
+          window.grecaptcha.reset(recaptchaWidgetId.current);
       }
     } finally {
       setIsLoading(false);
@@ -267,21 +267,7 @@ export default function LoginPage() {
                   <Button onClick={handleRegister} className="w-full" disabled={isLoading}>
                     {isLoading ? <Loader2 className="animate-spin" /> : "Create Account"}
                   </Button>
-                  <Button variant="link" onClick={() => {
-                      setOtpSent(false); 
-                      setIsRecaptchaSolved(false);
-                      if (window.recaptchaVerifier) {
-                          try {
-                              window.recaptchaVerifier.clear();
-                              if(recaptchaWidgetId.current !== null && window.grecaptcha){
-                                window.grecaptcha.reset(recaptchaWidgetId.current)
-                              }
-                          } catch (e) {
-                              console.error("Error on back button cleanup", e);
-                          }
-                          window.recaptchaVerifier = undefined;
-                      }
-                    }} disabled={isLoading}>
+                  <Button variant="link" onClick={() => { setOtpSent(false); }} disabled={isLoading}>
                     Back
                   </Button>
                 </>
@@ -293,3 +279,5 @@ export default function LoginPage() {
     </main>
   );
 }
+
+    
