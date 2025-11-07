@@ -245,29 +245,27 @@ export default function Home() {
         <Sidebar onExamSelect={handleExamSelectFromSidebar} language={uiLanguage} />
         <main className="relative flex flex-1 flex-col items-center">
           <Navbar language={uiLanguage} />
-          <div className="w-full p-2 bg-yellow-400">
-            <div className="flex gap-2 items-center justify-end">
-                <Button
-                    onClick={() => handleLanguageSelect("english")}
-                    size="sm"
-                    className={cn(
-                        "text-white bg-red-600 hover:bg-red-500",
-                        uiLanguage === "english" && "bg-red-700 hover:bg-red-600"
-                    )}
-                >
-                    English
-                </Button>
-                <Button
-                    onClick={() => handleLanguageSelect("hindi")}
-                    size="sm"
-                    className={cn(
-                        "text-black bg-yellow-300 hover:bg-yellow-200",
-                        uiLanguage === "hindi" && "bg-white hover:bg-white/90"
-                    )}
-                >
-                    Hindi
-                </Button>
-            </div>
+          <div className="absolute top-2 right-2 z-20 flex gap-2 items-center">
+              <Button
+                  onClick={() => handleLanguageSelect("english")}
+                  size="sm"
+                  className={cn(
+                      "text-white bg-red-600 hover:bg-red-500",
+                      uiLanguage === "english" && "bg-red-700 hover:bg-red-600"
+                  )}
+              >
+                  English
+              </Button>
+              <Button
+                  onClick={() => handleLanguageSelect("hindi")}
+                  size="sm"
+                  className={cn(
+                      "text-black bg-yellow-300 hover:bg-yellow-200",
+                      uiLanguage === "hindi" && "bg-white hover:bg-white/90"
+                  )}
+              >
+                  Hindi
+              </Button>
           </div>
           <div className="flex flex-1 flex-col items-center p-4 w-full">
             <div className="w-full max-w-2xl flex justify-between items-center mb-4 gap-2">
