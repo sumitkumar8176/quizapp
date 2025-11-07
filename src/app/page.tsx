@@ -246,7 +246,7 @@ export default function Home() {
         <main className="relative flex flex-1 flex-col items-center">
           <Navbar language={uiLanguage} />
           <div className="w-full p-2 bg-yellow-400">
-            <div className="flex gap-2 items-center justify-center">
+            <div className="flex gap-2 items-center justify-end">
                 <Button
                     onClick={() => handleLanguageSelect("english")}
                     size="sm"
