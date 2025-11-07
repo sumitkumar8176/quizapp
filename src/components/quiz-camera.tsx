@@ -31,6 +31,8 @@ export default function QuizCamera({ onCapture, isLoading, language }: QuizCamer
   const { toast } = useToast();
 
   useEffect(() => {
+    let stream: MediaStream | null = null;
+
     const getCameraPermission = async () => {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         toast({
@@ -43,7 +45,7 @@ export default function QuizCamera({ onCapture, isLoading, language }: QuizCamer
       }
 
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
         setHasCameraPermission(true);
 
         if (videoRef.current) {
@@ -63,10 +65,13 @@ export default function QuizCamera({ onCapture, isLoading, language }: QuizCamer
     getCameraPermission();
 
     return () => {
-      // Cleanup: stop video stream when component unmounts
-      if (videoRef.current && videoRef.current.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
+      if (stream) {
         stream.getTracks().forEach(track => track.stop());
+      }
+      if (videoRef.current && videoRef.current.srcObject) {
+        const currentStream = videoRef.current.srcObject as MediaStream;
+        currentStream.getTracks().forEach(track => track.stop());
+        videoRef.current.srcObject = null;
       }
     };
   }, [toast]);
@@ -98,6 +103,7 @@ export default function QuizCamera({ onCapture, isLoading, language }: QuizCamer
     return (
       <div className="flex items-center justify-center h-40">
         <Loader2 className="h-8 w-8 animate-spin" />
+        <p className="ml-2">Requesting camera...</p>
       </div>
     );
   }

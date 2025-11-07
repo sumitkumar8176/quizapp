@@ -40,7 +40,7 @@ export default function QuizResults({ quiz, userAnswers, score, onPlayAgain, lan
         throw new Error("Web Share API not supported");
       }
     } catch (error) {
-      console.log(error)
+      console.log("Share failed, falling back to clipboard:", error);
       // Fallback to clipboard
       try {
         await navigator.clipboard.writeText(`${shareText}\n\n${shareData.url}`);
