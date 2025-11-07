@@ -123,9 +123,8 @@ export default function Home() {
     setActiveTab("pyq");
   };
   
-  const handleLanguageAndStart = (lang: "english" | "hindi") => {
+  const handleLanguageSelect = (lang: "english" | "hindi") => {
     setUiLanguage(lang);
-    setShowWelcome(false);
   };
   
   const renderIdleState = () => (
@@ -227,10 +226,10 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-                <Button size="lg" variant="outline" onClick={() => handleLanguageAndStart("english")}>
+                <Button size="lg" variant="outline" onClick={() => handleLanguageSelect("english")}>
                     English
                 </Button>
-                <Button size="lg" variant="outline" onClick={() => handleLanguageAndStart("hindi")}>
+                <Button size="lg" variant="outline" onClick={() => handleLanguageSelect("hindi")}>
                     Hindi
                 </Button>
             </div>
