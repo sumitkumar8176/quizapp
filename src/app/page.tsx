@@ -123,6 +123,11 @@ export default function Home() {
     setActiveTab("pyq");
   };
   
+  const handleLanguageAndStart = (lang: "english" | "hindi") => {
+    setUiLanguage(lang);
+    setShowWelcome(false);
+  };
+  
   const renderIdleState = () => (
     <div className="w-full">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -196,19 +201,40 @@ export default function Home() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
+          className="space-y-8"
         >
-          <div className="mb-4 flex items-center justify-center gap-3">
-            <Logo className="h-12 w-12 text-primary" />
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-primary font-headline">
-              QuizWhiz
-            </h1>
+          <div>
+            <div className="mb-4 flex items-center justify-center gap-3">
+              <Logo className="h-12 w-12 text-primary" />
+              <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-primary font-headline">
+                QuizWhiz
+              </h1>
+            </div>
+            <p className="text-2xl md:text-3xl font-semibold text-foreground">
+              Welcome to my quiz app
+            </p>
           </div>
-          <p className="text-2xl md:text-3xl font-semibold mb-8 text-foreground">
-            Welcome to my quiz app
-          </p>
-          <Button size="lg" onClick={() => setShowWelcome(false)}>
-            Create your quiz here
-          </Button>
+          
+          <div className="space-y-4">
+            <Button size="lg" onClick={() => setShowWelcome(false)} className="w-full">
+                Create your quiz here
+            </Button>
+
+            <div className="flex justify-center items-center gap-4">
+                <div className="flex-grow border-t border-border"></div>
+                <span className="text-muted-foreground text-sm">OR CHOOSE LANGUAGE</span>
+                <div className="flex-grow border-t border-border"></div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <Button size="lg" variant="outline" onClick={() => handleLanguageAndStart("english")}>
+                    English
+                </Button>
+                <Button size="lg" variant="outline" onClick={() => handleLanguageAndStart("hindi")}>
+                    Hindi
+                </Button>
+            </div>
+          </div>
         </motion.div>
       </div>
     );
