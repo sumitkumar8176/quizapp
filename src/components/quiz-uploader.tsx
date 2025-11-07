@@ -181,5 +181,3 @@ export default function QuizUploader({ onUpload, isLoading, language }: QuizUplo
     </div>
   );
 }
-
-    

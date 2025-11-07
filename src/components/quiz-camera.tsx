@@ -88,8 +88,6 @@ export default function QuizCamera({ onCapture, isLoading, language }: QuizCamer
     setCapturedImage(null);
   };
 
-
-
   const handleGenerateQuiz = () => {
     if (capturedImage) {
       onCapture(capturedImage, numberOfQuestions, difficulty, quizLanguage);
