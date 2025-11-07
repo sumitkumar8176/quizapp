@@ -135,13 +135,13 @@ export default function Home() {
             value="topic"
             className="bg-pink-200 text-pink-800 data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-md rounded-md py-2"
           >
-            {t.fromTopic}
+            {t.fromAnyTopics}
           </TabsTrigger>
           <TabsTrigger
             value="pyq"
             className="bg-blue-200 text-blue-800 data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-md rounded-md py-2"
           >
-            {t.fromPYQ}
+            {t.previousYearQuestion}
           </TabsTrigger>
           <TabsTrigger
             value="upload"
@@ -244,33 +244,11 @@ export default function Home() {
       <div className="flex min-h-screen w-full bg-background">
         <Sidebar onExamSelect={handleExamSelectFromSidebar} language={uiLanguage} />
         <main className="relative flex flex-1 flex-col items-center">
-          <Navbar language={uiLanguage} />
+          <Navbar language={uiLanguage} onLanguageChange={handleLanguageSelect} />
           <div className="flex flex-1 flex-col items-center p-4 w-full">
             <div className="w-full max-w-2xl flex justify-between items-center mb-4 gap-2">
                 <div className="md:hidden">
                     <SidebarTrigger />
-                </div>
-                <div className="flex gap-2 ml-auto items-center">
-                    <Button
-                    onClick={() => setUiLanguage("english")}
-                    size="sm"
-                    className={cn(
-                        "text-black bg-yellow-300 hover:bg-yellow-200",
-                        uiLanguage === "english" && "bg-white hover:bg-white/90"
-                    )}
-                    >
-                    English
-                    </Button>
-                    <Button
-                    onClick={() => setUiLanguage("hindi")}
-                    size="sm"
-                    className={cn(
-                        "text-black bg-yellow-300 hover:bg-yellow-200",
-                        uiLanguage === "hindi" && "bg-white hover:bg-white/90"
-                    )}
-                    >
-                    Hindi
-                    </Button>
                 </div>
             </div>
             <div className="w-full max-w-2xl">
