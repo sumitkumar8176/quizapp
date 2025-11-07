@@ -11,9 +11,10 @@ import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { translations } from "@/lib/translations";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { indianLanguages } from "@/lib/languages";
 
 type QuizCameraProps = {
-  onCapture: (dataUri: string, numberOfQuestions: number, difficulty: string) => void;
+  onCapture: (dataUri: string, numberOfQuestions: number, difficulty: string, language: string) => void;
   isLoading: boolean;
   language: "english" | "hindi";
 };
@@ -26,6 +27,7 @@ export default function QuizCamera({ onCapture, isLoading, language }: QuizCamer
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [numberOfQuestions, setNumberOfQuestions] = useState(10);
   const [difficulty, setDifficulty] = useState("Medium");
+  const [quizLanguage, setQuizLanguage] = useState("English");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -90,7 +92,7 @@ export default function QuizCamera({ onCapture, isLoading, language }: QuizCamer
 
   const handleGenerateQuiz = () => {
     if (capturedImage) {
-      onCapture(capturedImage, numberOfQuestions, difficulty);
+      onCapture(capturedImage, numberOfQuestions, difficulty, quizLanguage);
     }
   };
 
@@ -128,7 +130,7 @@ export default function QuizCamera({ onCapture, isLoading, language }: QuizCamer
 
       <canvas ref={canvasRef} className="hidden" />
 
-      <div className="space-y-2">
+      <div className="space-y-2 text-left">
         <Label htmlFor="questions-camera">{t.numQuestions}</Label>
         <Input 
           id="questions-camera" 
@@ -140,6 +142,21 @@ export default function QuizCamera({ onCapture, isLoading, language }: QuizCamer
           placeholder="e.g., 10" 
         />
       </div>
+
+       <div className="space-y-2 text-left">
+          <Label htmlFor="language-camera">{t.quizLanguage}</Label>
+          <Select value={quizLanguage} onValueChange={setQuizLanguage} disabled={isLoading}>
+            <SelectTrigger id="language-camera">
+              <SelectValue placeholder={t.selectLanguage} />
+            </SelectTrigger>
+            <SelectContent>
+              {indianLanguages.map((lang) => (
+                <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
 
       <div className="space-y-2 text-left">
         <Label htmlFor="difficulty-camera">{t.selectDifficulty}</Label>

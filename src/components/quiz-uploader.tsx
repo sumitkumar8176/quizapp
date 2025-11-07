@@ -61,8 +61,8 @@ export default function QuizUploader({ onUpload, isLoading, language }: QuizUplo
     event.target.value = "";
   };
   
-  const handleCapture = (dataUri: string, numQuestions: number, captureDifficulty: string) => {
-    onUpload({ dataUri, numberOfQuestions: numQuestions, language: quizLanguage, difficulty: captureDifficulty });
+  const handleCapture = (dataUri: string, numQuestions: number, captureDifficulty: string, captureLanguage: string) => {
+    onUpload({ dataUri, numberOfQuestions: numQuestions, language: captureLanguage, difficulty: captureDifficulty });
   };
 
 
