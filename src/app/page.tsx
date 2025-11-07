@@ -28,6 +28,7 @@ type QuizPyqFormValues = { exam: string; subject: string; topic: string; numberO
 type QuizUploadValues = { dataUri: string, numberOfQuestions: number, language: string };
 
 export default function Home() {
+  const [showWelcome, setShowWelcome] = useState(true);
   const [gameState, setGameState] = useState<GameState>("idle");
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
@@ -187,6 +188,31 @@ export default function Home() {
         return null;
     }
   };
+
+  if (showWelcome) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background text-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="mb-4 flex items-center justify-center gap-3">
+            <Logo className="h-12 w-12 text-primary" />
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-primary font-headline">
+              QuizWhiz
+            </h1>
+          </div>
+          <p className="text-2xl md:text-3xl font-semibold mb-8 text-foreground">
+            Welcome to my quiz app
+          </p>
+          <Button size="lg" onClick={() => setShowWelcome(false)}>
+            Create your quiz here
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <SidebarProvider>
