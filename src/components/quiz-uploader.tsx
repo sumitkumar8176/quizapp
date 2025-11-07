@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { indianLanguages } from "@/lib/languages";
 
 type QuizUploaderProps = {
-  onUpload: (values: { dataUri: string; numberOfQuestions: number; language: string; }) => void;
+  onUpload: (values: { dataUri: string; numberOfQuestions: number; language: string; difficulty: string; }) => void;
   isLoading: boolean;
   language: "english" | "hindi";
 };
@@ -24,6 +24,7 @@ export default function QuizUploader({ onUpload, isLoading, language }: QuizUplo
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [numberOfQuestions, setNumberOfQuestions] = useState(10);
   const [quizLanguage, setQuizLanguage] = useState("English");
+  const [difficulty, setDifficulty] = useState("Medium");
   const { toast } = useToast();
 
   const handleButtonClick = () => {
@@ -38,7 +39,7 @@ export default function QuizUploader({ onUpload, isLoading, language }: QuizUplo
     reader.onload = (e) => {
       const dataUri = e.target?.result as string;
       if (dataUri) {
-        onUpload({dataUri, numberOfQuestions, language: quizLanguage});
+        onUpload({dataUri, numberOfQuestions, language: quizLanguage, difficulty});
       } else {
         toast({
           variant: "destructive",
@@ -61,7 +62,7 @@ export default function QuizUploader({ onUpload, isLoading, language }: QuizUplo
   };
   
   const handleCapture = (dataUri: string, numberOfQuestions: number) => {
-    onUpload({ dataUri, numberOfQuestions, language: quizLanguage });
+    onUpload({ dataUri, numberOfQuestions, language: quizLanguage, difficulty });
   };
 
 
@@ -133,6 +134,20 @@ export default function QuizUploader({ onUpload, isLoading, language }: QuizUplo
                   {indianLanguages.map((lang) => (
                     <SelectItem key={lang} value={lang}>{lang}</SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2 text-left">
+              <Label htmlFor="difficulty-upload">{t.difficulty}</Label>
+              <Select value={difficulty} onValueChange={setDifficulty} disabled={isLoading}>
+                <SelectTrigger id="difficulty-upload">
+                  <SelectValue placeholder={t.selectDifficulty} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Easy">{t.easy}</SelectItem>
+                  <SelectItem value="Medium">{t.medium}</SelectItem>
+                  <SelectItem value="Hard">{t.hard}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

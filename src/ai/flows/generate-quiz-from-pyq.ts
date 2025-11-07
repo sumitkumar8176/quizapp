@@ -18,6 +18,7 @@ const GenerateQuizFromPyqInputSchema = z.object({
   topic: z.string().describe('The specific topic within the subject.'),
   numberOfQuestions: z.number().describe('The number of questions to generate.'),
   language: z.string().describe('The language for the quiz (e.g., "English", "Hindi").'),
+  difficulty: z.string().describe('The difficulty level of the quiz (e.g., "Easy", "Medium", "Hard").'),
 });
 export type GenerateQuizFromPyqInput = z.infer<typeof GenerateQuizFromPyqInputSchema>;
 
@@ -31,7 +32,7 @@ const prompt = ai.definePrompt({
   name: 'generateQuizFromPyqPrompt',
   input: {schema: GenerateQuizFromPyqInputSchema},
   output: {schema: QuizSchema},
-  prompt: `You are an expert at creating educational quizzes based on Previous Year Questions (PYQs) for major Indian competitive exams. Your task is to generate {{{numberOfQuestions}}} important and relevant questions in {{{language}}} based on the patterns and topics from past papers for the specified exam, subject, and topic.
+  prompt: `You are an expert at creating educational quizzes based on Previous Year Questions (PYQs) for major Indian competitive exams. Your task is to generate {{{numberOfQuestions}}} important and relevant questions in {{{language}}} with a difficulty level of {{{difficulty}}} based on the patterns and topics from past papers for the specified exam, subject, and topic.
 
 Exam: {{{exam}}}
 Subject: {{{subject}}}

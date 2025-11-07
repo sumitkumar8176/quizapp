@@ -19,6 +19,7 @@ const formSchema = z.object({
   topic: z.string().min(2, { message: "Topic must be at least 2 characters." }),
   numberOfQuestions: z.coerce.number().min(1, { message: "You must request at least 1 question." }),
   language: z.string().min(1, { message: "Please select a language." }),
+  difficulty: z.string().min(1, { message: "Please select a difficulty." }),
 });
 
 type ExamData = {
@@ -60,6 +61,7 @@ export default function QuizPyqForm({ onSubmit, isLoading, selectedExam, languag
       topic: "",
       numberOfQuestions: 10,
       language: "English",
+      difficulty: "Medium",
     },
   });
 
@@ -178,6 +180,29 @@ export default function QuizPyqForm({ onSubmit, isLoading, selectedExam, languag
                   {indianLanguages.map((lang) => (
                     <SelectItem key={lang} value={lang}>{lang}</SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="difficulty"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-lg">{t.difficulty}</FormLabel>
+               <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t.selectDifficulty} />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="Easy">{t.easy}</SelectItem>
+                  <SelectItem value="Medium">{t.medium}</SelectItem>
+                  <SelectItem value="Hard">{t.hard}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

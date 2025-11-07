@@ -23,9 +23,9 @@ import { translations } from "@/lib/translations";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 type GameState = "idle" | "loading" | "playing" | "finished";
-type QuizFormValues = { topic: string; numberOfQuestions: number; language: string; };
-type QuizPyqFormValues = { exam: string; subject: string; topic: string; numberOfQuestions: number; language: string; };
-type QuizUploadValues = { dataUri: string, numberOfQuestions: number, language: string };
+type QuizFormValues = { topic: string; numberOfQuestions: number; language: string; difficulty: string; };
+type QuizPyqFormValues = { exam: string; subject: string; topic: string; numberOfQuestions: number; language: string; difficulty: string; };
+type QuizUploadValues = { dataUri: string, numberOfQuestions: number, language: string, difficulty: string };
 
 export default function Home() {
   const [showWelcome, setShowWelcome] = useState(true);
@@ -46,6 +46,7 @@ export default function Home() {
     formData.append("topic", values.topic);
     formData.append("numberOfQuestions", values.numberOfQuestions.toString());
     formData.append("language", values.language);
+    formData.append("difficulty", values.difficulty);
     const result = await createQuiz(formData);
     if (result.error) {
       toast({ variant: "destructive", title: t.errorGeneratingQuiz, description: result.error });
@@ -66,6 +67,7 @@ export default function Home() {
     formData.append("topic", values.topic);
     formData.append("numberOfQuestions", values.numberOfQuestions.toString());
     formData.append("language", values.language);
+    formData.append("difficulty", values.difficulty);
     const result = await createQuizFromPyq(formData);
     if (result.error) {
       toast({ variant: "destructive", title: t.errorGeneratingQuiz, description: result.error });
@@ -84,6 +86,7 @@ export default function Home() {
     formData.append("contentDataUri", values.dataUri);
     formData.append("numberOfQuestions", values.numberOfQuestions.toString());
     formData.append("language", values.language);
+    formData.append("difficulty", values.difficulty);
     const result = await createQuizFromContent(formData);
     if (result.error) {
       toast({ variant: "destructive", title: t.errorGeneratingQuiz, description: result.error });

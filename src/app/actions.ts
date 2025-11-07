@@ -9,6 +9,7 @@ const QuizTopicSchema = z.object({
   topic: z.string().min(2, { message: "Topic must be at least 2 characters long." }).max(50, { message: "Topic must be at most 50 characters long." }),
   numberOfQuestions: z.coerce.number().min(1, { message: "You must request at least 1 question." }),
   language: z.string(),
+  difficulty: z.string(),
 });
 
 export async function createQuiz(formData: FormData) {
@@ -16,6 +17,7 @@ export async function createQuiz(formData: FormData) {
     topic: formData.get("topic"),
     numberOfQuestions: formData.get("numberOfQuestions"),
     language: formData.get("language"),
+    difficulty: formData.get("difficulty"),
   });
 
   if (!validatedFields.success) {
@@ -32,6 +34,7 @@ export async function createQuiz(formData: FormData) {
       topic: validatedFields.data.topic, 
       numberOfQuestions: validatedFields.data.numberOfQuestions,
       language: validatedFields.data.language,
+      difficulty: validatedFields.data.difficulty,
     });
     if (!questions || questions.length === 0) {
       return { error: "Could not generate a quiz for this topic. Please try another one." };
@@ -47,6 +50,7 @@ const QuizContentSchema = z.object({
   contentDataUri: z.string().min(1, { message: "File content is missing." }),
   numberOfQuestions: z.coerce.number().min(1, { message: "You must request at least 1 question." }),
   language: z.string(),
+  difficulty: z.string(),
 });
 
 export async function createQuizFromContent(formData: FormData) {
@@ -54,6 +58,7 @@ export async function createQuizFromContent(formData: FormData) {
     contentDataUri: formData.get("contentDataUri"),
     numberOfQuestions: formData.get("numberOfQuestions"),
     language: formData.get("language"),
+    difficulty: formData.get("difficulty"),
   });
 
   if (!validatedFields.success) {
@@ -70,6 +75,7 @@ export async function createQuizFromContent(formData: FormData) {
       contentDataUri: validatedFields.data.contentDataUri,
       numberOfQuestions: validatedFields.data.numberOfQuestions,
       language: validatedFields.data.language,
+      difficulty: validatedFields.data.difficulty,
     });
     if (!questions || questions.length === 0) {
       return { error: "Could not generate a quiz from the provided content. Please try another file/image." };
@@ -87,6 +93,7 @@ const QuizPyqSchema = z.object({
   topic: z.string().min(2, { message: "Topic must be at least 2 characters." }).max(50),
   numberOfQuestions: z.coerce.number().min(1, { message: "You must request at least 1 question." }),
   language: z.string(),
+  difficulty: z.string(),
 });
 
 export async function createQuizFromPyq(formData: FormData) {
@@ -96,6 +103,7 @@ export async function createQuizFromPyq(formData: FormData) {
     topic: formData.get("topic"),
     numberOfQuestions: formData.get("numberOfQuestions"),
     language: formData.get("language"),
+    difficulty: formData.get("difficulty"),
   });
 
   if (!validatedFields.success) {
@@ -116,6 +124,7 @@ export async function createQuizFromPyq(formData: FormData) {
       topic: validatedFields.data.topic,
       numberOfQuestions: validatedFields.data.numberOfQuestions,
       language: validatedFields.data.language,
+      difficulty: validatedFields.data.difficulty,
     });
     if (!questions || questions.length === 0) {
       return { error: "Could not generate a PYQ quiz for this combination. Please try another one." };

@@ -16,6 +16,7 @@ const GenerateQuizQuestionsInputSchema = z.object({
   topic: z.string().describe('The topic for which to generate quiz questions.'),
   numberOfQuestions: z.number().describe('The number of questions to generate.'),
   language: z.string().describe('The language for the quiz (e.g., "English", "Hindi").'),
+  difficulty: z.string().describe('The difficulty level of the quiz (e.g., "Easy", "Medium", "Hard").'),
 });
 export type GenerateQuizQuestionsInput = z.infer<typeof GenerateQuizQuestionsInputSchema>;
 
@@ -29,7 +30,7 @@ const prompt = ai.definePrompt({
   name: 'generateQuizQuestionsPrompt',
   input: {schema: GenerateQuizQuestionsInputSchema},
   output: {schema: QuizSchema},
-  prompt: `You are an expert at creating educational quizzes in multiple languages. Your task is to generate {{{numberOfQuestions}}} important and relevant questions on the given topic in {{{language}}}.
+  prompt: `You are an expert at creating educational quizzes in multiple languages. Your task is to generate {{{numberOfQuestions}}} important and relevant questions on the given topic in {{{language}}} with a difficulty level of {{{difficulty}}}.
 
 Topic: {{{topic}}}
 

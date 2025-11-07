@@ -69,6 +69,11 @@ export const translations = {
     thankYouCommunity: "Thank you for being part of our growing quiz community!",
     quizLanguage: "Quiz Language",
     selectLanguage: "Select a language for the quiz",
+    difficulty: "Difficulty",
+    selectDifficulty: "Select a difficulty level",
+    easy: "Easy",
+    medium: "Medium",
+    hard: "Hard",
   },
   hindi: {
     appDescription: "एक विषय दर्ज करें और हमारे AI को आपके लिए एक मजेदार प्रश्नोत्तरी बनाने दें। अपने ज्ञान का परीक्षण करें और खुद को चुनौती दें!",
@@ -139,5 +144,10 @@ export const translations = {
     thankYouCommunity: "हमारे बढ़ते प्रश्नोत्तरी समुदाय का हिस्सा बनने के लिए धन्यवाद!",
     quizLanguage: "प्रश्नोत्तरी भाषा",
     selectLanguage: "प्रश्नोत्तरी के लिए एक भाषा चुनें",
+    difficulty: "कठिनाई",
+    selectDifficulty: "एक कठिनाई स्तर चुनें",
+    easy: "आसान",
+    medium: "मध्यम",
+    hard: "कठिन",
   }
 };
