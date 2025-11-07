@@ -23,8 +23,8 @@ import { translations } from "@/lib/translations";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 type GameState = "idle" | "loading" | "playing" | "finished";
-type QuizFormValues = { topic: string; numberOfQuestions: number; timerDuration: number | null; language: string; };
-type QuizPyqFormValues = { exam: string; subject: string; topic: string; numberOfQuestions: number; timerDuration: number | null; language: string; };
+type QuizFormValues = { topic: string; numberOfQuestions: number; language: string; };
+type QuizPyqFormValues = { exam: string; subject: string; topic: string; numberOfQuestions: number; language: string; };
 type QuizUploadValues = { dataUri: string, numberOfQuestions: number, language: string };
 
 export default function Home() {
@@ -32,7 +32,6 @@ export default function Home() {
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
   const [score, setScore] = useState(0);
-  const [timerDuration, setTimerDuration] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("topic");
   const [selectedExamFromSidebar, setSelectedExamFromSidebar] = useState<string | null>(null);
   const [uiLanguage, setUiLanguage] = useState<"english" | "hindi">("english");
@@ -54,7 +53,6 @@ export default function Home() {
       const newQuiz = result.data;
       setQuiz(newQuiz);
       setUserAnswers(new Array(newQuiz.length).fill(""));
-      setTimerDuration(values.timerDuration);
       setGameState("playing");
     }
   };
@@ -75,7 +73,6 @@ export default function Home() {
       const newQuiz = result.data;
       setQuiz(newQuiz);
       setUserAnswers(new Array(newQuiz.length).fill(""));
-      setTimerDuration(values.timerDuration);
       setGameState("playing");
     }
   };
@@ -94,7 +91,6 @@ export default function Home() {
       const newQuiz = result.data;
       setQuiz(newQuiz);
       setUserAnswers(new Array(newQuiz.length).fill(""));
-      setTimerDuration(null); // No timer for uploaded quizzes for now
       setGameState("playing");
     }
   };
@@ -117,7 +113,6 @@ export default function Home() {
     setQuiz(null);
     setUserAnswers([]);
     setScore(0);
-    setTimerDuration(null);
     setSelectedExamFromSidebar(null);
     setActiveTab("topic");
   };
@@ -176,7 +171,7 @@ export default function Home() {
         return renderIdleState();
       case "playing":
         return quiz ? (
-          <QuizSession quiz={quiz} onFinish={handleFinishQuiz} timerDuration={timerDuration} language={uiLanguage} />
+          <QuizSession quiz={quiz} onFinish={handleFinishQuiz} language={uiLanguage} />
         ) : renderIdleState();
       case "finished":
         return quiz ? (

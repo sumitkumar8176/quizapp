@@ -15,7 +15,6 @@ import { indianLanguages } from "@/lib/languages";
 const formSchema = z.object({
   topic: z.string().min(2, { message: "Topic must be at least 2 characters." }).max(50),
   numberOfQuestions: z.coerce.number().min(1, { message: "You must request at least 1 question." }),
-  timerDuration: z.coerce.number().min(0, { message: "Timer must be a positive number." }).max(120, { message: "Timer cannot exceed 120 minutes." }).nullable(),
   language: z.string().min(1, { message: "Please select a language." }),
 });
 
@@ -32,7 +31,6 @@ export default function QuizForm({ onSubmit, isLoading, language }: QuizFormProp
     defaultValues: {
       topic: "",
       numberOfQuestions: 10,
-      timerDuration: null,
       language: "English",
     },
   });
@@ -53,8 +51,7 @@ export default function QuizForm({ onSubmit, isLoading, language }: QuizFormProp
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
+        <FormField
             control={form.control}
             name="numberOfQuestions"
             render={({ field }) => (
@@ -67,20 +64,6 @@ export default function QuizForm({ onSubmit, isLoading, language }: QuizFormProp
               </FormItem>
             )}
           />
-           <FormField
-            control={form.control}
-            name="timerDuration"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-lg">{t.timerLabel}</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder={t.optional} {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? null : e.target.value)} />
-                </FormControl>
-                 <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
         <FormField
           control={form.control}
           name="language"
