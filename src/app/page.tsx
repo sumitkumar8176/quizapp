@@ -14,7 +14,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import Loading from "@/app/loading";
 import QuizUploader from "@/components/quiz-uploader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import QuizPayment from "@/components/quiz-payment";
 import QuizPyqForm from "@/components/quiz-pyq-form";
 import Sidebar from "@/components/sidebar";
 import { Navbar } from "@/components/navbar";
@@ -23,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { translations } from "@/lib/translations";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
-type GameState = "idle" | "loading" | "payment" | "playing" | "finished";
+type GameState = "idle" | "loading" | "playing" | "finished";
 type QuizFormValues = { topic: string; numberOfQuestions: number; timerDuration: number | null; language: string; };
 type QuizPyqFormValues = { exam: string; subject: string; topic: string; numberOfQuestions: number; timerDuration: number | null; language: string; };
 type QuizUploadValues = { dataUri: string, numberOfQuestions: number, language: string };
@@ -56,7 +55,7 @@ export default function Home() {
       setQuiz(newQuiz);
       setUserAnswers(new Array(newQuiz.length).fill(""));
       setTimerDuration(values.timerDuration);
-      setGameState("payment");
+      setGameState("playing");
     }
   };
 
@@ -77,7 +76,7 @@ export default function Home() {
       setQuiz(newQuiz);
       setUserAnswers(new Array(newQuiz.length).fill(""));
       setTimerDuration(values.timerDuration);
-      setGameState("payment");
+      setGameState("playing");
     }
   };
 
@@ -96,16 +95,9 @@ export default function Home() {
       setQuiz(newQuiz);
       setUserAnswers(new Array(newQuiz.length).fill(""));
       setTimerDuration(null); // No timer for uploaded quizzes for now
-      setGameState("payment");
+      setGameState("playing");
     }
   };
-
-
-  const handlePaymentSuccess = () => {
-    setGameState("playing");
-  };
-
-
 
   const handleFinishQuiz = (answers: string[]) => {
     if (!quiz) return;
@@ -182,8 +174,6 @@ export default function Home() {
         return <Loading />;
       case "idle":
         return renderIdleState();
-      case "payment":
-        return <QuizPayment onPaymentSuccess={handlePaymentSuccess} language={uiLanguage}/>;
       case "playing":
         return quiz ? (
           <QuizSession quiz={quiz} onFinish={handleFinishQuiz} timerDuration={timerDuration} language={uiLanguage} />
