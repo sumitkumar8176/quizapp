@@ -2,7 +2,7 @@
 export const translations = {
   english: {
     appDescription: "Enter a topic and let our AI create a fun quiz for you. Test your knowledge and challenge yourself!",
-    fromTopic: "From Topic",
+    fromTopic: "From Any Topics",
     fromPYQ: "Previous Year Question",
     fromFileImage: "From File/Image",
     quizOnWhat: "What do you want a quiz on?",
@@ -72,7 +72,7 @@ export const translations = {
   },
   hindi: {
     appDescription: "एक विषय दर्ज करें और हमारे AI को आपके लिए एक मजेदार प्रश्नोत्तरी बनाने दें। अपने ज्ञान का परीक्षण करें और खुद को चुनौती दें!",
-    fromTopic: "विषय से",
+    fromTopic: "किसी भी विषय से",
     fromPYQ: "पिछले वर्ष के प्रश्न",
     fromFileImage: "फ़ाइल/छवि से",
     quizOnWhat: "आप किस पर प्रश्नोत्तरी चाहते हैं?",
