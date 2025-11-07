@@ -142,7 +142,7 @@ export default function QuizCamera({ onCapture, isLoading, language }: QuizCamer
       </div>
 
       <div className="space-y-2 text-left">
-        <Label htmlFor="difficulty-camera">{t.difficulty}</Label>
+        <Label htmlFor="difficulty-camera">{t.selectDifficulty}</Label>
         <Select value={difficulty} onValueChange={setDifficulty} disabled={isLoading}>
             <SelectTrigger id="difficulty-camera">
                 <SelectValue placeholder={t.selectDifficulty} />

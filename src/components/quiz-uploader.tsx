@@ -61,8 +61,8 @@ export default function QuizUploader({ onUpload, isLoading, language }: QuizUplo
     event.target.value = "";
   };
   
-  const handleCapture = (dataUri: string, numberOfQuestions: number, difficulty: string) => {
-    onUpload({ dataUri, numberOfQuestions, language: quizLanguage, difficulty });
+  const handleCapture = (dataUri: string, numQuestions: number, captureDifficulty: string) => {
+    onUpload({ dataUri, numberOfQuestions: numQuestions, language: quizLanguage, difficulty: captureDifficulty });
   };
 
 
@@ -139,7 +139,7 @@ export default function QuizUploader({ onUpload, isLoading, language }: QuizUplo
             </div>
 
             <div className="space-y-2 text-left">
-              <Label htmlFor="difficulty-upload">{t.difficulty}</Label>
+              <Label htmlFor="difficulty-upload">{t.selectDifficulty}</Label>
               <Select value={difficulty} onValueChange={setDifficulty} disabled={isLoading}>
                 <SelectTrigger id="difficulty-upload">
                   <SelectValue placeholder={t.selectDifficulty} />
@@ -172,7 +172,7 @@ export default function QuizUploader({ onUpload, isLoading, language }: QuizUplo
         </TabsContent>
         <TabsContent value="camera" className="pt-6">
           <QuizCamera 
-            onCapture={(dataUri, numQuestions, difficulty) => onUpload({ dataUri, numberOfQuestions: numQuestions, language: quizLanguage, difficulty })} 
+            onCapture={handleCapture}
             isLoading={isLoading} 
             language={language} 
           />
