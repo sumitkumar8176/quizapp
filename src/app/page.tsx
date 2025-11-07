@@ -251,8 +251,8 @@ export default function Home() {
                     onClick={() => handleLanguageSelect("english")}
                     size="sm"
                     className={cn(
-                        "text-black bg-yellow-300 hover:bg-yellow-200",
-                        uiLanguage === "english" && "bg-white hover:bg-white/90"
+                        "text-white bg-red-600 hover:bg-red-500",
+                        uiLanguage === "english" && "bg-red-700 hover:bg-red-600"
                     )}
                 >
                     English
