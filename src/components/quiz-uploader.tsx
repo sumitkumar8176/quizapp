@@ -171,7 +171,11 @@ export default function QuizUploader({ onUpload, isLoading, language }: QuizUplo
           </div>
         </TabsContent>
         <TabsContent value="camera" className="pt-6">
-          <QuizCamera onCapture={handleCapture} isLoading={isLoading} language={language} />
+          <QuizCamera 
+            onCapture={(dataUri, numQuestions, difficulty) => onUpload({ dataUri, numberOfQuestions: numQuestions, language: quizLanguage, difficulty })} 
+            isLoading={isLoading} 
+            language={language} 
+          />
         </TabsContent>
       </Tabs>
     </div>

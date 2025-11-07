@@ -158,7 +158,7 @@ export default function QuizCamera({ onCapture, isLoading, language }: QuizCamer
       {capturedImage ? (
         <div className="grid grid-cols-2 gap-4">
           <Button onClick={handleRetake} variant="outline" disabled={isLoading}>
-            <RefreshCw className="mr-2" />
+            <RefreshCw className="mr-2 h-4 w-4" />
             {t.retake}
           </Button>
           <Button onClick={handleGenerateQuiz} disabled={isLoading}>
