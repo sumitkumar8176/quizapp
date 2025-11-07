@@ -126,6 +126,10 @@ export default function Home() {
   const handleLanguageSelect = (lang: "english" | "hindi") => {
     setUiLanguage(lang);
   };
+
+  const handleStartApp = () => {
+    setShowWelcome(false);
+  }
   
   const renderIdleState = () => (
     <div className="w-full">
@@ -215,7 +219,7 @@ export default function Home() {
           </div>
           
           <div className="space-y-4">
-            <Button size="lg" onClick={() => setShowWelcome(false)} className="w-full">
+            <Button size="lg" onClick={handleStartApp} className="w-full">
                 Create your quiz here
             </Button>
 
@@ -241,32 +245,32 @@ export default function Home() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
+      <div className="flex min-h-screen w-full bg-background relative">
+         <div className="absolute top-2 right-2 z-20 flex gap-2 items-center">
+            <Button
+                onClick={() => handleLanguageSelect("english")}
+                size="sm"
+                className={cn(
+                    "text-white bg-red-600 hover:bg-red-500",
+                    uiLanguage === "english" && "bg-red-700 hover:bg-red-600"
+                )}
+            >
+                English
+            </Button>
+            <Button
+                onClick={() => handleLanguageSelect("hindi")}
+                size="sm"
+                className={cn(
+                    "text-black bg-yellow-300 hover:bg-yellow-200",
+                    uiLanguage === "hindi" && "bg-white hover:bg-white/90"
+                )}
+            >
+                Hindi
+            </Button>
+        </div>
         <Sidebar onExamSelect={handleExamSelectFromSidebar} language={uiLanguage} />
-        <main className="relative flex flex-1 flex-col items-center">
+        <main className="flex flex-1 flex-col items-center">
           <Navbar language={uiLanguage} />
-          <div className="absolute top-2 right-2 z-20 flex gap-2 items-center">
-              <Button
-                  onClick={() => handleLanguageSelect("english")}
-                  size="sm"
-                  className={cn(
-                      "text-white bg-red-600 hover:bg-red-500",
-                      uiLanguage === "english" && "bg-red-700 hover:bg-red-600"
-                  )}
-              >
-                  English
-              </Button>
-              <Button
-                  onClick={() => handleLanguageSelect("hindi")}
-                  size="sm"
-                  className={cn(
-                      "text-black bg-yellow-300 hover:bg-yellow-200",
-                      uiLanguage === "hindi" && "bg-white hover:bg-white/90"
-                  )}
-              >
-                  Hindi
-              </Button>
-          </div>
           <div className="flex flex-1 flex-col items-center p-4 w-full">
             <div className="w-full max-w-2xl flex justify-between items-center mb-4 gap-2">
                 <div className="md:hidden">
