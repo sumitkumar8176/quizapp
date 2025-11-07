@@ -244,7 +244,31 @@ export default function Home() {
       <div className="flex min-h-screen w-full bg-background">
         <Sidebar onExamSelect={handleExamSelectFromSidebar} language={uiLanguage} />
         <main className="relative flex flex-1 flex-col items-center">
-          <Navbar language={uiLanguage} onLanguageChange={handleLanguageSelect} />
+          <Navbar language={uiLanguage} />
+          <div className="w-full p-2 bg-yellow-400">
+            <div className="flex gap-2 items-center justify-center">
+                <Button
+                    onClick={() => handleLanguageSelect("english")}
+                    size="sm"
+                    className={cn(
+                        "text-black bg-yellow-300 hover:bg-yellow-200",
+                        uiLanguage === "english" && "bg-white hover:bg-white/90"
+                    )}
+                >
+                    English
+                </Button>
+                <Button
+                    onClick={() => handleLanguageSelect("hindi")}
+                    size="sm"
+                    className={cn(
+                        "text-black bg-yellow-300 hover:bg-yellow-200",
+                        uiLanguage === "hindi" && "bg-white hover:bg-white/90"
+                    )}
+                >
+                    Hindi
+                </Button>
+            </div>
+          </div>
           <div className="flex flex-1 flex-col items-center p-4 w-full">
             <div className="w-full max-w-2xl flex justify-between items-center mb-4 gap-2">
                 <div className="md:hidden">

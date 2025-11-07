@@ -2,16 +2,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Button } from "./ui/button";
-import { cn } from "@/lib/utils";
 
 type NavbarProps = {
   language: "english" | "hindi";
-  onLanguageChange: (lang: "english" | "hindi") => void;
 };
 
 
-export function Navbar({ language, onLanguageChange }: NavbarProps) {
+export function Navbar({ language }: NavbarProps) {
   const navbarText = language === 'hindi' 
     ? "🚀 अपनी प्रश्नोत्तरी यात्रा अभी शुरू करें और अपने ज्ञान का परीक्षण करें!"
     : "🚀 Start your quiz journey now and test your knowledge!";
@@ -36,28 +33,6 @@ export function Navbar({ language, onLanguageChange }: NavbarProps) {
           {navbarText}
         </h1>
       </motion.div>
-      <div className="flex gap-2 items-center absolute right-4">
-        <Button
-        onClick={() => onLanguageChange("english")}
-        size="sm"
-        className={cn(
-            "text-black bg-yellow-300 hover:bg-yellow-200",
-            language === "english" && "bg-white hover:bg-white/90"
-        )}
-        >
-        English
-        </Button>
-        <Button
-        onClick={() => onLanguageChange("hindi")}
-        size="sm"
-        className={cn(
-            "text-black bg-yellow-300 hover:bg-yellow-200",
-            language === "hindi" && "bg-white hover:bg-white/90"
-        )}
-        >
-        Hindi
-        </Button>
-      </div>
     </div>
   );
 }
