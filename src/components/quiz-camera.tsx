@@ -10,9 +10,10 @@ import { Card } from "./ui/card";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { translations } from "@/lib/translations";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 type QuizCameraProps = {
-  onCapture: (dataUri: string, numberOfQuestions: number) => void;
+  onCapture: (dataUri: string, numberOfQuestions: number, difficulty: string) => void;
   isLoading: boolean;
   language: "english" | "hindi";
 };
@@ -24,6 +25,7 @@ export default function QuizCamera({ onCapture, isLoading, language }: QuizCamer
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [numberOfQuestions, setNumberOfQuestions] = useState(10);
+  const [difficulty, setDifficulty] = useState("Medium");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -88,7 +90,7 @@ export default function QuizCamera({ onCapture, isLoading, language }: QuizCamer
 
   const handleGenerateQuiz = () => {
     if (capturedImage) {
-      onCapture(capturedImage, numberOfQuestions);
+      onCapture(capturedImage, numberOfQuestions, difficulty);
     }
   };
 
@@ -137,6 +139,20 @@ export default function QuizCamera({ onCapture, isLoading, language }: QuizCamer
           disabled={isLoading}
           placeholder="e.g., 10" 
         />
+      </div>
+
+      <div className="space-y-2 text-left">
+        <Label htmlFor="difficulty-camera">{t.difficulty}</Label>
+        <Select value={difficulty} onValueChange={setDifficulty} disabled={isLoading}>
+            <SelectTrigger id="difficulty-camera">
+                <SelectValue placeholder={t.selectDifficulty} />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="Easy">{t.easy}</SelectItem>
+                <SelectItem value="Medium">{t.medium}</SelectItem>
+                <SelectItem value="Hard">{t.hard}</SelectItem>
+            </SelectContent>
+        </Select>
       </div>
 
       {capturedImage ? (
