@@ -19,9 +19,16 @@ const nationalExams = {
   "National Level": {
     "UPSC Civil Services": ["History", "Geography", "Polity & Governance", "Economy", "Environment & Ecology", "Science & Technology", "Current Affairs"],
     "SSC CGL": ["Quantitative Aptitude", "General Intelligence & Reasoning", "English Language", "General Awareness"],
+    "SSC CHSL": ["English Language", "Quantitative Aptitude", "General Intelligence", "General Awareness"],
+    "SSC MTS": ["Numerical and Mathematical Ability", "Reasoning Ability and Problem Solving", "General Awareness", "English Language"],
+    "SSC CPO": ["General Intelligence and Reasoning", "General Knowledge and General Awareness", "Quantitative Aptitude", "English Comprehension"],
+    "SSC GD Constable": ["General Intelligence & Reasoning", "General Knowledge & General Awareness", "Elementary Mathematics", "English/Hindi"],
     "IBPS PO": ["Reasoning Ability", "Quantitative Aptitude", "English Language", "General Awareness", "Computer Aptitude"],
     "SBI PO": ["Reasoning Ability", "Quantitative Aptitude", "English Language", "General/Economy/Banking Awareness", "Computer Aptitude"],
     "RRB NTPC": ["Mathematics", "General Intelligence and Reasoning", "General Awareness"],
+    "RRB ALP": ["Mathematics", "General Intelligence and Reasoning", "General Science", "General Awareness on Current Affairs"],
+    "RRB JE": ["Mathematics", "General Intelligence & Reasoning", "General Awareness", "General Science"],
+    "RRB Group D": ["General Science", "Mathematics", "General Intelligence & Reasoning", "General Awareness & Current Affairs"],
     "NEET": ["Physics", "Chemistry", "Biology"],
     "JEE Main": ["Physics", "Chemistry", "Mathematics"],
     "JEE Advanced": ["Physics", "Chemistry", "Mathematics"],
@@ -153,3 +160,5 @@ export default function Sidebar({ onExamSelect, language }: SidebarProps) {
     </SidebarPrimitive>
   );
 }
+
+    
