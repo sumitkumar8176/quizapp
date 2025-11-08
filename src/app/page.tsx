@@ -9,7 +9,7 @@ import QuizForm from "@/components/quiz-form";
 import QuizSession from "@/components/quiz-session";
 import QuizResults from "@/components/quiz-results";
 import { Logo } from "@/components/icons";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { AnimatePresence, motion } from "framer-motion";
 import Loading from "@/app/loading";
 import QuizUploader from "@/components/quiz-uploader";
@@ -21,8 +21,10 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { translations } from "@/lib/translations";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import QRCodeComponent from "@/components/qr-code";
+import { CreditCard } from "lucide-react";
 
-type GameState = "idle" | "loading" | "playing" | "finished";
+type GameState = "idle" | "loading" | "payment" | "playing" | "finished";
 type QuizFormValues = { topic: string; numberOfQuestions: number; language: string; difficulty: string; };
 type QuizPyqFormValues = { exam: string; subject: string; topic: string; numberOfQuestions: number; language: string; difficulty: string; };
 type QuizUploadValues = { dataUri: string, numberOfQuestions: number, language: string, difficulty: string };
@@ -40,6 +42,17 @@ export default function Home() {
 
   const t = translations[uiLanguage];
   
+  const handleQuizCreationSuccess = (newQuiz: Quiz) => {
+    setQuiz(newQuiz);
+    setUserAnswers(new Array(newQuiz.length).fill(""));
+    setGameState("payment");
+  };
+
+  const handleQuizCreationFailure = (error: string) => {
+    toast({ variant: "destructive", title: t.errorGeneratingQuiz, description: error });
+    setGameState("idle");
+  };
+
   const handleStartQuiz = async (values: QuizFormValues) => {
     setGameState("loading");
     const formData = new FormData();
@@ -49,13 +62,9 @@ export default function Home() {
     formData.append("difficulty", values.difficulty);
     const result = await createQuiz(formData);
     if (result.error) {
-      toast({ variant: "destructive", title: t.errorGeneratingQuiz, description: result.error });
-      setGameState("idle");
+      handleQuizCreationFailure(result.error);
     } else if (result.data) {
-      const newQuiz = result.data;
-      setQuiz(newQuiz);
-      setUserAnswers(new Array(newQuiz.length).fill(""));
-      setGameState("playing");
+      handleQuizCreationSuccess(result.data);
     }
   };
 
@@ -70,13 +79,9 @@ export default function Home() {
     formData.append("difficulty", values.difficulty);
     const result = await createQuizFromPyq(formData);
     if (result.error) {
-      toast({ variant: "destructive", title: t.errorGeneratingQuiz, description: result.error });
-      setGameState("idle");
+      handleQuizCreationFailure(result.error);
     } else if (result.data) {
-      const newQuiz = result.data;
-      setQuiz(newQuiz);
-      setUserAnswers(new Array(newQuiz.length).fill(""));
-      setGameState("playing");
+      handleQuizCreationSuccess(result.data);
     }
   };
 
@@ -89,14 +94,14 @@ export default function Home() {
     formData.append("difficulty", values.difficulty);
     const result = await createQuizFromContent(formData);
     if (result.error) {
-      toast({ variant: "destructive", title: t.errorGeneratingQuiz, description: result.error });
-      setGameState("idle");
+      handleQuizCreationFailure(result.error);
     } else if (result.data) {
-      const newQuiz = result.data;
-      setQuiz(newQuiz);
-      setUserAnswers(new Array(newQuiz.length).fill(""));
-      setGameState("playing");
+      handleQuizCreationSuccess(result.data);
     }
+  };
+
+  const handlePaymentSuccess = () => {
+    setGameState("playing");
   };
 
   const handleFinishQuiz = (answers: string[]) => {
@@ -175,12 +180,33 @@ export default function Home() {
     </div>
   );
 
+  const renderPaymentState = () => (
+    <Card className="text-center">
+      <CardHeader>
+        <CardTitle className="text-2xl font-bold">Unlock Your Quiz</CardTitle>
+        <CardDescription>
+          Please make a payment of ₹5 to start the quiz.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col items-center gap-6">
+        <QRCodeComponent upiId="your-upi-id@okhdfcbank" amount={5} />
+        <p className="text-sm text-muted-foreground">Scan the QR code with any UPI app.</p>
+        <Button onClick={handlePaymentSuccess} className="w-full" size="lg">
+          <CreditCard className="mr-2 h-5 w-5" />
+          I Have Paid, Start Quiz
+        </Button>
+      </CardContent>
+    </Card>
+  );
+
   const renderGameState = () => {
     switch (gameState) {
       case "loading":
         return <Loading />;
       case "idle":
         return renderIdleState();
+      case "payment":
+        return renderPaymentState();
       case "playing":
         return quiz ? (
           <QuizSession quiz={quiz} onFinish={handleFinishQuiz} language={uiLanguage} />
