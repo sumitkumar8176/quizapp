@@ -189,7 +189,7 @@ export default function Home() {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-6">
-        <QRCodeComponent upiId="your-upi-id@okhdfcbank" amount={2} />
+        <QRCodeComponent upiId="sumit.gusknp2022@okhdfcbank" amount={2} />
         <p className="text-sm text-muted-foreground">Scan the QR code with any UPI app.</p>
         <Button onClick={handlePaymentSuccess} className="w-full" size="lg">
           <CreditCard className="mr-2 h-5 w-5" />
