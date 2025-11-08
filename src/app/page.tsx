@@ -193,7 +193,7 @@ export default function Home() {
         <p className="text-sm text-muted-foreground">Scan the QR code with any UPI app.</p>
         <Button onClick={handlePaymentSuccess} className="w-full" size="lg">
           <CreditCard className="mr-2 h-5 w-5" />
-          I Have Paid, Start Quiz
+          Complete your payment and start quiz
         </Button>
       </CardContent>
     </Card>
@@ -346,3 +346,5 @@ export default function Home() {
     </SidebarProvider>
   );
 }
+
+    
