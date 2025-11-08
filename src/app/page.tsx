@@ -185,11 +185,11 @@ export default function Home() {
       <CardHeader>
         <CardTitle className="text-2xl font-bold">Unlock Your Quiz</CardTitle>
         <CardDescription>
-          Please make a payment of ₹5 to start the quiz.
+          Please make a payment of ₹2 to start the quiz.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-6">
-        <QRCodeComponent upiId="your-upi-id@okhdfcbank" amount={5} />
+        <QRCodeComponent upiId="your-upi-id@okhdfcbank" amount={2} />
         <p className="text-sm text-muted-foreground">Scan the QR code with any UPI app.</p>
         <Button onClick={handlePaymentSuccess} className="w-full" size="lg">
           <CreditCard className="mr-2 h-5 w-5" />
