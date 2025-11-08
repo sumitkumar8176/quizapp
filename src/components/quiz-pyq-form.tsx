@@ -22,11 +22,8 @@ const formSchema = z.object({
   difficulty: z.string().min(1, { message: "Please select a difficulty." }),
 });
 
-type ExamData = {
-  [key: string]: string[];
-};
-
-const examSubjects: ExamData = {
+const examSubjects: { [key: string]: string[] } = {
+  // National Level
   "UPSC Civil Services": ["History", "Geography", "Polity & Governance", "Economy", "Environment & Ecology", "Science & Technology", "Current Affairs"],
   "SSC CGL": ["Quantitative Aptitude", "General Intelligence & Reasoning", "English Language", "General Awareness"],
   "IBPS PO": ["Reasoning Ability", "Quantitative Aptitude", "English Language", "General Awareness", "Computer Aptitude"],
@@ -40,9 +37,44 @@ const examSubjects: ExamData = {
   "CLAT": ["English Language", "Current Affairs, including General Knowledge", "Legal Reasoning", "Logical Reasoning", "Quantitative Techniques"],
   "NDA": ["Mathematics", "General Ability Test"],
   "CDS": ["English", "General Knowledge", "Elementary Mathematics"],
+
+  // State Level
+  "APPSC": ["General Studies", "Concerned Subject"],
+  "EAMCET": ["Physics", "Chemistry", "Mathematics/Biology"],
+  "AP-PGECET": ["Concerned Engineering Subject"],
+  "UPPSC": ["General Studies", "CSAT", "Optional Subject"],
+  "UPTET": ["Child Development", "Language I", "Language II", "Mathematics", "Environmental Studies"],
+  "UPSEE": ["Physics", "Chemistry", "Mathematics"],
+  "MPSC": ["Marathi", "English", "General Studies"],
+  "MHT-CET": ["Physics", "Chemistry", "Mathematics/Biology"],
+  "MAH-CET": ["Logical Reasoning", "Abstract Reasoning", "Quantitative Aptitude", "Verbal Ability"],
+  "BPSC": ["General Studies", "Optional Subject"],
+  "BTET": ["Child Development", "Language I", "Language II", "Mathematics", "Environmental Studies"],
+  "BCECE": ["Physics", "Chemistry", "Mathematics/Biology"],
+  "WBPSC": ["General Studies", "Concerned Subject"],
+  "WBJEE": ["Physics", "Chemistry", "Mathematics"],
+  "WB-SET": ["General Paper", "Concerned Subject"],
+  "TNPSC": ["General Studies", "Aptitude", "General Tamil/English"],
+  "TANCET": ["Concerned Subject"],
+  "TNEA": ["Mathematics", "Physics", "Chemistry"],
+  "MPPSC": ["General Studies", "CSAT", "Optional Subject"],
+  "MP-PAT": ["Agriculture Science"],
+  "MP-TET": ["Child Development", "Language I", "Language II", "Mathematics", "Environmental Studies"],
+  "RPSC": ["General Knowledge", "Concerned Subject"],
+  "REET": ["Child Development", "Language I", "Language II", "Mathematics", "Environmental Studies"],
+  "RPET": ["Physics", "Chemistry", "Mathematics"],
+  "KPSC": ["General Studies", "Concerned Subject"],
+  "KCET": ["Physics", "Chemistry", "Mathematics/Biology"],
+  "K-SET": ["General Paper", "Concerned Subject"],
+  "GPSC": ["General Studies", "Optional Subject"],
+  "GUJCET": ["Physics", "Chemistry", "Mathematics/Biology"],
+  "G-SET": ["General Paper", "Concerned Subject"],
+  "Kerala PSC": ["General Knowledge", "Current Affairs", "Concerned Subject"],
+  "KEAM": ["Physics", "Chemistry", "Mathematics"],
+  "K-TET": ["Child Development", "Language I", "Language II", "Mathematics", "Science"],
 };
 
-const indianExams = Object.keys(examSubjects);
+const allExams = Object.keys(examSubjects);
 
 type QuizPyqFormProps = {
   onSubmit: (values: z.infer<typeof formSchema>) => void;
@@ -98,7 +130,7 @@ export default function QuizPyqForm({ onSubmit, isLoading, selectedExam, languag
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {indianExams.map(exam => (
+                  {allExams.map(exam => (
                     <SelectItem key={exam} value={exam}>{exam}</SelectItem>
                   ))}
                 </SelectContent>
@@ -108,7 +140,7 @@ export default function QuizPyqForm({ onSubmit, isLoading, selectedExam, languag
           )}
         />
         
-        {watchedExam && (
+        {watchedExam && examSubjects[watchedExam] && (
           <>
             <FormField
               control={form.control}
@@ -210,7 +242,7 @@ export default function QuizPyqForm({ onSubmit, isLoading, selectedExam, languag
           )}
         />
 
-        <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+        <Button type="submit" className="w-full" size="lg" disabled={isLoading || !watchedExam || !examSubjects[watchedExam]}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
